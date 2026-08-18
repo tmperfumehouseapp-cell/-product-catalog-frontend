@@ -340,19 +340,31 @@ async function handleDelete(id, btnEl) {
         formData.append('id', id);
 
         const res = await fetch(`${API_BASE}/delete_product.php`, { method: 'POST', body: formData });
-        const data = await res.json();
+
+        let data;
+        try {
+            data = await res.json();
+        } catch (parseErr) {
+            const raw = await res.text();
+            alert(`Server returned an unexpected response (status ${res.status}):\n\n${raw.slice(0, 300)}`);
+            btnEl.disabled = false;
+            btnEl.textContent = 'Delete';
+            return;
+        }
 
         if (res.status === 403) {
+            alert('Incorrect admin password saved in this session. Re-enter it below, then try deleting again — no page reload needed.');
             sessionStorage.removeItem('adminPassword');
-            alert('Incorrect admin password. Please unlock again.');
-            location.reload();
+            adminPassword = '';
+            btnEl.disabled = false;
+            btnEl.textContent = 'Delete';
             return;
         }
 
         if (res.ok && data.success) {
             row.remove();
         } else {
-            alert(data.error || 'Delete failed.');
+            alert('Delete failed: ' + (data.error || `HTTP ${res.status}`));
             btnEl.disabled = false;
             btnEl.textContent = 'Delete';
         }
