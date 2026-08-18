@@ -11,18 +11,23 @@
 <div class="top-header">
     <div class="title-row">
         <h1>Product Catalog</h1>
+        <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Search...">
+        </div>
     </div>
-    <div class="search-box">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="searchInput" placeholder="Search products...">
+</div>
+
+<div class="category-stories" id="categoryRow">
+    <div class="story-item">
+        <div class="story-circle all-circle active" data-category="">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <div class="story-label active">All Category</div>
     </div>
 </div>
 
 <div class="filter-panel">
-    <div class="category-row" id="categoryRow">
-        <span class="cat-btn active" data-category="">All Category</span>
-    </div>
-
     <div class="dual-select-row">
         <select id="brandFilter"><option value="">All Brands</option></select>
         <select id="genderFilter">

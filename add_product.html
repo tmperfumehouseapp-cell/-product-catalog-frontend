@@ -15,7 +15,6 @@
 
 <div class="container">
 
-    <!-- Password gate -->
     <div class="form-card" id="passwordGate">
         <label for="adminPasswordInput">Admin Password</label>
         <input type="password" id="adminPasswordInput" placeholder="Enter password">
@@ -23,7 +22,6 @@
         <div id="gateMsg"></div>
     </div>
 
-    <!-- Actual form, hidden until unlocked -->
     <form class="form-card" id="productForm" style="display:none;">
         <label for="name">Product Name</label>
         <input type="text" id="name" name="name" required>
@@ -52,27 +50,69 @@
         <label for="brand">Brand</label>
         <input type="text" id="brand" name="brand" required>
 
-        <button type="submit" id="submitBtn">Add Product</button>
+        <label>Does this product have size/variant options?</label>
+        <div style="display:flex; gap:20px; margin-top:6px;">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+                <input type="radio" name="hasVariants" value="no" checked style="width:auto;"> No
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+                <input type="radio" name="hasVariants" value="yes" style="width:auto;"> Yes
+            </label>
+        </div>
+
+        <div id="variantSection" style="display:none; margin-top:12px;">
+            <label style="margin-top:0;">Variants (e.g. 20ml, 50ml, 100ml)</label>
+            <div id="variantRows"></div>
+            <button type="button" id="addVariantBtn" style="width:auto; margin-top:8px; padding:8px 16px; background:#f0f0f0; color:#333; font-size:13px;">+ Add variant</button>
+        </div>
+
+        <button type="submit" id="submitBtn" style="margin-top:22px;">Add Product</button>
         <div id="formMsg"></div>
     </form>
+
+    <div class="form-card" id="deleteSection" style="display:none;">
+        <label style="margin-top:0;">Delete a Product</label>
+        <input type="text" id="deleteSearchInput" placeholder="Search product name...">
+        <div id="deleteList" style="margin-top:12px;"></div>
+        <button type="button" id="deleteLoadMoreBtn" style="display:none; margin-top:12px; background:#f0f0f0; color:#333;">Load More</button>
+    </div>
+
+    <div class="form-card" id="iconSection" style="display:none;">
+        <label style="margin-top:0;">Set Category Icon</label>
+        <select id="iconCategorySelect">
+            <option value="__ALL__">All Category (main icon)</option>
+        </select>
+        <label>Icon Image</label>
+        <input type="file" id="iconFileInput" accept=".jpg,.jpeg,.png,.webp">
+        <button type="button" id="uploadIconBtn" style="margin-top:16px;">Upload Icon</button>
+        <div id="iconMsg"></div>
+    </div>
+
 </div>
 
 <script>
 const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
 
-// ---- Password gate ----
 const passwordGate = document.getElementById('passwordGate');
 const productForm = document.getElementById('productForm');
+const deleteSection = document.getElementById('deleteSection');
+const iconSection = document.getElementById('iconSection');
 const adminPasswordInput = document.getElementById('adminPasswordInput');
 const unlockBtn = document.getElementById('unlockBtn');
 const gateMsg = document.getElementById('gateMsg');
 
 let adminPassword = sessionStorage.getItem('adminPassword') || '';
 
-if (adminPassword) {
+function unlockUI() {
     passwordGate.style.display = 'none';
     productForm.style.display = 'block';
+    deleteSection.style.display = 'block';
+    iconSection.style.display = 'block';
+    loadDeleteList(1, false);
+    loadIconCategoryOptions();
 }
+
+if (adminPassword) unlockUI();
 
 unlockBtn.addEventListener('click', () => {
     const entered = adminPasswordInput.value.trim();
@@ -83,13 +123,18 @@ unlockBtn.addEventListener('click', () => {
     }
     adminPassword = entered;
     sessionStorage.setItem('adminPassword', entered);
-    passwordGate.style.display = 'none';
-    productForm.style.display = 'block';
+    unlockUI();
 });
 
 adminPasswordInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') unlockBtn.click();
 });
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
 
 // ---- Image upload + preview ----
 const form = productForm;
@@ -102,13 +147,8 @@ const previewGrid = document.getElementById('previewGrid');
 let selectedFiles = [];
 
 dropZone.addEventListener('click', () => imageInput.click());
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.style.borderColor = '#1a1a1a';
-});
-dropZone.addEventListener('dragleave', () => {
-    dropZone.style.borderColor = '#ddd';
-});
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#1a1a1a'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#ddd'; });
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.style.borderColor = '#ddd';
@@ -157,6 +197,44 @@ function removeFile(index) {
     renderPreviews();
 }
 
+// ---- Variants ----
+const variantSection = document.getElementById('variantSection');
+const variantRows = document.getElementById('variantRows');
+const addVariantBtn = document.getElementById('addVariantBtn');
+
+document.querySelectorAll('input[name="hasVariants"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        if (e.target.value === 'yes') {
+            variantSection.style.display = 'block';
+            if (variantRows.children.length === 0) addVariantRow();
+        } else {
+            variantSection.style.display = 'none';
+            variantRows.innerHTML = '';
+        }
+    });
+});
+
+function addVariantRow() {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px;';
+    row.innerHTML = `
+        <input type="text" class="variant-input" placeholder="e.g. 20ml" style="flex:1;">
+        <button type="button" class="remove-variant-btn" style="width:auto; padding:0 14px; background:#f0f0f0; color:#c0392b; font-size:16px;">×</button>
+    `;
+    row.querySelector('.remove-variant-btn').addEventListener('click', () => row.remove());
+    variantRows.appendChild(row);
+}
+addVariantBtn.addEventListener('click', addVariantRow);
+
+function getVariants() {
+    const hasVariants = document.querySelector('input[name="hasVariants"]:checked').value;
+    if (hasVariants !== 'yes') return [];
+    return Array.from(document.querySelectorAll('.variant-input'))
+        .map(i => i.value.trim())
+        .filter(v => v !== '');
+}
+
+// ---- Add product submit ----
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -179,12 +257,10 @@ form.addEventListener('submit', async (e) => {
     formData.append('gender', document.getElementById('gender').value);
     formData.append('brand', document.getElementById('brand').value);
     selectedFiles.forEach(file => formData.append('images[]', file));
+    getVariants().forEach(v => formData.append('variants[]', v));
 
     try {
-        const res = await fetch(`${API_BASE}/add_product.php`, {
-            method: 'POST',
-            body: formData
-        });
+        const res = await fetch(`${API_BASE}/add_product.php`, { method: 'POST', body: formData });
         const data = await res.json();
 
         if (res.status === 403) {
@@ -192,6 +268,7 @@ form.addEventListener('submit', async (e) => {
             msg.textContent = 'Incorrect admin password. Please re-enter.';
             msg.className = 'error';
             productForm.style.display = 'none';
+            deleteSection.style.display = 'none';
             passwordGate.style.display = 'block';
             adminPasswordInput.value = '';
             return;
@@ -203,6 +280,9 @@ form.addEventListener('submit', async (e) => {
             form.reset();
             selectedFiles = [];
             renderPreviews();
+            variantSection.style.display = 'none';
+            variantRows.innerHTML = '';
+            loadDeleteList(1, false);
         } else {
             msg.textContent = data.error || 'Something went wrong.';
             msg.className = 'error';
@@ -213,6 +293,180 @@ form.addEventListener('submit', async (e) => {
     } finally {
         btn.disabled = false;
         btn.textContent = 'Add Product';
+    }
+});
+
+// ---- Delete product list ----
+const deleteSearchInput = document.getElementById('deleteSearchInput');
+const deleteList = document.getElementById('deleteList');
+const deleteLoadMoreBtn = document.getElementById('deleteLoadMoreBtn');
+let deletePage = 1;
+let deleteDebounce;
+
+async function loadDeleteList(page = 1, append = false) {
+    if (!append) {
+        deleteList.innerHTML = '<div style="font-size:13px; color:#888; padding:10px 0;">Loading...</div>';
+    }
+    try {
+        const params = new URLSearchParams();
+        if (deleteSearchInput.value.trim()) params.set('search', deleteSearchInput.value.trim());
+        params.set('page', page);
+
+        const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed to load');
+
+        deletePage = data.page;
+        const rowsHtml = data.products.map(p => `
+            <div class="delete-row" data-id="${p.id}" style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eee;">
+                <img src="${p.image ? escapeHtml(p.image) : ''}" style="width:44px; height:44px; object-fit:cover; border-radius:6px; background:#eee;">
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
+                    <div style="font-size:12px; color:#888;">₹${p.price.toFixed(2)}</div>
+                </div>
+                <button type="button" class="delete-btn" data-id="${p.id}" style="width:auto; padding:6px 12px; background:#fbeaea; color:#c0392b; font-size:12px;">Delete</button>
+            </div>
+        `).join('');
+
+        deleteList.innerHTML = append ? deleteList.innerHTML + rowsHtml : (rowsHtml || '<div style="font-size:13px; color:#888; padding:10px 0;">No products yet.</div>');
+        deleteLoadMoreBtn.style.display = data.hasMore ? 'block' : 'none';
+
+        deleteList.querySelectorAll('.delete-btn').forEach(b => {
+            b.addEventListener('click', () => handleDelete(b.dataset.id, b));
+        });
+    } catch (err) {
+        deleteList.innerHTML = `<div style="font-size:13px; color:#c0392b; padding:10px 0;">${escapeHtml(err.message)}</div>`;
+    }
+}
+
+async function handleDelete(id, btnEl) {
+    const row = btnEl.closest('.delete-row');
+    const name = row.querySelector('div div').textContent;
+
+    if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
+
+    btnEl.disabled = true;
+    btnEl.textContent = '...';
+
+    try {
+        const formData = new FormData();
+        formData.append('admin_password', adminPassword);
+        formData.append('id', id);
+
+        const res = await fetch(`${API_BASE}/delete_product.php`, { method: 'POST', body: formData });
+
+        let data;
+        try {
+            data = await res.json();
+        } catch (parseErr) {
+            const raw = await res.text();
+            alert(`Server returned an unexpected response (status ${res.status}):\n\n${raw.slice(0, 300)}`);
+            btnEl.disabled = false;
+            btnEl.textContent = 'Delete';
+            return;
+        }
+
+        if (res.status === 403) {
+            alert('Incorrect admin password saved in this session. Re-enter it below, then try deleting again — no page reload needed.');
+            sessionStorage.removeItem('adminPassword');
+            adminPassword = '';
+            passwordGate.style.display = 'block';
+            btnEl.disabled = false;
+            btnEl.textContent = 'Delete';
+            return;
+        }
+
+        if (res.ok && data.success) {
+            row.remove();
+        } else {
+            alert('Delete failed: ' + (data.error || `HTTP ${res.status}`));
+            btnEl.disabled = false;
+            btnEl.textContent = 'Delete';
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+        btnEl.disabled = false;
+        btnEl.textContent = 'Delete';
+    }
+}
+
+deleteSearchInput.addEventListener('input', () => {
+    clearTimeout(deleteDebounce);
+    deleteDebounce = setTimeout(() => loadDeleteList(1, false), 350);
+});
+
+deleteLoadMoreBtn.addEventListener('click', () => {
+    loadDeleteList(deletePage + 1, true);
+});
+
+// ---- Category icon uploader ----
+const iconCategorySelect = document.getElementById('iconCategorySelect');
+const iconFileInput = document.getElementById('iconFileInput');
+const uploadIconBtn = document.getElementById('uploadIconBtn');
+const iconMsg = document.getElementById('iconMsg');
+
+async function loadIconCategoryOptions() {
+    try {
+        const res = await fetch(`${API_BASE}/get_categories.php`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        data.categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.category;
+            opt.textContent = c.category;
+            iconCategorySelect.appendChild(opt);
+        });
+    } catch (err) {
+        // fine — dropdown just keeps only "All Category" option
+    }
+}
+
+uploadIconBtn.addEventListener('click', async () => {
+    const file = iconFileInput.files[0];
+    if (!file) {
+        iconMsg.textContent = 'Choose an image first.';
+        iconMsg.className = 'error';
+        return;
+    }
+
+    uploadIconBtn.disabled = true;
+    uploadIconBtn.textContent = 'Uploading...';
+    iconMsg.textContent = '';
+    iconMsg.className = '';
+
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('category_name', iconCategorySelect.value);
+    formData.append('icon', file);
+
+    try {
+        const res = await fetch(`${API_BASE}/set_category_icon.php`, { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (res.status === 403) {
+            iconMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
+            iconMsg.className = 'error';
+            sessionStorage.removeItem('adminPassword');
+            adminPassword = '';
+            passwordGate.style.display = 'block';
+            return;
+        }
+
+        if (res.ok && data.success) {
+            iconMsg.textContent = 'Icon updated!';
+            iconMsg.className = 'success';
+            iconFileInput.value = '';
+        } else {
+            iconMsg.textContent = data.error || 'Upload failed.';
+            iconMsg.className = 'error';
+        }
+    } catch (err) {
+        iconMsg.textContent = 'Network error: ' + err.message;
+        iconMsg.className = 'error';
+    } finally {
+        uploadIconBtn.disabled = false;
+        uploadIconBtn.textContent = 'Upload Icon';
     }
 });
 </script>

@@ -8,10 +8,9 @@
 </head>
 <body>
 
-<header>
-    <h1>Product Details</h1>
-    <a href="index.html">← Back to Catalog</a>
-</header>
+<div class="detail-header">
+    <span>Product details</span>
+</div>
 
 <div class="container">
     <div id="detailWrap">
@@ -21,7 +20,6 @@
 
 <script>
 const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
-
 const params = new URLSearchParams(window.location.search);
 const id = params.get('id');
 const wrap = document.getElementById('detailWrap');
@@ -36,6 +34,11 @@ function switchImage(src, thumbEl) {
     document.getElementById('mainImage').src = src;
     document.querySelectorAll('.gallery-thumbs img').forEach(t => t.classList.remove('active'));
     thumbEl.classList.add('active');
+}
+
+function selectVariant(el) {
+    document.querySelectorAll('.variant-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
 }
 
 async function loadProduct() {
@@ -56,12 +59,22 @@ async function loadProduct() {
         const p = data.product;
         const images = p.images && p.images.length ? p.images : [];
         const mainImg = images[0] || '';
+        const variants = p.variants || [];
 
         const thumbsHtml = images.length > 1 ? `
             <div class="gallery-thumbs">
                 ${images.map((img, i) => `
                     <img src="${escapeHtml(img)}" class="${i === 0 ? 'active' : ''}"
                          onclick="switchImage('${escapeHtml(img)}', this)">
+                `).join('')}
+            </div>
+        ` : '';
+
+        const variantHtml = variants.length > 0 ? `
+            <div class="variant-label">Options</div>
+            <div class="variant-row">
+                ${variants.map((v, i) => `
+                    <span class="variant-chip ${i === 0 ? 'active' : ''}" onclick="selectVariant(this)">${escapeHtml(v)}</span>
                 `).join('')}
             </div>
         ` : '';
@@ -75,12 +88,16 @@ async function loadProduct() {
                 <div class="detail-info">
                     <h2>${escapeHtml(p.name)}</h2>
                     <div class="detail-price">₹${p.price.toFixed(2)}</div>
-                    <div class="detail-meta">
-                        <div><span>Brand</span><strong>${escapeHtml(p.brand)}</strong></div>
-                        <div><span>Category</span><strong>${escapeHtml(p.category)}</strong></div>
-                        <div><span>Gender</span><strong>${escapeHtml(p.gender)}</strong></div>
+
+                    <div class="detail-badges">
+                        <span class="badge-pill">${escapeHtml(p.brand)}</span>
+                        <span class="badge-pill">${escapeHtml(p.category)}</span>
+                        <span class="badge-pill">${escapeHtml(p.gender)}</span>
                     </div>
-                    <a href="index.html" class="back-btn">← Back to Catalog</a>
+
+                    ${variantHtml}
+
+                    <a href="index.html" class="back-btn-full">← Back to catalog</a>
                 </div>
             </div>
         `;

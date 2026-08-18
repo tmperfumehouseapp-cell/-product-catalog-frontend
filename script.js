@@ -13,6 +13,26 @@ let currentProducts = [];
 let selectedCategory = '';
 let debounceTimer;
 
+// ---- Persist filter state across page navigation (product.html and back) ----
+const FILTER_KEY = 'catalogFilters';
+
+function saveFilterState() {
+    sessionStorage.setItem(FILTER_KEY, JSON.stringify({
+        search: searchInput.value,
+        category: selectedCategory,
+        brand: brandFilter.value,
+        gender: genderFilter.value
+    }));
+}
+
+function loadFilterState() {
+    try {
+        return JSON.parse(sessionStorage.getItem(FILTER_KEY)) || null;
+    } catch (e) {
+        return null;
+    }
+}
+
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -36,22 +56,67 @@ async function loadCategories() {
         const data = await res.json();
         if (!data.success) return;
 
-        const buttons = data.categories.map(c => `
-            <span class="cat-btn" data-category="${escapeHtml(c.category)}">${escapeHtml(c.category)}</span>
+        const circles = data.categories.map(c => `
+            <div class="story-item" data-category="${escapeHtml(c.category)}">
+                <div class="story-circle">
+                    ${c.thumb ? `<img src="${escapeHtml(c.thumb)}" alt="${escapeHtml(c.category)}">` : ''}
+                </div>
+                <div class="story-label">${escapeHtml(c.category)}</div>
+            </div>
         `).join('');
 
-        categoryRow.innerHTML = `<span class="cat-btn active" data-category="">All Category</span>` + buttons;
+        categoryRow.innerHTML = `
+            <div class="story-item" data-category="">
+                <div class="story-circle all-circle active">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    <div class="story-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                </div>
+                <div class="story-label active">All Category</div>
+            </div>
+        ` + circles;
 
-        categoryRow.querySelectorAll('.cat-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                selectedCategory = btn.dataset.category;
-                categoryRow.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+        categoryRow.querySelectorAll('.story-item').forEach(item => {
+            item.addEventListener('click', () => {
+                selectedCategory = item.dataset.category;
+
+                categoryRow.querySelectorAll('.story-circle').forEach(c => {
+                    c.classList.remove('active');
+                    const check = c.querySelector('.story-check');
+                    if (check) check.remove();
+                });
+                categoryRow.querySelectorAll('.story-label').forEach(l => l.classList.remove('active'));
+
+                const circle = item.querySelector('.story-circle');
+                circle.classList.add('active');
+                circle.insertAdjacentHTML('beforeend', '<div class="story-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>');
+                item.querySelector('.story-label').classList.add('active');
+
+                saveFilterState();
                 resetAndReload();
             });
         });
+
+        // Restore previously selected category (if any) now that circles exist
+        const saved = loadFilterState();
+        if (saved && saved.category) {
+            selectedCategory = saved.category;
+            categoryRow.querySelectorAll('.story-circle').forEach(c => {
+                c.classList.remove('active');
+                const check = c.querySelector('.story-check');
+                if (check) check.remove();
+            });
+            categoryRow.querySelectorAll('.story-label').forEach(l => l.classList.remove('active'));
+
+            const match = categoryRow.querySelector(`.story-item[data-category="${CSS.escape(saved.category)}"]`);
+            if (match) {
+                const circle = match.querySelector('.story-circle');
+                circle.classList.add('active');
+                circle.insertAdjacentHTML('beforeend', '<div class="story-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>');
+                match.querySelector('.story-label').classList.add('active');
+            }
+        }
     } catch (err) {
-        // Buttons failing silently is fine — filters via product data still work
+        // Circles failing silently is fine — filters via product data still work
     }
 }
 
@@ -142,6 +207,7 @@ function renderProducts(products) {
 }
 
 function resetAndReload() {
+    saveFilterState();
     loadProducts(1, false);
 }
 
@@ -156,6 +222,51 @@ loadMoreBtn.addEventListener('click', () => {
     loadProducts(currentPage + 1, true);
 });
 
-loadCategories();
-loadBrands();
-loadProducts(1, false);
+// ---- Restore search/brand/gender before first load (category restored inside loadCategories) ----
+const savedFilters = loadFilterState();
+if (savedFilters) {
+    searchInput.value = savedFilters.search || '';
+    // brand/gender <select> options aren't populated yet — set once loadBrands() finishes
+}
+
+async function init() {
+    await loadCategories();
+    await loadBrands();
+
+    if (savedFilters) {
+        if (savedFilters.brand) brandFilter.value = savedFilters.brand;
+        if (savedFilters.gender) genderFilter.value = savedFilters.gender;
+    }
+
+    loadProducts(1, false);
+}
+
+init();
+
+// ---- Floating header: hide on scroll down, show on scroll up ----
+(function () {
+    const header = document.querySelector('.top-header');
+    if (!header) return;
+
+    let lastY = window.scrollY;
+    let ticking = false;
+    const THRESHOLD = 30;
+
+    function update() {
+        const y = window.scrollY;
+        if (y > THRESHOLD) {
+            header.classList.toggle('header-hidden', y > lastY);
+        } else {
+            header.classList.remove('header-hidden');
+        }
+        lastY = y;
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(update);
+            ticking = true;
+        }
+    }, { passive: true });
+})();
