@@ -13,6 +13,26 @@ let currentProducts = [];
 let selectedCategory = '';
 let debounceTimer;
 
+// ---- Persist filter state across page navigation (product.html and back) ----
+const FILTER_KEY = 'catalogFilters';
+
+function saveFilterState() {
+    sessionStorage.setItem(FILTER_KEY, JSON.stringify({
+        search: searchInput.value,
+        category: selectedCategory,
+        brand: brandFilter.value,
+        gender: genderFilter.value
+    }));
+}
+
+function loadFilterState() {
+    try {
+        return JSON.parse(sessionStorage.getItem(FILTER_KEY)) || null;
+    } catch (e) {
+        return null;
+    }
+}
+
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -47,9 +67,19 @@ async function loadCategories() {
                 selectedCategory = btn.dataset.category;
                 categoryRow.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                saveFilterState();
                 resetAndReload();
             });
         });
+
+        // Restore previously selected category (if any) now that buttons exist
+        const saved = loadFilterState();
+        if (saved && saved.category) {
+            selectedCategory = saved.category;
+            categoryRow.querySelectorAll('.cat-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.category === saved.category);
+            });
+        }
     } catch (err) {
         // Buttons failing silently is fine — filters via product data still work
     }
@@ -142,6 +172,7 @@ function renderProducts(products) {
 }
 
 function resetAndReload() {
+    saveFilterState();
     loadProducts(1, false);
 }
 
@@ -156,6 +187,23 @@ loadMoreBtn.addEventListener('click', () => {
     loadProducts(currentPage + 1, true);
 });
 
-loadCategories();
-loadBrands();
-loadProducts(1, false);
+// ---- Restore search/brand/gender before first load (category restored inside loadCategories) ----
+const savedFilters = loadFilterState();
+if (savedFilters) {
+    searchInput.value = savedFilters.search || '';
+    // brand/gender <select> options aren't populated yet — set once loadBrands() finishes
+}
+
+async function init() {
+    await loadCategories();
+    await loadBrands();
+
+    if (savedFilters) {
+        if (savedFilters.brand) brandFilter.value = savedFilters.brand;
+        if (savedFilters.gender) genderFilter.value = savedFilters.gender;
+    }
+
+    loadProducts(1, false);
+}
+
+init();
