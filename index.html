@@ -8,42 +8,36 @@
 </head>
 <body>
 
-<header>
-    <h1>Product Catalog</h1>
-    <a href="add_product.html">+ Add Product</a>
-</header>
+<div class="top-header">
+    <div class="title-row">
+        <h1>Product Catalog</h1>
+    </div>
+    <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Search products...">
+    </div>
+</div>
+
+<div class="filter-panel">
+    <div class="category-row" id="categoryRow">
+        <span class="cat-btn active" data-category="">All Category</span>
+    </div>
+
+    <div class="dual-select-row">
+        <select id="brandFilter"><option value="">All Brands</option></select>
+        <select id="genderFilter">
+            <option value="">All Genders</option>
+            <option value="men">Men</option>
+            <option value="women">Women</option>
+            <option value="unisex">Unisex</option>
+        </select>
+    </div>
+</div>
 
 <div class="container">
-    <div class="filters">
-        <div class="filter-field">
-            <label for="searchInput">Search</label>
-            <input type="text" id="searchInput" placeholder="Product name...">
-        </div>
-        <div class="filter-field">
-            <label for="categoryFilter">Category</label>
-            <select id="categoryFilter"><option value="">All Categories</option></select>
-        </div>
-        <div class="filter-field">
-            <label for="genderFilter">Gender</label>
-            <select id="genderFilter">
-                <option value="">All Genders</option>
-                <option value="men">Men</option>
-                <option value="women">Women</option>
-                <option value="unisex">Unisex</option>
-            </select>
-        </div>
-        <div class="filter-field">
-            <label for="brandFilter">Brand</label>
-            <select id="brandFilter"><option value="">All Brands</option></select>
-        </div>
-        <button class="clear-btn" id="clearBtn">Clear Filters</button>
-    </div>
-
     <div class="results-count" id="resultsCount"></div>
 
-    <div class="grid" id="productGrid">
-        <div class="loading">Loading products...</div>
-    </div>
+    <div class="grid" id="productGrid"></div>
 
     <div class="load-more-wrap">
         <button class="load-more-btn" id="loadMoreBtn" style="display:none;">Load More</button>
@@ -53,4 +47,3 @@
 <script src="script.js"></script>
 </body>
 </html>
-5
