@@ -412,7 +412,6 @@ body { padding-top: 66px; }
     margin-top: 8px;
 }
 .back-btn-full:hover { background: #333; }
-<<<<<<< HEAD
 
 /* Category stories row (circular, Instagram-style) */
 .category-stories {
@@ -472,5 +471,3 @@ body { padding-top: 66px; }
     text-align: center;
 }
 .story-label.active { color: #ff8a3d; font-weight: 700; }
-=======
->>>>>>> bba124a90526746635121d6eb66b6443dad541df
