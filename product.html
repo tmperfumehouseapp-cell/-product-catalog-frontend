@@ -7,56 +7,44 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <header>
     <h1>Product Details</h1>
-   
 </header>
-
 <div class="container">
     <div id="detailWrap">
         <div class="loading">Loading product...</div>
     </div>
 </div>
-
 <script>
 const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
-
 const params = new URLSearchParams(window.location.search);
 const id = params.get('id');
 const wrap = document.getElementById('detailWrap');
-
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
 }
-
 function switchImage(src, thumbEl) {
     document.getElementById('mainImage').src = src;
     document.querySelectorAll('.gallery-thumbs img').forEach(t => t.classList.remove('active'));
     thumbEl.classList.add('active');
 }
-
 async function loadProduct() {
     if (!id) {
         wrap.innerHTML = '<div class="empty">No product specified.</div>';
         return;
     }
-
     try {
         const res = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(id)}`);
         const data = await res.json();
-
         if (!res.ok || !data.success) {
             wrap.innerHTML = `<div class="empty">${escapeHtml(data.error || 'Product not found.')}</div>`;
             return;
         }
-
         const p = data.product;
         const images = p.images && p.images.length ? p.images : [];
         const mainImg = images[0] || '';
-
         const thumbsHtml = images.length > 1 ? `
             <div class="gallery-thumbs">
                 ${images.map((img, i) => `
@@ -65,7 +53,6 @@ async function loadProduct() {
                 `).join('')}
             </div>
         ` : '';
-
         wrap.innerHTML = `
             <div class="detail-card">
                 <div>
@@ -80,7 +67,7 @@ async function loadProduct() {
                         <div><span>Category</span><strong>${escapeHtml(p.category)}</strong></div>
                         <div><span>Gender</span><strong>${escapeHtml(p.gender)}</strong></div>
                     </div>
-                     <a href="index.html">← Back to Catalog</a>
+                    <a href="index.html" class="back-btn">← Back to Catalog</a>
                 </div>
             </div>
         `;
@@ -88,9 +75,7 @@ async function loadProduct() {
         wrap.innerHTML = `<div class="empty">Error: ${escapeHtml(err.message)}</div>`;
     }
 }
-
 loadProduct();
 </script>
-
 </body>
 </html>
