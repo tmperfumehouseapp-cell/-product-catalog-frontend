@@ -65,10 +65,14 @@ async function loadCategories() {
             </div>
         `).join('');
 
+        const allIconHtml = data.all_icon
+            ? `<img src="${escapeHtml(data.all_icon)}" alt="All Category">`
+            : `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`;
+
         categoryRow.innerHTML = `
             <div class="story-item" data-category="">
-                <div class="story-circle all-circle active">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <div class="story-circle ${data.all_icon ? '' : 'all-circle'} active">
+                    ${allIconHtml}
                     <div class="story-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
                 </div>
                 <div class="story-label active">All Category</div>
