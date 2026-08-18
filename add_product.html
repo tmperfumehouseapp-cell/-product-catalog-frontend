@@ -69,24 +69,36 @@
         <button type="submit" id="submitBtn" style="margin-top:22px;">Add Product</button>
         <div id="formMsg"></div>
     </form>
+
+    <div class="form-card" id="deleteSection" style="display:none;">
+        <label style="margin-top:0;">Delete a Product</label>
+        <input type="text" id="deleteSearchInput" placeholder="Search product name...">
+        <div id="deleteList" style="margin-top:12px;"></div>
+        <button type="button" id="deleteLoadMoreBtn" style="display:none; margin-top:12px; background:#f0f0f0; color:#333;">Load More</button>
+    </div>
+
 </div>
 
 <script>
 const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
 
-// ---- Password gate ----
 const passwordGate = document.getElementById('passwordGate');
 const productForm = document.getElementById('productForm');
+const deleteSection = document.getElementById('deleteSection');
 const adminPasswordInput = document.getElementById('adminPasswordInput');
 const unlockBtn = document.getElementById('unlockBtn');
 const gateMsg = document.getElementById('gateMsg');
 
 let adminPassword = sessionStorage.getItem('adminPassword') || '';
 
-if (adminPassword) {
+function unlockUI() {
     passwordGate.style.display = 'none';
     productForm.style.display = 'block';
+    deleteSection.style.display = 'block';
+    loadDeleteList(1, false);
 }
+
+if (adminPassword) unlockUI();
 
 unlockBtn.addEventListener('click', () => {
     const entered = adminPasswordInput.value.trim();
@@ -97,13 +109,18 @@ unlockBtn.addEventListener('click', () => {
     }
     adminPassword = entered;
     sessionStorage.setItem('adminPassword', entered);
-    passwordGate.style.display = 'none';
-    productForm.style.display = 'block';
+    unlockUI();
 });
 
 adminPasswordInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') unlockBtn.click();
 });
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
 
 // ---- Image upload + preview ----
 const form = productForm;
@@ -116,13 +133,8 @@ const previewGrid = document.getElementById('previewGrid');
 let selectedFiles = [];
 
 dropZone.addEventListener('click', () => imageInput.click());
-dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.style.borderColor = '#1a1a1a';
-});
-dropZone.addEventListener('dragleave', () => {
-    dropZone.style.borderColor = '#ddd';
-});
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#1a1a1a'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = '#ddd'; });
 dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.style.borderColor = '#ddd';
@@ -171,7 +183,7 @@ function removeFile(index) {
     renderPreviews();
 }
 
-// ---- Variants: Yes/No toggle + dynamic rows ----
+// ---- Variants ----
 const variantSection = document.getElementById('variantSection');
 const variantRows = document.getElementById('variantRows');
 const addVariantBtn = document.getElementById('addVariantBtn');
@@ -198,7 +210,6 @@ function addVariantRow() {
     row.querySelector('.remove-variant-btn').addEventListener('click', () => row.remove());
     variantRows.appendChild(row);
 }
-
 addVariantBtn.addEventListener('click', addVariantRow);
 
 function getVariants() {
@@ -209,7 +220,7 @@ function getVariants() {
         .filter(v => v !== '');
 }
 
-// ---- Submit ----
+// ---- Add product submit ----
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -235,10 +246,7 @@ form.addEventListener('submit', async (e) => {
     getVariants().forEach(v => formData.append('variants[]', v));
 
     try {
-        const res = await fetch(`${API_BASE}/add_product.php`, {
-            method: 'POST',
-            body: formData
-        });
+        const res = await fetch(`${API_BASE}/add_product.php`, { method: 'POST', body: formData });
         const data = await res.json();
 
         if (res.status === 403) {
@@ -246,6 +254,7 @@ form.addEventListener('submit', async (e) => {
             msg.textContent = 'Incorrect admin password. Please re-enter.';
             msg.className = 'error';
             productForm.style.display = 'none';
+            deleteSection.style.display = 'none';
             passwordGate.style.display = 'block';
             adminPasswordInput.value = '';
             return;
@@ -259,6 +268,7 @@ form.addEventListener('submit', async (e) => {
             renderPreviews();
             variantSection.style.display = 'none';
             variantRows.innerHTML = '';
+            loadDeleteList(1, false);
         } else {
             msg.textContent = data.error || 'Something went wrong.';
             msg.className = 'error';
@@ -270,6 +280,96 @@ form.addEventListener('submit', async (e) => {
         btn.disabled = false;
         btn.textContent = 'Add Product';
     }
+});
+
+// ---- Delete product list ----
+const deleteSearchInput = document.getElementById('deleteSearchInput');
+const deleteList = document.getElementById('deleteList');
+const deleteLoadMoreBtn = document.getElementById('deleteLoadMoreBtn');
+let deletePage = 1;
+let deleteDebounce;
+
+async function loadDeleteList(page = 1, append = false) {
+    if (!append) {
+        deleteList.innerHTML = '<div style="font-size:13px; color:#888; padding:10px 0;">Loading...</div>';
+    }
+    try {
+        const params = new URLSearchParams();
+        if (deleteSearchInput.value.trim()) params.set('search', deleteSearchInput.value.trim());
+        params.set('page', page);
+
+        const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed to load');
+
+        deletePage = data.page;
+        const rowsHtml = data.products.map(p => `
+            <div class="delete-row" data-id="${p.id}" style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eee;">
+                <img src="${p.image ? escapeHtml(p.image) : ''}" style="width:44px; height:44px; object-fit:cover; border-radius:6px; background:#eee;">
+                <div style="flex:1; min-width:0;">
+                    <div style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
+                    <div style="font-size:12px; color:#888;">₹${p.price.toFixed(2)}</div>
+                </div>
+                <button type="button" class="delete-btn" data-id="${p.id}" style="width:auto; padding:6px 12px; background:#fbeaea; color:#c0392b; font-size:12px;">Delete</button>
+            </div>
+        `).join('');
+
+        deleteList.innerHTML = append ? deleteList.innerHTML + rowsHtml : (rowsHtml || '<div style="font-size:13px; color:#888; padding:10px 0;">No products yet.</div>');
+        deleteLoadMoreBtn.style.display = data.hasMore ? 'block' : 'none';
+
+        deleteList.querySelectorAll('.delete-btn').forEach(b => {
+            b.addEventListener('click', () => handleDelete(b.dataset.id, b));
+        });
+    } catch (err) {
+        deleteList.innerHTML = `<div style="font-size:13px; color:#c0392b; padding:10px 0;">${escapeHtml(err.message)}</div>`;
+    }
+}
+
+async function handleDelete(id, btnEl) {
+    const row = btnEl.closest('.delete-row');
+    const name = row.querySelector('div div').textContent;
+
+    if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
+
+    btnEl.disabled = true;
+    btnEl.textContent = '...';
+
+    try {
+        const formData = new FormData();
+        formData.append('admin_password', adminPassword);
+        formData.append('id', id);
+
+        const res = await fetch(`${API_BASE}/delete_product.php`, { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (res.status === 403) {
+            sessionStorage.removeItem('adminPassword');
+            alert('Incorrect admin password. Please unlock again.');
+            location.reload();
+            return;
+        }
+
+        if (res.ok && data.success) {
+            row.remove();
+        } else {
+            alert(data.error || 'Delete failed.');
+            btnEl.disabled = false;
+            btnEl.textContent = 'Delete';
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+        btnEl.disabled = false;
+        btnEl.textContent = 'Delete';
+    }
+}
+
+deleteSearchInput.addEventListener('input', () => {
+    clearTimeout(deleteDebounce);
+    deleteDebounce = setTimeout(() => loadDeleteList(1, false), 350);
+});
+
+deleteLoadMoreBtn.addEventListener('click', () => {
+    loadDeleteList(deletePage + 1, true);
 });
 </script>
 
