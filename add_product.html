@@ -1,149 +1,277 @@
-<?php
-require_once 'config.php';
-header("Content-Type: application/json");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Product</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-$adminPass = $_POST['admin_password'] ?? '';
-if ($adminPass !== ADMIN_PASSWORD) {
-    http_response_code(403);
-    echo json_encode(["error" => "Invalid admin password"]);
-    exit();
+<header>
+    <h1>Add Product</h1>
+    <a href="index.html">← Back to Catalog</a>
+</header>
+
+<div class="container">
+
+    <div class="form-card" id="passwordGate">
+        <label for="adminPasswordInput">Admin Password</label>
+        <input type="password" id="adminPasswordInput" placeholder="Enter password">
+        <button type="button" id="unlockBtn">Unlock</button>
+        <div id="gateMsg"></div>
+    </div>
+
+    <form class="form-card" id="productForm" style="display:none;">
+        <label for="name">Product Name</label>
+        <input type="text" id="name" name="name" required>
+
+        <label>Product Images (1–4)</label>
+        <div class="image-drop" id="dropZone">
+            Click to select images, or drag & drop here
+            <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" multiple>
+        </div>
+        <div class="preview-grid" id="previewGrid"></div>
+
+        <label for="price">Price (₹)</label>
+        <input type="number" id="price" name="price" step="0.01" min="0" required>
+
+        <label for="category">Category</label>
+        <input type="text" id="category" name="category" placeholder="e.g. Perfume, Shirt, Watch" required>
+
+        <label for="gender">Gender</label>
+        <select id="gender" name="gender" required>
+            <option value="">Select</option>
+            <option value="men">Men</option>
+            <option value="women">Women</option>
+            <option value="unisex">Unisex</option>
+        </select>
+
+        <label for="brand">Brand</label>
+        <input type="text" id="brand" name="brand" required>
+
+        <label>Does this product have size/variant options?</label>
+        <div style="display:flex; gap:20px; margin-top:6px;">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+                <input type="radio" name="hasVariants" value="no" checked style="width:auto;"> No
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+                <input type="radio" name="hasVariants" value="yes" style="width:auto;"> Yes
+            </label>
+        </div>
+
+        <div id="variantSection" style="display:none; margin-top:12px;">
+            <label style="margin-top:0;">Variants (e.g. 20ml, 50ml, 100ml)</label>
+            <div id="variantRows"></div>
+            <button type="button" id="addVariantBtn" style="width:auto; margin-top:8px; padding:8px 16px; background:#f0f0f0; color:#333; font-size:13px;">+ Add variant</button>
+        </div>
+
+        <button type="submit" id="submitBtn" style="margin-top:22px;">Add Product</button>
+        <div id="formMsg"></div>
+    </form>
+</div>
+
+<script>
+const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
+
+// ---- Password gate ----
+const passwordGate = document.getElementById('passwordGate');
+const productForm = document.getElementById('productForm');
+const adminPasswordInput = document.getElementById('adminPasswordInput');
+const unlockBtn = document.getElementById('unlockBtn');
+const gateMsg = document.getElementById('gateMsg');
+
+let adminPassword = sessionStorage.getItem('adminPassword') || '';
+
+if (adminPassword) {
+    passwordGate.style.display = 'none';
+    productForm.style.display = 'block';
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(["error" => "Only POST allowed"]);
-    exit();
-}
+unlockBtn.addEventListener('click', () => {
+    const entered = adminPasswordInput.value.trim();
+    if (!entered) {
+        gateMsg.textContent = 'Enter a password.';
+        gateMsg.className = 'error';
+        return;
+    }
+    adminPassword = entered;
+    sessionStorage.setItem('adminPassword', entered);
+    passwordGate.style.display = 'none';
+    productForm.style.display = 'block';
+});
 
-$name     = trim($_POST['name'] ?? '');
-$price    = trim($_POST['price'] ?? '');
-$category = trim($_POST['category'] ?? '');
-$gender   = trim($_POST['gender'] ?? '');
-$brand    = trim($_POST['brand'] ?? '');
+adminPasswordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') unlockBtn.click();
+});
 
-if ($name === '' || $price === '' || $category === '' || $gender === '' || $brand === '') {
-    http_response_code(400);
-    echo json_encode(["error" => "All fields (name, price, category, gender, brand) are required"]);
-    exit();
-}
+// ---- Image upload + preview ----
+const form = productForm;
+const msg = document.getElementById('formMsg');
+const btn = document.getElementById('submitBtn');
+const dropZone = document.getElementById('dropZone');
+const imageInput = document.getElementById('imageInput');
+const previewGrid = document.getElementById('previewGrid');
 
-if (!is_numeric($price) || $price < 0) {
-    http_response_code(400);
-    echo json_encode(["error" => "Price must be a valid positive number"]);
-    exit();
-}
+let selectedFiles = [];
 
-$allowedGenders = ['men', 'women', 'unisex'];
-if (!in_array($gender, $allowedGenders)) {
-    http_response_code(400);
-    echo json_encode(["error" => "Gender must be men, women, or unisex"]);
-    exit();
-}
+dropZone.addEventListener('click', () => imageInput.click());
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = '#1a1a1a';
+});
+dropZone.addEventListener('dragleave', () => {
+    dropZone.style.borderColor = '#ddd';
+});
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = '#ddd';
+    addFiles(Array.from(e.dataTransfer.files));
+});
+imageInput.addEventListener('change', () => {
+    addFiles(Array.from(imageInput.files));
+    imageInput.value = '';
+});
 
-// ---- Variants are OPTIONAL. Only processed if provided and non-empty. ----
-$variants = [];
-if (!empty($_POST['variants']) && is_array($_POST['variants'])) {
-    foreach ($_POST['variants'] as $v) {
-        $v = trim($v);
-        if ($v !== '') {
-            $variants[] = $v;
+function addFiles(files) {
+    const validExt = ['jpg', 'jpeg', 'png', 'webp'];
+    for (const file of files) {
+        if (selectedFiles.length >= 4) {
+            msg.textContent = 'Maximum 4 images allowed.';
+            msg.className = 'error';
+            break;
         }
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!validExt.includes(ext)) {
+            msg.textContent = `${file.name} is not a supported image type.`;
+            msg.className = 'error';
+            continue;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            msg.textContent = `${file.name} is over 5MB.`;
+            msg.className = 'error';
+            continue;
+        }
+        selectedFiles.push(file);
     }
-}
-if (count($variants) > 10) {
-    http_response_code(400);
-    echo json_encode(["error" => "Maximum 10 variants allowed"]);
-    exit();
+    renderPreviews();
 }
 
-if (!isset($_FILES['images']) || empty($_FILES['images']['name'][0])) {
-    http_response_code(400);
-    echo json_encode(["error" => "At least one product image is required"]);
-    exit();
+function renderPreviews() {
+    previewGrid.innerHTML = selectedFiles.map((file, i) => `
+        <div class="preview-item">
+            <img src="${URL.createObjectURL(file)}" alt="preview">
+            <button type="button" class="remove-btn" onclick="removeFile(${i})">×</button>
+        </div>
+    `).join('');
 }
 
-$fileCount = count($_FILES['images']['name']);
-if ($fileCount > 4) {
-    http_response_code(400);
-    echo json_encode(["error" => "Maximum 4 images allowed per product"]);
-    exit();
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    renderPreviews();
 }
 
-$allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
+// ---- Variants: Yes/No toggle + dynamic rows ----
+const variantSection = document.getElementById('variantSection');
+const variantRows = document.getElementById('variantRows');
+const addVariantBtn = document.getElementById('addVariantBtn');
 
-for ($i = 0; $i < $fileCount; $i++) {
-    if ($_FILES['images']['error'][$i] !== UPLOAD_ERR_OK) {
-        http_response_code(400);
-        echo json_encode(["error" => "Image " . ($i + 1) . " failed to upload"]);
-        exit();
+document.querySelectorAll('input[name="hasVariants"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        if (e.target.value === 'yes') {
+            variantSection.style.display = 'block';
+            if (variantRows.children.length === 0) addVariantRow();
+        } else {
+            variantSection.style.display = 'none';
+            variantRows.innerHTML = '';
+        }
+    });
+});
+
+function addVariantRow() {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px;';
+    row.innerHTML = `
+        <input type="text" class="variant-input" placeholder="e.g. 20ml" style="flex:1;">
+        <button type="button" class="remove-variant-btn" style="width:auto; padding:0 14px; background:#f0f0f0; color:#c0392b; font-size:16px;">×</button>
+    `;
+    row.querySelector('.remove-variant-btn').addEventListener('click', () => row.remove());
+    variantRows.appendChild(row);
+}
+
+addVariantBtn.addEventListener('click', addVariantRow);
+
+function getVariants() {
+    const hasVariants = document.querySelector('input[name="hasVariants"]:checked').value;
+    if (hasVariants !== 'yes') return [];
+    return Array.from(document.querySelectorAll('.variant-input'))
+        .map(i => i.value.trim())
+        .filter(v => v !== '');
+}
+
+// ---- Submit ----
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (selectedFiles.length === 0) {
+        msg.textContent = 'Please select at least one image.';
+        msg.className = 'error';
+        return;
     }
-    $ext = strtolower(pathinfo($_FILES['images']['name'][$i], PATHINFO_EXTENSION));
-    if (!in_array($ext, $allowedExt)) {
-        http_response_code(400);
-        echo json_encode(["error" => "Image " . ($i + 1) . " must be jpg, jpeg, png, or webp"]);
-        exit();
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    msg.textContent = '';
+    msg.className = '';
+
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('name', document.getElementById('name').value);
+    formData.append('price', document.getElementById('price').value);
+    formData.append('category', document.getElementById('category').value);
+    formData.append('gender', document.getElementById('gender').value);
+    formData.append('brand', document.getElementById('brand').value);
+    selectedFiles.forEach(file => formData.append('images[]', file));
+    getVariants().forEach(v => formData.append('variants[]', v));
+
+    try {
+        const res = await fetch(`${API_BASE}/add_product.php`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        if (res.status === 403) {
+            sessionStorage.removeItem('adminPassword');
+            msg.textContent = 'Incorrect admin password. Please re-enter.';
+            msg.className = 'error';
+            productForm.style.display = 'none';
+            passwordGate.style.display = 'block';
+            adminPasswordInput.value = '';
+            return;
+        }
+
+        if (res.ok && data.success) {
+            msg.textContent = 'Product added successfully!';
+            msg.className = 'success';
+            form.reset();
+            selectedFiles = [];
+            renderPreviews();
+            variantSection.style.display = 'none';
+            variantRows.innerHTML = '';
+        } else {
+            msg.textContent = data.error || 'Something went wrong.';
+            msg.className = 'error';
+        }
+    } catch (err) {
+        msg.textContent = 'Network error: ' + err.message;
+        msg.className = 'error';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Add Product';
     }
-    if ($_FILES['images']['size'][$i] > 5 * 1024 * 1024) {
-        http_response_code(400);
-        echo json_encode(["error" => "Image " . ($i + 1) . " must be under 5MB"]);
-        exit();
-    }
-}
+});
+</script>
 
-$uploadDir = __DIR__ . '/uploads/';
-if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0755, true);
-}
-
-$stmt = $conn->prepare("INSERT INTO products (name, price, category, gender, brand) VALUES (?, ?, ?, ?, ?)");
-$stmt->bind_param("sdsss", $name, $price, $category, $gender, $brand);
-
-if (!$stmt->execute()) {
-    http_response_code(500);
-    echo json_encode(["error" => "Database insert failed: " . $stmt->error]);
-    exit();
-}
-
-$productId = $stmt->insert_id;
-$stmt->close();
-
-$savedImages = [];
-$imgStmt = $conn->prepare("INSERT INTO product_images (product_id, image, sort_order) VALUES (?, ?, ?)");
-
-for ($i = 0; $i < $fileCount; $i++) {
-    $ext = strtolower(pathinfo($_FILES['images']['name'][$i], PATHINFO_EXTENSION));
-    $fileName = uniqid('prod_', true) . '.' . $ext;
-    $targetPath = $uploadDir . $fileName;
-
-    if (move_uploaded_file($_FILES['images']['tmp_name'][$i], $targetPath)) {
-        $imgStmt->bind_param("isi", $productId, $fileName, $i);
-        $imgStmt->execute();
-        $savedImages[] = "uploads/" . $fileName;
-    }
-}
-$imgStmt->close();
-
-if (empty($savedImages)) {
-    $conn->query("DELETE FROM products WHERE id = " . (int) $productId);
-    http_response_code(500);
-    echo json_encode(["error" => "Failed to save any images"]);
-    exit();
-}
-
-if (!empty($variants)) {
-    $varStmt = $conn->prepare("INSERT INTO product_variants (product_id, variant_label, sort_order) VALUES (?, ?, ?)");
-    foreach ($variants as $i => $label) {
-        $varStmt->bind_param("isi", $productId, $label, $i);
-        $varStmt->execute();
-    }
-    $varStmt->close();
-}
-
-echo json_encode([
-    "success" => true,
-    "id" => $productId,
-    "images" => $savedImages,
-    "variants" => $variants
-]);
-
-$conn->close();
+</body>
+</html>
