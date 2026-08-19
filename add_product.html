@@ -101,7 +101,7 @@ const adminPasswordInput = document.getElementById('adminPasswordInput');
 const unlockBtn = document.getElementById('unlockBtn');
 const gateMsg = document.getElementById('gateMsg');
 
-let adminPassword = sessionStorage.getItem('adminPassword') || '';
+let adminPassword = localStorage.getItem('adminPassword') || '';
 
 function unlockUI() {
     passwordGate.style.display = 'none';
@@ -122,7 +122,7 @@ unlockBtn.addEventListener('click', () => {
         return;
     }
     adminPassword = entered;
-    sessionStorage.setItem('adminPassword', entered);
+    localStorage.setItem('adminPassword', entered);
     unlockUI();
 });
 
@@ -264,7 +264,7 @@ form.addEventListener('submit', async (e) => {
         const data = await res.json();
 
         if (res.status === 403) {
-            sessionStorage.removeItem('adminPassword');
+            localStorage.removeItem('adminPassword');
             msg.textContent = 'Incorrect admin password. Please re-enter.';
             msg.className = 'error';
             productForm.style.display = 'none';
@@ -368,7 +368,7 @@ async function handleDelete(id, btnEl) {
 
         if (res.status === 403) {
             alert('Incorrect admin password saved in this session. Re-enter it below, then try deleting again — no page reload needed.');
-            sessionStorage.removeItem('adminPassword');
+            localStorage.removeItem('adminPassword');
             adminPassword = '';
             passwordGate.style.display = 'block';
             btnEl.disabled = false;
@@ -447,7 +447,7 @@ uploadIconBtn.addEventListener('click', async () => {
         if (res.status === 403) {
             iconMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
             iconMsg.className = 'error';
-            sessionStorage.removeItem('adminPassword');
+            localStorage.removeItem('adminPassword');
             adminPassword = '';
             passwordGate.style.display = 'block';
             return;
