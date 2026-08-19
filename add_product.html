@@ -15,14 +15,7 @@
 
 <div class="container">
 
-    <div class="form-card" id="passwordGate">
-        <label for="adminPasswordInput">Admin Password</label>
-        <input type="password" id="adminPasswordInput" placeholder="Enter password">
-        <button type="button" id="unlockBtn">Unlock</button>
-        <div id="gateMsg"></div>
-    </div>
-
-    <form class="form-card" id="productForm" style="display:none;">
+    <form class="form-card" id="productForm">
         <label for="name">Product Name</label>
         <input type="text" id="name" name="name" required>
 
@@ -70,14 +63,14 @@
         <div id="formMsg"></div>
     </form>
 
-    <div class="form-card" id="deleteSection" style="display:none;">
+    <div class="form-card" id="deleteSection">
         <label style="margin-top:0;">Delete a Product</label>
         <input type="text" id="deleteSearchInput" placeholder="Search product name...">
         <div id="deleteList" style="margin-top:12px;"></div>
         <button type="button" id="deleteLoadMoreBtn" style="display:none; margin-top:12px; background:#f0f0f0; color:#333;">Load More</button>
     </div>
 
-    <div class="form-card" id="iconSection" style="display:none;">
+    <div class="form-card" id="iconSection">
         <label style="margin-top:0;">Set Category Icon</label>
         <select id="iconCategorySelect">
             <option value="__ALL__">All Category (main icon)</option>
@@ -92,43 +85,7 @@
 
 <script>
 const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
-
-const passwordGate = document.getElementById('passwordGate');
-const productForm = document.getElementById('productForm');
-const deleteSection = document.getElementById('deleteSection');
-const iconSection = document.getElementById('iconSection');
-const adminPasswordInput = document.getElementById('adminPasswordInput');
-const unlockBtn = document.getElementById('unlockBtn');
-const gateMsg = document.getElementById('gateMsg');
-
-let adminPassword = localStorage.getItem('adminPassword') || '';
-
-function unlockUI() {
-    passwordGate.style.display = 'none';
-    productForm.style.display = 'block';
-    deleteSection.style.display = 'block';
-    iconSection.style.display = 'block';
-    loadDeleteList(1, false);
-    loadIconCategoryOptions();
-}
-
-if (adminPassword) unlockUI();
-
-unlockBtn.addEventListener('click', () => {
-    const entered = adminPasswordInput.value.trim();
-    if (!entered) {
-        gateMsg.textContent = 'Enter a password.';
-        gateMsg.className = 'error';
-        return;
-    }
-    adminPassword = entered;
-    localStorage.setItem('adminPassword', entered);
-    unlockUI();
-});
-
-adminPasswordInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') unlockBtn.click();
-});
+const ADMIN_PASSWORD = 'upload'; // matches config.php on the backend — sent automatically, no prompt
 
 function escapeHtml(str) {
     const div = document.createElement('div');
@@ -137,7 +94,7 @@ function escapeHtml(str) {
 }
 
 // ---- Image upload + preview ----
-const form = productForm;
+const form = document.getElementById('productForm');
 const msg = document.getElementById('formMsg');
 const btn = document.getElementById('submitBtn');
 const dropZone = document.getElementById('dropZone');
@@ -250,7 +207,7 @@ form.addEventListener('submit', async (e) => {
     msg.className = '';
 
     const formData = new FormData();
-    formData.append('admin_password', adminPassword);
+    formData.append('admin_password', ADMIN_PASSWORD);
     formData.append('name', document.getElementById('name').value);
     formData.append('price', document.getElementById('price').value);
     formData.append('category', document.getElementById('category').value);
@@ -262,17 +219,6 @@ form.addEventListener('submit', async (e) => {
     try {
         const res = await fetch(`${API_BASE}/add_product.php`, { method: 'POST', body: formData });
         const data = await res.json();
-
-        if (res.status === 403) {
-            localStorage.removeItem('adminPassword');
-            msg.textContent = 'Incorrect admin password. Please re-enter.';
-            msg.className = 'error';
-            productForm.style.display = 'none';
-            deleteSection.style.display = 'none';
-            passwordGate.style.display = 'block';
-            adminPasswordInput.value = '';
-            return;
-        }
 
         if (res.ok && data.success) {
             msg.textContent = 'Product added successfully!';
@@ -350,7 +296,7 @@ async function handleDelete(id, btnEl) {
 
     try {
         const formData = new FormData();
-        formData.append('admin_password', adminPassword);
+        formData.append('admin_password', ADMIN_PASSWORD);
         formData.append('id', id);
 
         const res = await fetch(`${API_BASE}/delete_product.php`, { method: 'POST', body: formData });
@@ -361,16 +307,6 @@ async function handleDelete(id, btnEl) {
         } catch (parseErr) {
             const raw = await res.text();
             alert(`Server returned an unexpected response (status ${res.status}):\n\n${raw.slice(0, 300)}`);
-            btnEl.disabled = false;
-            btnEl.textContent = 'Delete';
-            return;
-        }
-
-        if (res.status === 403) {
-            alert('Incorrect admin password saved in this session. Re-enter it below, then try deleting again — no page reload needed.');
-            localStorage.removeItem('adminPassword');
-            adminPassword = '';
-            passwordGate.style.display = 'block';
             btnEl.disabled = false;
             btnEl.textContent = 'Delete';
             return;
@@ -436,22 +372,13 @@ uploadIconBtn.addEventListener('click', async () => {
     iconMsg.className = '';
 
     const formData = new FormData();
-    formData.append('admin_password', adminPassword);
+    formData.append('admin_password', ADMIN_PASSWORD);
     formData.append('category_name', iconCategorySelect.value);
     formData.append('icon', file);
 
     try {
         const res = await fetch(`${API_BASE}/set_category_icon.php`, { method: 'POST', body: formData });
         const data = await res.json();
-
-        if (res.status === 403) {
-            iconMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
-            iconMsg.className = 'error';
-            localStorage.removeItem('adminPassword');
-            adminPassword = '';
-            passwordGate.style.display = 'block';
-            return;
-        }
 
         if (res.ok && data.success) {
             iconMsg.textContent = 'Icon updated!';
@@ -469,6 +396,10 @@ uploadIconBtn.addEventListener('click', async () => {
         uploadIconBtn.textContent = 'Upload Icon';
     }
 });
+
+// ---- Init ----
+loadDeleteList(1, false);
+loadIconCategoryOptions();
 </script>
 
 </body>
