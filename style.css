@@ -6,30 +6,29 @@ body {
     color: #222;
 }
 
-/* Floating rounded pill header (Shopify-style, hides on scroll down) */
-body { padding-top: 66px; }
+/* Full-width header (hides on scroll down) */
+body { padding-top: 60px; }
 .top-header {
     position: fixed;
-    top: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: calc(100% - 28px);
-    max-width: 1200px;
+    top: 0;
+    left: 0;
+    width: 100%;
     z-index: 999;
     background: #fff;
-    border-radius: 24px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
-    padding: 12px 18px;
+    border-radius: 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    padding: 12px 20px;
     transition: transform 0.35s ease;
 }
 .top-header.header-hidden {
-    transform: translateX(-50%) translateY(-160%);
+    transform: translateY(-100%);
 }
 .top-header .title-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    position: relative;
 }
 .top-header h1 {
     color: #1a1a1a;
@@ -38,29 +37,183 @@ body { padding-top: 66px; }
     letter-spacing: -0.01em;
     white-space: nowrap;
     flex-shrink: 0;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.2s ease;
 }
+.top-header .title-row.search-open h1 {
+    opacity: 0;
+}
+
+/* Hamburger button (left) */
+.hamburger-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: #f2f2f4;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+}
+.hamburger-btn:hover { background: #e6e6e9; }
+
+/* Search icon (right) — replaces the old always-visible search bar */
 .search-box {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: #f2f2f4;
-    border-radius: 20px;
-    padding: 9px 16px;
-    flex: 1;
-    max-width: 220px;
-    color: #888;
+    justify-content: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: auto;
 }
-.search-box svg { flex-shrink: 0; }
-.search-box svg { flex-shrink: 0; opacity: 0.5; }
-.search-box input {
-    background: none;
+.search-box.expanded {
+    flex: 1;
+    margin-left: 12px;
+}
+.search-icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
     border: none;
+    background: #f2f2f4;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+}
+.search-icon-btn:hover { background: #e6e6e9; }
+.search-input-hidden {
+    background: #f2f2f4;
+    border: none;
+    border-radius: 20px;
     outline: none;
     color: #1a1a1a;
     font-size: 14px;
-    width: 100%;
+    width: 0;
+    padding: 9px 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: width 0.25s ease, opacity 0.2s ease, padding 0.25s ease;
 }
-.search-box input::placeholder { color: #999; }
+.search-box.expanded .search-input-hidden {
+    width: 100%;
+    flex: 1;
+    padding: 9px 14px;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Desktop: keep logo visible, search expands to a fixed width on the right
+   instead of pushing into the centered title */
+@media (min-width: 640px) {
+    .top-header .title-row.search-open h1 {
+        opacity: 1;
+    }
+    .search-box.expanded {
+        flex: 0 0 auto;
+        margin-left: 12px;
+    }
+    .search-box.expanded .search-input-hidden {
+        width: 240px;
+        flex: 0 0 auto;
+    }
+}
+.search-input-hidden::placeholder { color: #999; }
+
+/* Drawer */
+.drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 17, 17, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 1001;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+.drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 280px;
+    max-width: 82vw;
+    background: #fff;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+    z-index: 1002;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+.drawer.open { transform: translateX(0); }
+
+.drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 18px;
+    border-bottom: 1px solid #eee;
+}
+.drawer-logo { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+.drawer-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #f2f2f4;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.drawer-nav {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+}
+.drawer-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-transform: capitalize;
+}
+.drawer-link:hover { background: #f7f2ea; }
+.drawer-link.active { background: #fdf1e2; color: #b8860b; font-weight: 700; }
+.drawer-link .drawer-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.drawer-link .drawer-icon img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Pill filter row */
 .pill-filters {
@@ -155,7 +308,7 @@ body { padding-top: 66px; }
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
-.card-body .price { font-size: 14px; font-weight: 700; color: #b8860b; margin-bottom: 6px; }
+.card-body .price { font-size: 14px; font-weight: 500; color: #b8860b; margin-bottom: 6px; }
 .card-body .meta { font-size: 11px; color: #777; display: flex; gap: 4px; flex-wrap: wrap; }
 .tag { background: #f0f0f0; padding: 2px 7px; border-radius: 8px; }
 
