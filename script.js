@@ -3,19 +3,10 @@ const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
 const grid = document.getElementById('productGrid');
 const searchInput = document.getElementById('searchInput');
 const categoryRow = document.getElementById('categoryRow');
-const drawerNav = document.getElementById('drawerNav');
 const brandFilter = document.getElementById('brandFilter');
 const genderFilter = document.getElementById('genderFilter');
 const resultsCount = document.getElementById('resultsCount');
 const loadMoreBtn = document.getElementById('loadMoreBtn');
-
-const hamburgerBtn = document.getElementById('hamburgerBtn');
-const drawer = document.getElementById('drawer');
-const drawerOverlay = document.getElementById('drawerOverlay');
-const drawerClose = document.getElementById('drawerClose');
-
-const searchBox = document.getElementById('searchBox');
-const searchToggle = document.getElementById('searchToggle');
 
 let currentPage = 1;
 let currentProducts = [];
@@ -58,41 +49,7 @@ function skeletonHtml(count) {
     `).join('');
 }
 
-// ---- Drawer open/close ----
-function openDrawer() {
-    drawer.classList.add('open');
-    drawerOverlay.classList.add('open');
-}
-function closeDrawer() {
-    drawer.classList.remove('open');
-    drawerOverlay.classList.remove('open');
-}
-hamburgerBtn.addEventListener('click', openDrawer);
-drawerClose.addEventListener('click', closeDrawer);
-drawerOverlay.addEventListener('click', closeDrawer);
-
-// ---- Search icon toggle (replaces the old always-visible search bar) ----
-const titleRow = document.querySelector('.title-row');
-
-searchToggle.addEventListener('click', () => {
-    const expanding = !searchBox.classList.contains('expanded');
-    searchBox.classList.toggle('expanded');
-    titleRow.classList.toggle('search-open', expanding);
-    if (expanding) {
-        searchInput.focus();
-    } else if (!searchInput.value) {
-        searchInput.blur();
-    }
-});
-document.addEventListener('click', (e) => {
-    if (!searchBox.contains(e.target) && !searchInput.value) {
-        searchBox.classList.remove('expanded');
-        titleRow.classList.remove('search-open');
-    }
-});
-
 // ---- Category buttons (independent of pagination, always complete) ----
-// Mirrors the same category list into both the circular story row and the drawer nav.
 async function loadCategories() {
     try {
         const res = await fetch(`${API_BASE}/get_categories.php`);
@@ -122,65 +79,45 @@ async function loadCategories() {
             </div>
         ` + circles;
 
-        // Drawer nav list (same categories, simple link style)
-        const drawerLinks = data.categories.map(c => `
-            <a class="drawer-link" data-category="${escapeHtml(c.category)}">
-                <span class="drawer-icon">${c.thumb ? `<img src="${escapeHtml(c.thumb)}" alt="${escapeHtml(c.category)}">` : ''}</span>
-                ${escapeHtml(c.category)}
-            </a>
-        `).join('');
+        categoryRow.querySelectorAll('.story-item').forEach(item => {
+            item.addEventListener('click', () => {
+                selectedCategory = item.dataset.category;
 
-        drawerNav.innerHTML = `
-            <a class="drawer-link active" data-category="">
-                <span class="drawer-icon">${data.all_icon ? `<img src="${escapeHtml(data.all_icon)}" alt="All Category">` : ''}</span>
-                All Category
-            </a>
-        ` + drawerLinks;
+                categoryRow.querySelectorAll('.story-circle').forEach(c => {
+                    c.classList.remove('active');
+                    const check = c.querySelector('.story-check');
+                    if (check) check.remove();
+                });
+                categoryRow.querySelectorAll('.story-label').forEach(l => l.classList.remove('active'));
 
-        function applyActiveState(category) {
+                const circle = item.querySelector('.story-circle');
+                circle.classList.add('active');
+                circle.insertAdjacentHTML('beforeend', '<div class="story-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>');
+                item.querySelector('.story-label').classList.add('active');
+
+                saveFilterState();
+                resetAndReload();
+            });
+        });
+
+        // Restore previously selected category (if any) now that circles exist
+        const saved = loadFilterState();
+        if (saved && saved.category) {
+            selectedCategory = saved.category;
             categoryRow.querySelectorAll('.story-circle').forEach(c => {
                 c.classList.remove('active');
                 const check = c.querySelector('.story-check');
                 if (check) check.remove();
             });
             categoryRow.querySelectorAll('.story-label').forEach(l => l.classList.remove('active'));
-            drawerNav.querySelectorAll('.drawer-link').forEach(l => l.classList.remove('active'));
 
-            const rowMatch = categoryRow.querySelector(`.story-item[data-category="${CSS.escape(category)}"]`);
-            if (rowMatch) {
-                const circle = rowMatch.querySelector('.story-circle');
+            const match = categoryRow.querySelector(`.story-item[data-category="${CSS.escape(saved.category)}"]`);
+            if (match) {
+                const circle = match.querySelector('.story-circle');
                 circle.classList.add('active');
                 circle.insertAdjacentHTML('beforeend', '<div class="story-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>');
-                rowMatch.querySelector('.story-label').classList.add('active');
+                match.querySelector('.story-label').classList.add('active');
             }
-
-            const drawerMatch = drawerNav.querySelector(`.drawer-link[data-category="${CSS.escape(category)}"]`);
-            if (drawerMatch) drawerMatch.classList.add('active');
-        }
-
-        function selectCategory(category) {
-            selectedCategory = category;
-            applyActiveState(category);
-            saveFilterState();
-            resetAndReload();
-        }
-
-        categoryRow.querySelectorAll('.story-item').forEach(item => {
-            item.addEventListener('click', () => selectCategory(item.dataset.category));
-        });
-
-        drawerNav.querySelectorAll('.drawer-link').forEach(link => {
-            link.addEventListener('click', () => {
-                selectCategory(link.dataset.category);
-                closeDrawer();
-            });
-        });
-
-        // Restore previously selected category (if any) now that circles/links exist
-        const saved = loadFilterState();
-        if (saved && saved.category) {
-            selectedCategory = saved.category;
-            applyActiveState(saved.category);
         }
     } catch (err) {
         // Circles failing silently is fine — filters via product data still work
@@ -293,10 +230,6 @@ loadMoreBtn.addEventListener('click', () => {
 const savedFilters = loadFilterState();
 if (savedFilters) {
     searchInput.value = savedFilters.search || '';
-    if (savedFilters.search) {
-        searchBox.classList.add('expanded');
-        document.querySelector('.title-row').classList.add('search-open');
-    }
     // brand/gender <select> options aren't populated yet — set once loadBrands() finishes
 }
 
