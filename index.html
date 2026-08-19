@@ -10,34 +10,13 @@
 
 <div class="top-header">
     <div class="title-row">
-        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
-
         <h1>Product Catalog</h1>
-
-        <div class="search-box" id="searchBox">
-            <input type="text" id="searchInput" placeholder="Search..." class="search-input-hidden">
-            <button class="search-icon-btn" id="searchToggle" aria-label="Search">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            </button>
+        <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchInput" placeholder="Search...">
         </div>
     </div>
 </div>
-
-<!-- Drawer -->
-<div class="drawer-overlay" id="drawerOverlay"></div>
-<nav class="drawer" id="drawer">
-    <div class="drawer-head">
-        <span class="drawer-logo">Product Catalog</span>
-        <button class="drawer-close-btn" id="drawerClose" aria-label="Close menu">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-    </div>
-    <div class="drawer-nav" id="drawerNav">
-        <!-- populated by script.js, mirrors category-stories -->
-    </div>
-</nav>
 
 <div class="category-stories" id="categoryRow">
     <div class="story-item">
