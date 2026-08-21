@@ -3,19 +3,57 @@ const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
 const grid = document.getElementById('productGrid');
 const searchInput = document.getElementById('searchInput');
 const categoryRow = document.getElementById('categoryRow');
-const drawerNav = document.getElementById('drawerNav');
 const brandFilter = document.getElementById('brandFilter');
 const genderFilter = document.getElementById('genderFilter');
 const resultsCount = document.getElementById('resultsCount');
 const loadMoreBtn = document.getElementById('loadMoreBtn');
 
+const viewToggleBtn = document.getElementById('viewToggleBtn');
+if (viewToggleBtn) {
+    viewToggleBtn.addEventListener('click', () => {
+        const isList = grid.classList.toggle('list-view');
+        viewToggleBtn.classList.toggle('active', isList);
+    });
+}
+
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const drawer = document.getElementById('drawer');
 const drawerOverlay = document.getElementById('drawerOverlay');
 const drawerClose = document.getElementById('drawerClose');
+const drawerNav = document.getElementById('drawerNav');
 
 const searchBox = document.getElementById('searchBox');
 const searchToggle = document.getElementById('searchToggle');
+
+function openDrawer() {
+    drawer.classList.add('open');
+    drawerOverlay.classList.add('open');
+}
+function closeDrawer() {
+    drawer.classList.remove('open');
+    drawerOverlay.classList.remove('open');
+}
+hamburgerBtn.addEventListener('click', openDrawer);
+drawerClose.addEventListener('click', closeDrawer);
+drawerOverlay.addEventListener('click', closeDrawer);
+
+const titleRow = document.querySelector('.title-row');
+searchToggle.addEventListener('click', () => {
+    const expanding = !searchBox.classList.contains('expanded');
+    searchBox.classList.toggle('expanded');
+    titleRow.classList.toggle('search-open', expanding);
+    if (expanding) {
+        searchInput.focus();
+    } else if (!searchInput.value) {
+        searchInput.blur();
+    }
+});
+document.addEventListener('click', (e) => {
+    if (!searchBox.contains(e.target) && !searchInput.value) {
+        searchBox.classList.remove('expanded');
+        titleRow.classList.remove('search-open');
+    }
+});
 
 let currentPage = 1;
 let currentProducts = [];
@@ -48,6 +86,11 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// ---- Price formatting: "Rs. 1,199" style (Indian comma grouping, no decimals) ----
+function formatPrice(price) {
+    return 'Rs. ' + Math.round(price).toLocaleString('en-IN');
+}
+
 function skeletonHtml(count) {
     return Array.from({ length: count }).map(() => `
         <div class="skeleton-card">
@@ -58,41 +101,7 @@ function skeletonHtml(count) {
     `).join('');
 }
 
-// ---- Drawer open/close ----
-function openDrawer() {
-    drawer.classList.add('open');
-    drawerOverlay.classList.add('open');
-}
-function closeDrawer() {
-    drawer.classList.remove('open');
-    drawerOverlay.classList.remove('open');
-}
-hamburgerBtn.addEventListener('click', openDrawer);
-drawerClose.addEventListener('click', closeDrawer);
-drawerOverlay.addEventListener('click', closeDrawer);
-
-// ---- Search icon toggle (replaces the old always-visible search bar) ----
-const titleRow = document.querySelector('.title-row');
-
-searchToggle.addEventListener('click', () => {
-    const expanding = !searchBox.classList.contains('expanded');
-    searchBox.classList.toggle('expanded');
-    titleRow.classList.toggle('search-open', expanding);
-    if (expanding) {
-        searchInput.focus();
-    } else if (!searchInput.value) {
-        searchInput.blur();
-    }
-});
-document.addEventListener('click', (e) => {
-    if (!searchBox.contains(e.target) && !searchInput.value) {
-        searchBox.classList.remove('expanded');
-        titleRow.classList.remove('search-open');
-    }
-});
-
 // ---- Category buttons (independent of pagination, always complete) ----
-// Mirrors the same category list into both the circular story row and the drawer nav.
 async function loadCategories() {
     try {
         const res = await fetch(`${API_BASE}/get_categories.php`);
@@ -122,7 +131,6 @@ async function loadCategories() {
             </div>
         ` + circles;
 
-        // Drawer nav list (same categories, simple link style)
         const drawerLinks = data.categories.map(c => `
             <a class="drawer-link" data-category="${escapeHtml(c.category)}">
                 <span class="drawer-icon">${c.thumb ? `<img src="${escapeHtml(c.thumb)}" alt="${escapeHtml(c.category)}">` : ''}</span>
@@ -136,6 +144,16 @@ async function loadCategories() {
                 All Category
             </a>
         ` + drawerLinks;
+
+        const footerCollection = document.getElementById('footerCollection');
+        if (footerCollection) {
+            const footerLinks = data.categories.map(c => `
+                <a href="index.html?category=${encodeURIComponent(c.category)}" class="footer-link">${escapeHtml(c.category)}</a>
+            `).join('');
+            footerCollection.innerHTML = `
+                <a href="index.html" class="footer-link">All Category</a>
+            ` + footerLinks;
+        }
 
         function applyActiveState(category) {
             categoryRow.querySelectorAll('.story-circle').forEach(c => {
@@ -176,7 +194,7 @@ async function loadCategories() {
             });
         });
 
-        // Restore previously selected category (if any) now that circles/links exist
+        // Restore previously selected category (if any) now that circles exist
         const saved = loadFilterState();
         if (saved && saved.category) {
             selectedCategory = saved.category;
@@ -260,13 +278,17 @@ function renderProducts(products) {
 
     grid.innerHTML = products.map(p => `
         <a class="card" href="product.html?id=${p.id}">
-            <img src="${p.image ? escapeHtml(p.image) : ''}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.opacity=0">
+            <div class="card-img-wrap">
+                <img src="${p.image ? escapeHtml(p.image) : ''}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.opacity=0">
+            </div>
             <div class="card-body">
+                <span class="brand-label">${escapeHtml(p.brand)}</span>
                 <h3>${escapeHtml(p.name)}</h3>
-                <div class="price">₹${p.price.toFixed(2)}</div>
-                <div class="meta">
-                    <span class="tag">${escapeHtml(p.brand)}</span>
-                    <span class="tag">${escapeHtml(p.gender)}</span>
+                <div class="price-row">
+                    <div class="price">${formatPrice(p.price)}</div>
+                    <div class="meta">
+                        <span class="tag">${escapeHtml(p.gender)}</span>
+                    </div>
                 </div>
             </div>
         </a>
@@ -290,13 +312,17 @@ loadMoreBtn.addEventListener('click', () => {
 });
 
 // ---- Restore search/brand/gender before first load (category restored inside loadCategories) ----
+const urlParams = new URLSearchParams(window.location.search);
+const urlCategory = urlParams.get('category');
+if (urlCategory) {
+    const existing = loadFilterState() || {};
+    existing.category = urlCategory;
+    sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
+}
+
 const savedFilters = loadFilterState();
 if (savedFilters) {
     searchInput.value = savedFilters.search || '';
-    if (savedFilters.search) {
-        searchBox.classList.add('expanded');
-        document.querySelector('.title-row').classList.add('search-open');
-    }
     // brand/gender <select> options aren't populated yet — set once loadBrands() finishes
 }
 
@@ -314,30 +340,180 @@ async function init() {
 
 init();
 
-// ---- Floating header: hide on scroll down, show on scroll up ----
+// ---- Filter drawer (opened by the Filter button on mobile; a permanent
+// left sidebar on desktop via the >=900px media query in style.css) ----
 (function () {
-    const header = document.querySelector('.top-header');
-    if (!header) return;
+    const openBtn = document.getElementById('filterToggleBtn');
+    const drawer = document.getElementById('filterDrawer');
+    const overlay = document.getElementById('filterDrawerOverlay');
+    const closeBtn = document.getElementById('filterDrawerClose');
+    const genderBody = document.getElementById('fdGender');
+    const brandBody = document.getElementById('fdBrand');
+    const clearBtn = document.getElementById('fdClearBtn');
+    if (!openBtn || !drawer) return;
 
-    let lastY = window.scrollY;
-    let ticking = false;
-    const THRESHOLD = 30;
+    let brandList = [];
+    let genderCounts = null;
 
-    function update() {
-        const y = window.scrollY;
-        if (y > THRESHOLD) {
-            header.classList.toggle('header-hidden', y > lastY);
-        } else {
-            header.classList.remove('header-hidden');
-        }
-        lastY = y;
-        ticking = false;
+    const GENDER_OPTIONS = [
+        { value: 'men', label: 'Men' },
+        { value: 'women', label: 'Women' },
+        { value: 'unisex', label: 'Unisex' }
+    ];
+    const BRAND_VISIBLE = 8;
+
+    function openDrawerPanel() {
+        drawer.classList.add('open');
+        overlay.classList.add('open');
+        renderGender();
+        renderBrand();
+    }
+    function closeDrawerPanel() {
+        drawer.classList.remove('open');
+        overlay.classList.remove('open');
+    }
+    openBtn.addEventListener('click', openDrawerPanel);
+    closeBtn.addEventListener('click', closeDrawerPanel);
+    overlay.addEventListener('click', closeDrawerPanel);
+
+    document.querySelectorAll('.fd-section-head').forEach(head => {
+        head.addEventListener('click', () => {
+            const body = document.getElementById(head.dataset.target);
+            head.classList.toggle('collapsed');
+            if (body) body.classList.toggle('collapsed');
+        });
+    });
+
+    async function fetchGenderCounts() {
+        if (genderCounts) return genderCounts;
+        genderCounts = {};
+        await Promise.all(GENDER_OPTIONS.map(async (g) => {
+            try {
+                const res = await fetch(`${API_BASE}/get_products.php?gender=${encodeURIComponent(g.value)}&page=1`);
+                const data = await res.json();
+                genderCounts[g.value] = data.success ? data.total : null;
+            } catch (e) {
+                genderCounts[g.value] = null;
+            }
+        }));
+        return genderCounts;
     }
 
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            requestAnimationFrame(update);
-            ticking = true;
+    function optionRow(name, value, label, count, checked, extraClass) {
+        const countHtml = (count === null || count === undefined) ? '' : `<span class="fd-count">[${count}]</span>`;
+        return `<label class="fd-option${extraClass ? ' ' + extraClass : ''}">
+            <input type="checkbox" name="${name}" value="${escapeHtml(value)}" ${checked ? 'checked' : ''}>
+            ${escapeHtml(label)}${countHtml}
+        </label>`;
+    }
+
+    async function renderGender() {
+        genderBody.innerHTML = GENDER_OPTIONS.map(g =>
+            optionRow('fdGenderOpt', g.value, g.label, undefined, genderFilter.value === g.value)
+        ).join('');
+        bindExclusiveGroup(genderBody, 'fdGenderOpt', (val) => {
+            genderFilter.value = val;
+            resetAndReload();
+        });
+
+        const counts = await fetchGenderCounts();
+        genderBody.querySelectorAll('input[name="fdGenderOpt"]').forEach(input => {
+            const countEl = input.closest('.fd-option').querySelector('.fd-count');
+            const c = counts[input.value];
+            if (c !== null && c !== undefined) {
+                if (countEl) {
+                    countEl.textContent = `[${c}]`;
+                } else {
+                    input.closest('.fd-option').insertAdjacentHTML('beforeend', `<span class="fd-count">[${c}]</span>`);
+                }
+            }
+        });
+    }
+
+    function selectedBrands() {
+        return brandFilter.value ? brandFilter.value.split(',').filter(Boolean) : [];
+    }
+
+    function renderBrand() {
+        if (brandList.length === 0) {
+            brandBody.innerHTML = `<p style="font-size:13px;color:#999;">No brands available.</p>`;
+            return;
         }
-    }, { passive: true });
+        const selected = selectedBrands();
+        const rows = brandList.map((b, i) =>
+            optionRow('fdBrandOpt', b.brand, b.brand, b.count, selected.includes(b.brand), i >= BRAND_VISIBLE ? 'hidden-extra' : '')
+        ).join('');
+        const showMoreHtml = brandList.length > BRAND_VISIBLE
+            ? `<button type="button" class="fd-show-more" id="fdBrandShowMore">+ Show more</button>`
+            : '';
+        brandBody.innerHTML = rows + showMoreHtml;
+
+        // Brand is multi-select: checking a box adds it to the list, unchecking
+        // removes it — unlike gender, other brand checkboxes stay as they are.
+        bindMultiGroup(brandBody, 'fdBrandOpt', (values) => {
+            brandFilter.value = values.join(',');
+            resetAndReload();
+        });
+
+        const showMoreBtn = document.getElementById('fdBrandShowMore');
+        if (showMoreBtn) {
+            showMoreBtn.addEventListener('click', () => {
+                const hidden = brandBody.querySelectorAll('.fd-option.hidden-extra');
+                const isShown = hidden[0] && hidden[0].classList.contains('shown');
+                hidden.forEach(el => el.classList.toggle('shown', !isShown));
+                showMoreBtn.textContent = isShown ? '+ Show more' : '- Show less';
+            });
+        }
+    }
+
+    // Gender stays single-select: checking one unchecks the others in the group.
+    function bindExclusiveGroup(container, name, onChange) {
+        container.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+            input.addEventListener('change', () => {
+                if (input.checked) {
+                    container.querySelectorAll(`input[name="${name}"]`).forEach(other => {
+                        if (other !== input) other.checked = false;
+                    });
+                    onChange(input.value);
+                } else {
+                    onChange('');
+                }
+            });
+        });
+    }
+
+    // Brand is multi-select: every checked box in the group is collected and
+    // passed back together, nothing else gets unchecked automatically.
+    function bindMultiGroup(container, name, onChange) {
+        container.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+            input.addEventListener('change', () => {
+                const checked = Array.from(container.querySelectorAll(`input[name="${name}"]:checked`)).map(i => i.value);
+                onChange(checked);
+            });
+        });
+    }
+
+    clearBtn.addEventListener('click', () => {
+        genderFilter.value = '';
+        brandFilter.value = '';
+        renderGender();
+        renderBrand();
+        resetAndReload();
+    });
+
+    // Fetch the same brand list used to populate the hidden <select>, so the
+    // drawer's checkboxes show the identical names and counts. Render
+    // immediately on load too — the desktop sidebar is always visible,
+    // it doesn't wait for a Filter button click like mobile does.
+    (async () => {
+        try {
+            const res = await fetch(`${API_BASE}/get_brands.php`);
+            const data = await res.json();
+            if (data.success) brandList = data.brands;
+        } catch (e) {
+            brandList = [];
+        }
+        renderGender();
+        renderBrand();
+    })();
 })();

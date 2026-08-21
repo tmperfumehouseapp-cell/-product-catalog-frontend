@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Product Catalog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +17,9 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
 
-        <h1>Product Catalog</h1>
+        <div class="logo-wrap">
+            <img src="assets/logo.png" alt="3rd Party — Masters of Style" class="site-logo">
+        </div>
 
         <div class="search-box" id="searchBox">
             <input type="text" id="searchInput" placeholder="Search..." class="search-input-hidden">
@@ -22,10 +27,12 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             </button>
         </div>
+
+        <div class="header-icons">
+        </div>
     </div>
 </div>
 
-<!-- Drawer -->
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <nav class="drawer" id="drawer">
     <div class="drawer-head">
@@ -34,9 +41,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
     </div>
-    <div class="drawer-nav" id="drawerNav">
-        <!-- populated by script.js, mirrors category-stories -->
-    </div>
+    <div class="drawer-nav" id="drawerNav"></div>
 </nav>
 
 <div class="category-stories" id="categoryRow">
@@ -48,27 +53,91 @@
     </div>
 </div>
 
-<div class="filter-panel">
-    <div class="dual-select-row">
-        <select id="brandFilter"><option value="">All Brands</option></select>
-        <select id="genderFilter">
-            <option value="">All Genders</option>
-            <option value="men">Men</option>
-            <option value="women">Women</option>
-            <option value="unisex">Unisex</option>
-        </select>
-    </div>
-</div>
-
-<div class="container">
+<div class="toolbar-row">
     <div class="results-count" id="resultsCount"></div>
-
-    <div class="grid" id="productGrid"></div>
-
-    <div class="load-more-wrap">
-        <button class="load-more-btn" id="loadMoreBtn" style="display:none;">Load More</button>
+    <div class="toolbar-actions">
+        <button type="button" class="filter-toggle-btn" id="filterToggleBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filter
+        </button>
     </div>
 </div>
+
+<!-- Hidden source-of-truth selects — synced by the filter drawer checkboxes -->
+<select id="brandFilter" class="visually-hidden"><option value="">All Brands</option></select>
+<select id="genderFilter" class="visually-hidden">
+    <option value="">All Genders</option>
+    <option value="men">Men</option>
+    <option value="women">Women</option>
+    <option value="unisex">Unisex</option>
+</select>
+
+<div class="filter-drawer-overlay" id="filterDrawerOverlay"></div>
+
+<div class="page-layout">
+    <div class="filter-drawer" id="filterDrawer">
+        <div class="filter-drawer-head">
+            <span>Filter</span>
+            <button class="filter-drawer-close" id="filterDrawerClose" aria-label="Close filter">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div class="filter-drawer-body">
+            <div class="fd-section">
+                <button type="button" class="fd-section-head" data-target="fdGender">
+                    Gender
+                    <svg class="fd-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <div class="fd-section-body" id="fdGender"></div>
+            </div>
+
+            <div class="fd-section">
+                <button type="button" class="fd-section-head" data-target="fdBrand">
+                    Brand
+                    <svg class="fd-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <div class="fd-section-body" id="fdBrand"></div>
+            </div>
+        </div>
+
+        <div class="filter-drawer-footer">
+            <button type="button" class="fd-clear-btn" id="fdClearBtn">Clear all</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="grid" id="productGrid"></div>
+
+        <div class="load-more-wrap">
+            <button class="load-more-btn" id="loadMoreBtn" style="display:none;">Load More</button>
+        </div>
+    </div>
+</div>
+
+<footer class="site-footer">
+    <div class="footer-cols">
+        <div class="footer-col">
+            <button type="button" class="footer-heading" data-target="footerCollection">
+                Our Collection
+                <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="footer-body" id="footerCollection">
+                <a href="index.html" class="footer-link">All Category</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+document.querySelectorAll('.footer-heading').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var body = document.getElementById(btn.dataset.target);
+        var isOpen = btn.classList.toggle('open');
+        if (body) body.classList.toggle('open', isOpen);
+    });
+});
+</script>
 
 <script src="script.js"></script>
 </body>

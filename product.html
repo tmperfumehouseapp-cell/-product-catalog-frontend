@@ -4,19 +4,79 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Product Details</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="detail-header">
-    <span>Product details</span>
+<div class="top-header">
+    <div class="title-row">
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+
+        <div class="logo-wrap">
+            <img src="assets/logo.png" alt="3rd Party — Masters of Style" class="site-logo">
+        </div>
+
+        <div class="search-box" id="searchBox">
+            <input type="text" id="searchInput" placeholder="Search..." class="search-input-hidden">
+            <button class="search-icon-btn" id="searchToggle" aria-label="Search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+        </div>
+
+        <div class="header-icons"></div>
+    </div>
 </div>
 
-<div class="container">
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<nav class="drawer" id="drawer">
+    <div class="drawer-head">
+        <span class="drawer-logo">Product Catalog</span>
+        <button class="drawer-close-btn" id="drawerClose" aria-label="Close menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+    </div>
+    <div class="drawer-nav" id="drawerNav">
+        <a class="drawer-link" href="index.html">All Category</a>
+    </div>
+</nav>
+
+<div class="container" style="position:relative;">
+    <a href="index.html" class="back-icon-btn" aria-label="Back to catalog">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </a>
     <div id="detailWrap">
         <div class="loading">Loading product...</div>
     </div>
 </div>
+
+<footer class="site-footer">
+    <div class="footer-cols">
+        <div class="footer-col">
+            <button type="button" class="footer-heading" data-target="footerCollection">
+                Our Collection
+                <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="footer-body" id="footerCollection">
+                <a href="index.html" class="footer-link">All Category</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+document.querySelectorAll('.footer-heading').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var body = document.getElementById(btn.dataset.target);
+        var isOpen = btn.classList.toggle('open');
+        if (body) body.classList.toggle('open', isOpen);
+    });
+});
+</script>
 
 <script>
 const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
@@ -24,10 +84,58 @@ const params = new URLSearchParams(window.location.search);
 const id = params.get('id');
 const wrap = document.getElementById('detailWrap');
 
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const drawer = document.getElementById('drawer');
+const drawerOverlay = document.getElementById('drawerOverlay');
+const drawerClose = document.getElementById('drawerClose');
+const searchBox = document.getElementById('searchBox');
+const searchToggle = document.getElementById('searchToggle');
+const searchInput = document.getElementById('searchInput');
+const titleRow = document.querySelector('.title-row');
+
+function openDrawer() {
+    drawer.classList.add('open');
+    drawerOverlay.classList.add('open');
+}
+function closeDrawer() {
+    drawer.classList.remove('open');
+    drawerOverlay.classList.remove('open');
+}
+hamburgerBtn.addEventListener('click', openDrawer);
+drawerClose.addEventListener('click', closeDrawer);
+drawerOverlay.addEventListener('click', closeDrawer);
+
+searchToggle.addEventListener('click', () => {
+    const expanding = !searchBox.classList.contains('expanded');
+    searchBox.classList.toggle('expanded');
+    titleRow.classList.toggle('search-open', expanding);
+    if (expanding) {
+        searchInput.focus();
+    } else if (!searchInput.value) {
+        searchInput.blur();
+    }
+});
+document.addEventListener('click', (e) => {
+    if (!searchBox.contains(e.target) && !searchInput.value) {
+        searchBox.classList.remove('expanded');
+        titleRow.classList.remove('search-open');
+    }
+});
+searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && searchInput.value.trim()) {
+        sessionStorage.setItem('catalogFilters', JSON.stringify({ search: searchInput.value.trim() }));
+        window.location.href = 'index.html';
+    }
+});
+
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+function formatPrice(price) {
+    return 'Rs. ' + Math.round(price).toLocaleString('en-IN');
 }
 
 function switchImage(src, thumbEl) {
@@ -71,13 +179,22 @@ async function loadProduct() {
         ` : '';
 
         const variantHtml = variants.length > 0 ? `
-            <div class="variant-label">Options</div>
+            <div class="variant-label">Quantity</div>
             <div class="variant-row">
                 ${variants.map((v, i) => `
                     <span class="variant-chip ${i === 0 ? 'active' : ''}" onclick="selectVariant(this)">${escapeHtml(v)}</span>
                 `).join('')}
             </div>
         ` : '';
+
+        const descriptionHtml = p.description && p.description.trim() ? `
+            <div class="description-card">
+                <p class="description-card-label">Description</p>
+                <p class="description-card-text">${escapeHtml(p.description)}</p>
+            </div>
+        ` : '';
+
+        document.title = `${p.name} — Product Catalog`;
 
         wrap.innerHTML = `
             <div class="detail-card">
@@ -87,7 +204,7 @@ async function loadProduct() {
                 </div>
                 <div class="detail-info">
                     <h2>${escapeHtml(p.name)}</h2>
-                    <div class="detail-price">₹${p.price.toFixed(2)}</div>
+                    <div class="detail-price">${formatPrice(p.price)}</div>
 
                     <div class="detail-badges">
                         <span class="badge-pill">${escapeHtml(p.brand)}</span>
@@ -97,9 +214,65 @@ async function loadProduct() {
 
                     ${variantHtml}
 
+                    <div class="bundle-upsell">
+                        <p class="bundle-upsell-line">If you go for just 1 bottle (50ml), it's ${formatPrice(p.price)} — single-piece orders cost more for us to pack and ship, so the price reflects that.</p>
+                        <p class="bundle-upsell-line">Here's a better way to do it — grab a bundle of 6 × 50ml for ${formatPrice(p.price * 6 * 0.47)}, and each bottle drops to just ${formatPrice(p.price * 0.47)}. That's less than half price, and you get to pick 6 different fragrances instead of just one.</p>
+                        <a href="https://wa.me/?text=${encodeURIComponent('I\'m interested in the 6x50ml bundle for ' + p.name)}" class="bundle-upsell-btn" target="_blank" rel="noopener">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.35 5.07L2 22l5.06-1.33A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.6 0-3.1-.42-4.4-1.16l-.32-.18-3 .79.8-2.92-.2-.3A7.94 7.94 0 0 1 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8zm4.4-5.6c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1-.37-1.9-1.17-.7-.62-1.18-1.4-1.32-1.64-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.12 3.64.58.25 1.03.4 1.38.51.58.18 1.1.16 1.52.1.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28z"/></svg>
+                            Yes, I'm interested
+                        </a>
+                    </div>
+
+                    ${descriptionHtml}
+
                     <a href="index.html" class="back-btn-full">← Back to catalog</a>
                 </div>
             </div>
+
+            <div class="trust-badges">
+                <div class="trust-pill">
+                    <span class="trust-dot"></span>
+                    Dispatched within 24 hours
+                </div>
+                <div class="trust-grid">
+                    <div class="trust-item">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="14" height="10"/><path d="M15 10h4l3 3v3h-7z"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+                        <h4>3-7 day delivery</h4>
+                        <p>Pan India shipping</p>
+                    </div>
+                    <div class="trust-item">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 4v4h4"/><polyline points="9 5 12 6 12 9"/></svg>
+                        <h4>7 day return</h4>
+                        <p>No questions asked</p>
+                    </div>
+                    <div class="trust-item">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+                        <h4>24 hr support</h4>
+                        <p>On WhatsApp</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="why-us">
+                <p class="why-us-heading"><span>★</span> Things we do that actually makes sense</p>
+                <div class="why-us-grid">
+                    <div class="why-us-item">
+                        <span class="why-us-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.35 5.07L2 22l5.06-1.33A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                        </span>
+                        <h4>WhatsApp support</h4>
+                        <p>Every order is handled through WhatsApp, so your questions are always just one message away — even after you place your order.</p>
+                    </div>
+                    <div class="why-us-item">
+                        <span class="why-us-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </span>
+                        <h4>We listen to you</h4>
+                        <p>Your feedback drives us. We launch requested fragrances and take every genuine complaint seriously to keep improving.</p>
+                    </div>
+                </div>
+            </div>
+
         `;
     } catch (err) {
         wrap.innerHTML = `<div class="empty">Error: ${escapeHtml(err.message)}</div>`;

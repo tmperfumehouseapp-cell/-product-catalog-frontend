@@ -6,80 +6,178 @@
 <title>Add Product</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="admin-page">
 
-<header>
-    <h1>Add Product</h1>
-    <a href="index.html">← Back to Catalog</a>
-</header>
+<div class="admin-layout">
 
-<div class="container">
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-head">Admin</div>
+        <nav class="admin-nav">
+            <a class="admin-nav-link active" data-target="add">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add product
+            </a>
+            <a class="admin-nav-link" data-target="delete">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                Delete product
+            </a>
+            <a class="admin-nav-link" data-target="icons">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                Category icons
+            </a>
+        </nav>
+        <a href="index.html" class="admin-nav-back">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back to catalog
+        </a>
+    </aside>
 
-    <form class="form-card" id="productForm">
-        <label for="name">Product Name</label>
-        <input type="text" id="name" name="name" required>
+    <main class="admin-main">
 
-        <label>Product Images (1–4)</label>
-        <div class="image-drop" id="dropZone">
-            Click to select images, or drag & drop here
-            <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" multiple>
+        <!-- Panel: Add product -->
+        <div class="admin-panel" id="panel-add">
+            <div class="admin-add-layout">
+            <form id="productForm">
+
+                <p class="section-label">Basic info</p>
+                <div class="section-card">
+                    <label for="name">Product Name</label>
+                    <input type="text" id="name" name="name" required>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="price">Price (₹)</label>
+                            <input type="number" id="price" name="price" step="0.01" min="0" required>
+                        </div>
+                        <div>
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select</option>
+                                <option value="men">Men</option>
+                                <option value="women">Women</option>
+                                <option value="unisex">Unisex</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="section-label">Details</p>
+                <div class="section-card">
+                    <div class="form-row">
+                        <div>
+                            <label for="category">Category</label>
+                            <input type="text" id="category" name="category" placeholder="e.g. Perfume, Shirt, Watch" required>
+                        </div>
+                        <div>
+                            <label for="brand">Brand</label>
+                            <input type="text" id="brand" name="brand" required>
+                        </div>
+                    </div>
+
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" maxlength="1000" placeholder="Notes, scent profile, fit, material — whatever's relevant." style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-family:inherit; resize:vertical;"></textarea>
+                    <div id="descCount" style="font-size:11px; color:#999; text-align:right; margin-top:4px;">0 / 1000</div>
+                </div>
+
+                <p class="section-label">Media</p>
+                <div class="section-card">
+                    <label>Product Images (1–4)</label>
+                    <div class="image-drop" id="dropZone">
+                        Click to select images, or drag & drop here
+                        <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" multiple>
+                    </div>
+                    <div class="preview-grid" id="previewGrid"></div>
+                </div>
+
+                <p class="section-label">Variants</p>
+                <div class="section-card">
+                    <label>Does this product have size/variant options?</label>
+                    <div style="display:flex; gap:20px; margin-top:6px;">
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+                            <input type="radio" name="hasVariants" value="no" checked style="width:auto;"> No
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
+                            <input type="radio" name="hasVariants" value="yes" style="width:auto;"> Yes
+                        </label>
+                    </div>
+
+                    <div id="variantSection" style="display:none; margin-top:12px;">
+                        <label style="margin-top:0;">Variants (e.g. 20ml, 50ml, 100ml)</label>
+                        <div id="variantRows"></div>
+                        <button type="button" id="addVariantBtn" style="width:auto; margin-top:8px; padding:8px 16px; background:#f0f0f0; color:#333; font-size:13px;">+ Add variant</button>
+                    </div>
+                </div>
+
+                <div class="save-bar">
+                    <div id="formMsg"></div>
+                    <button type="submit" id="submitBtn">Add Product</button>
+                </div>
+            </form>
+
+            <div class="admin-preview-col">
+                <p class="section-label">Catalog snapshot</p>
+
+                <div class="snapshot-hero">
+                    <p class="snapshot-hero-label">Total products</p>
+                    <p class="snapshot-hero-value" id="snapshotTotal">—</p>
+                </div>
+
+                <div class="snapshot-card">
+                    <p class="snapshot-card-title">By category</p>
+                    <div id="snapshotCategoryBars">
+                        <p style="font-size:12px;color:#999;">Loading...</p>
+                    </div>
+                </div>
+
+                <div class="snapshot-card">
+                    <p class="snapshot-card-title">Quick tips</p>
+                    <div class="snapshot-tip">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7 1 1 0 0 1 .4.8V17h7.2v-1.5a1 1 0 0 1 .4-.8A7 7 0 0 0 12 2z"/></svg>
+                        Use square 1:1 images for the cleanest grid.
+                    </div>
+                    <div class="snapshot-tip">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7 1 1 0 0 1 .4.8V17h7.2v-1.5a1 1 0 0 1 .4-.8A7 7 0 0 0 12 2z"/></svg>
+                        Keep product names under 60 characters.
+                    </div>
+                </div>
+            </div>
+            </div>
         </div>
-        <div class="preview-grid" id="previewGrid"></div>
 
-        <label for="price">Price (₹)</label>
-        <input type="number" id="price" name="price" step="0.01" min="0" required>
-
-        <label for="category">Category</label>
-        <input type="text" id="category" name="category" placeholder="e.g. Perfume, Shirt, Watch" required>
-
-        <label for="gender">Gender</label>
-        <select id="gender" name="gender" required>
-            <option value="">Select</option>
-            <option value="men">Men</option>
-            <option value="women">Women</option>
-            <option value="unisex">Unisex</option>
-        </select>
-
-        <label for="brand">Brand</label>
-        <input type="text" id="brand" name="brand" required>
-
-        <label>Does this product have size/variant options?</label>
-        <div style="display:flex; gap:20px; margin-top:6px;">
-            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
-                <input type="radio" name="hasVariants" value="no" checked style="width:auto;"> No
-            </label>
-            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin:0;">
-                <input type="radio" name="hasVariants" value="yes" style="width:auto;"> Yes
-            </label>
+        <!-- Panel: Delete product -->
+        <div class="admin-panel" id="panel-delete" style="display:none;">
+            <p class="section-label">Delete a product</p>
+            <div class="section-card" id="deleteSection">
+                <input type="text" id="deleteSearchInput" placeholder="Search product name...">
+                <div id="deleteList" style="margin-top:12px;"></div>
+                <button type="button" id="deleteLoadMoreBtn" style="display:none; margin-top:12px; background:#f0f0f0; color:#333;">Load More</button>
+            </div>
         </div>
 
-        <div id="variantSection" style="display:none; margin-top:12px;">
-            <label style="margin-top:0;">Variants (e.g. 20ml, 50ml, 100ml)</label>
-            <div id="variantRows"></div>
-            <button type="button" id="addVariantBtn" style="width:auto; margin-top:8px; padding:8px 16px; background:#f0f0f0; color:#333; font-size:13px;">+ Add variant</button>
+        <!-- Panel: Category icons -->
+        <div class="admin-panel" id="panel-icons" style="display:none;">
+            <p class="section-label">Set category icon</p>
+            <div class="section-card" id="iconSection">
+                <select id="iconCategorySelect">
+                    <option value="__ALL__">All Category (main icon)</option>
+                </select>
+
+                <div class="icon-preview-row">
+                    <div class="icon-preview-circle" id="iconPreviewCircle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="margin-top:0;">Icon Image</label>
+                        <input type="file" id="iconFileInput" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                </div>
+
+                <button type="button" id="uploadIconBtn" style="margin-top:16px;">Upload Icon</button>
+                <div id="iconMsg"></div>
+            </div>
         </div>
 
-        <button type="submit" id="submitBtn" style="margin-top:22px;">Add Product</button>
-        <div id="formMsg"></div>
-    </form>
-
-    <div class="form-card" id="deleteSection">
-        <label style="margin-top:0;">Delete a Product</label>
-        <input type="text" id="deleteSearchInput" placeholder="Search product name...">
-        <div id="deleteList" style="margin-top:12px;"></div>
-        <button type="button" id="deleteLoadMoreBtn" style="display:none; margin-top:12px; background:#f0f0f0; color:#333;">Load More</button>
-    </div>
-
-    <div class="form-card" id="iconSection">
-        <label style="margin-top:0;">Set Category Icon</label>
-        <select id="iconCategorySelect">
-            <option value="__ALL__">All Category (main icon)</option>
-        </select>
-        <label>Icon Image</label>
-        <input type="file" id="iconFileInput" accept=".jpg,.jpeg,.png,.webp">
-        <button type="button" id="uploadIconBtn" style="margin-top:16px;">Upload Icon</button>
-        <div id="iconMsg"></div>
-    </div>
+    </main>
 
 </div>
 
@@ -92,6 +190,32 @@ function escapeHtml(str) {
     div.textContent = str;
     return div.innerHTML;
 }
+
+// ---- Tab switching: only one panel visible at a time ----
+function showPanel(name) {
+    document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+    const panel = document.getElementById('panel-' + name);
+    if (panel) panel.style.display = 'block';
+
+    document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
+    const link = document.querySelector(`.admin-nav-link[data-target="${name}"]`);
+    if (link) link.classList.add('active');
+}
+
+document.querySelectorAll('.admin-nav-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        link.blur();
+        showPanel(link.dataset.target);
+    });
+});
+
+// ---- Description character counter ----
+const descriptionInput = document.getElementById('description');
+const descCount = document.getElementById('descCount');
+descriptionInput.addEventListener('input', () => {
+    descCount.textContent = `${descriptionInput.value.length} / 1000`;
+});
 
 // ---- Image upload + preview ----
 const form = document.getElementById('productForm');
@@ -154,6 +278,50 @@ function removeFile(index) {
     renderPreviews();
 }
 
+// ---- Catalog snapshot ----
+async function loadCatalogSnapshot() {
+    const totalEl = document.getElementById('snapshotTotal');
+    const barsEl = document.getElementById('snapshotCategoryBars');
+
+    try {
+        const totalRes = await fetch(`${API_BASE}/get_products.php?page=1`);
+        const totalData = await totalRes.json();
+        totalEl.textContent = totalData.success ? totalData.total : '—';
+
+        const catRes = await fetch(`${API_BASE}/get_categories.php`);
+        const catData = await catRes.json();
+
+        if (!catData.success || !catData.categories.length) {
+            barsEl.innerHTML = '<p style="font-size:12px;color:#999;">No categories yet.</p>';
+            return;
+        }
+
+        const counts = await Promise.all(catData.categories.map(async (c) => {
+            try {
+                const r = await fetch(`${API_BASE}/get_products.php?category=${encodeURIComponent(c.category)}&page=1`);
+                const d = await r.json();
+                return { name: c.category, count: d.success ? d.total : 0 };
+            } catch (e) {
+                return { name: c.category, count: 0 };
+            }
+        }));
+
+        counts.sort((a, b) => b.count - a.count);
+        const top = counts.slice(0, 4);
+        const max = Math.max(...top.map(c => c.count), 1);
+
+        barsEl.innerHTML = top.map(c => `
+            <div class="snapshot-bar-row">
+                <div class="snapshot-bar-label"><span>${escapeHtml(c.name)}</span><span>${c.count}</span></div>
+                <div class="snapshot-bar-track"><div class="snapshot-bar-fill" style="width:${Math.max((c.count / max) * 100, 4)}%;"></div></div>
+            </div>
+        `).join('');
+    } catch (err) {
+        totalEl.textContent = '—';
+        barsEl.innerHTML = '<p style="font-size:12px;color:#999;">Couldn\'t load stats.</p>';
+    }
+}
+
 // ---- Variants ----
 const variantSection = document.getElementById('variantSection');
 const variantRows = document.getElementById('variantRows');
@@ -213,6 +381,7 @@ form.addEventListener('submit', async (e) => {
     formData.append('category', document.getElementById('category').value);
     formData.append('gender', document.getElementById('gender').value);
     formData.append('brand', document.getElementById('brand').value);
+    formData.append('description', descriptionInput.value.trim());
     selectedFiles.forEach(file => formData.append('images[]', file));
     getVariants().forEach(v => formData.append('variants[]', v));
 
@@ -228,7 +397,9 @@ form.addEventListener('submit', async (e) => {
             renderPreviews();
             variantSection.style.display = 'none';
             variantRows.innerHTML = '';
+            descCount.textContent = '0 / 1000';
             loadDeleteList(1, false);
+            loadCatalogSnapshot();
         } else {
             msg.textContent = data.error || 'Something went wrong.';
             msg.className = 'error';
@@ -340,6 +511,14 @@ const iconCategorySelect = document.getElementById('iconCategorySelect');
 const iconFileInput = document.getElementById('iconFileInput');
 const uploadIconBtn = document.getElementById('uploadIconBtn');
 const iconMsg = document.getElementById('iconMsg');
+const iconPreviewCircle = document.getElementById('iconPreviewCircle');
+
+iconFileInput.addEventListener('change', () => {
+    const file = iconFileInput.files[0];
+    if (file) {
+        iconPreviewCircle.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="icon preview">`;
+    }
+});
 
 async function loadIconCategoryOptions() {
     try {
@@ -384,6 +563,7 @@ uploadIconBtn.addEventListener('click', async () => {
             iconMsg.textContent = 'Icon updated!';
             iconMsg.className = 'success';
             iconFileInput.value = '';
+            iconPreviewCircle.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
         } else {
             iconMsg.textContent = data.error || 'Upload failed.';
             iconMsg.className = 'error';
@@ -397,9 +577,10 @@ uploadIconBtn.addEventListener('click', async () => {
     }
 });
 
-// ---- Init ----
+// ---- Init (runs immediately, no password gate) ----
 loadDeleteList(1, false);
 loadIconCategoryOptions();
+loadCatalogSnapshot();
 </script>
 
 </body>
