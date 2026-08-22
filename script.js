@@ -178,6 +178,9 @@ async function loadCategories() {
 
         function selectCategory(category) {
             selectedCategory = category;
+            searchInput.value = '';
+            searchBox.classList.remove('expanded');
+            titleRow.classList.remove('search-open');
             applyActiveState(category);
             saveFilterState();
             resetAndReload();

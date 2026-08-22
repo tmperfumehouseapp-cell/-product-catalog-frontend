@@ -45,26 +45,17 @@
     </div>
 </nav>
 
-<div class="container" style="position:relative;">
-    <a href="index.html" class="back-icon-btn" aria-label="Back to catalog">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    </a>
+<div class="container">
     <div id="detailWrap">
         <div class="loading">Loading product...</div>
     </div>
 </div>
 
 <footer class="site-footer">
-    <div class="footer-cols">
-        <div class="footer-col">
-            <button type="button" class="footer-heading" data-target="footerCollection">
-                Our Collection
-                <svg class="footer-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="footer-body" id="footerCollection">
-                <a href="index.html" class="footer-link">All Category</a>
-            </div>
-        </div>
+    <div class="footer-brand-banner">
+        <p class="footer-brand-copy">Authentic perfumes, sunglasses, watches, and belts, all in one place. 3rd Party brings you genuine accessories from the brands you trust, at prices that actually make sense — no compromises, just the real thing.</p>
+        <img src="assets/logo-white.png" alt="3rd Party — Masters of 9A" class="footer-brand-logo">
+        <p class="footer-brand-copyright">&#169; 2026, 3rd Party</p>
     </div>
 </footer>
 
@@ -188,9 +179,14 @@ async function loadProduct() {
         ` : '';
 
         const descriptionHtml = p.description && p.description.trim() ? `
-            <div class="description-card">
-                <p class="description-card-label">Description</p>
-                <p class="description-card-text">${escapeHtml(p.description)}</p>
+            <div class="description-accordion">
+                <button type="button" class="description-toggle" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open');">
+                    Description
+                    <svg class="description-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="description-body">
+                    <p class="description-card-text">${escapeHtml(p.description)}</p>
+                </div>
             </div>
         ` : '';
 
@@ -198,16 +194,19 @@ async function loadProduct() {
 
         wrap.innerHTML = `
             <div class="detail-card">
-                <div>
+                <div style="position:relative;">
+                    <a href="index.html" class="back-icon-btn" aria-label="Back to catalog">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </a>
                     <img id="mainImage" class="gallery-main" src="${escapeHtml(mainImg)}" alt="${escapeHtml(p.name)}">
                     ${thumbsHtml}
                 </div>
                 <div class="detail-info">
+                    <p class="detail-brand">${escapeHtml(p.brand)}</p>
                     <h2>${escapeHtml(p.name)}</h2>
                     <div class="detail-price">${formatPrice(p.price)}</div>
 
                     <div class="detail-badges">
-                        <span class="badge-pill">${escapeHtml(p.brand)}</span>
                         <span class="badge-pill">${escapeHtml(p.category)}</span>
                         <span class="badge-pill">${escapeHtml(p.gender)}</span>
                     </div>
@@ -215,11 +214,10 @@ async function loadProduct() {
                     ${variantHtml}
 
                     <div class="bundle-upsell">
-                        <p class="bundle-upsell-line">If you go for just 1 bottle (50ml), it's ${formatPrice(p.price)} — single-piece orders cost more for us to pack and ship, so the price reflects that.</p>
-                        <p class="bundle-upsell-line">Here's a better way to do it — grab a bundle of 6 × 50ml for ${formatPrice(p.price * 6 * 0.47)}, and each bottle drops to just ${formatPrice(p.price * 0.47)}. That's less than half price, and you get to pick 6 different fragrances instead of just one.</p>
-                        <a href="https://wa.me/?text=${encodeURIComponent('I\'m interested in the 6x50ml bundle for ' + p.name)}" class="bundle-upsell-btn" target="_blank" rel="noopener">
+                        <p class="bundle-upsell-line">Have a question before you order — stock, sizing, authenticity, anything? Send us a message and we'll get back to you fast.</p>
+                        <a href="https://wa.me/?text=${encodeURIComponent('Hi, I have a question about ' + p.name)}" class="bundle-upsell-btn" target="_blank" rel="noopener">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.35 5.07L2 22l5.06-1.33A9.96 9.96 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm0 18c-1.6 0-3.1-.42-4.4-1.16l-.32-.18-3 .79.8-2.92-.2-.3A7.94 7.94 0 0 1 4 12c0-4.41 3.59-8 8-8s8 3.59 8 8-3.59 8-8 8zm4.4-5.6c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1-.37-1.9-1.17-.7-.62-1.18-1.4-1.32-1.64-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.12 3.64.58.25 1.03.4 1.38.51.58.18 1.1.16 1.52.1.46-.07 1.42-.58 1.62-1.14.2-.56.2-1.04.14-1.14-.06-.1-.22-.16-.46-.28z"/></svg>
-                            Yes, I'm interested
+                            Ask on WhatsApp
                         </a>
                     </div>
 
