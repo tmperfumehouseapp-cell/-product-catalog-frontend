@@ -8,6 +8,56 @@
 </head>
 <body class="admin-page">
 
+<!-- Mobile-only header + drawer, matches the storefront's top-header/drawer.
+     Hidden on desktop (≥769px) via CSS — desktop keeps the dark sidebar. -->
+<div class="admin-mobile-header">
+    <div class="top-header">
+        <div class="title-row">
+            <button class="hamburger-btn" id="adminHamburgerBtn" aria-label="Open menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+
+            <div class="logo-wrap">
+                <span class="admin-mobile-title">Admin</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="drawer-overlay" id="adminDrawerOverlay"></div>
+    <nav class="drawer" id="adminDrawer">
+        <div class="drawer-head">
+            <span class="drawer-logo">Admin</span>
+            <button class="drawer-close-btn" id="adminDrawerClose" aria-label="Close menu">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="drawer-nav" id="adminDrawerNav">
+            <div class="drawer-link active" data-target="add">
+                <span class="drawer-icon admin-drawer-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </span>
+                Add product
+            </div>
+            <div class="drawer-link" data-target="delete">
+                <span class="drawer-icon admin-drawer-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                </span>
+                Edit / Delete product
+            </div>
+            <div class="drawer-link" data-target="icons">
+                <span class="drawer-icon admin-drawer-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
+                </span>
+                Category icons
+            </div>
+        </div>
+        <a href="index.html" class="admin-nav-back" style="border-top:1px solid #eee; margin-top:auto;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Back to catalog
+        </a>
+    </nav>
+</div>
+
 <div class="admin-layout">
 
     <aside class="admin-sidebar">
@@ -34,8 +84,15 @@
 
     <main class="admin-main">
 
+        <div class="form-card" id="passwordGate">
+            <label for="adminPasswordInput">Admin Password</label>
+            <input type="password" id="adminPasswordInput" placeholder="Enter password">
+            <button type="button" id="unlockBtn">Unlock</button>
+            <div id="gateMsg"></div>
+        </div>
+
         <!-- Panel: Add product -->
-        <div class="admin-panel" id="panel-add">
+        <div class="admin-panel" id="panel-add" style="display:none;">
             <div class="admin-add-layout">
             <form id="productForm">
 
@@ -74,6 +131,9 @@
                         </div>
                     </div>
 
+                    <label for="longevity">Longevity</label>
+                    <input type="text" id="longevity" name="longevity" placeholder="e.g. 6-8 hours">
+
                     <label for="description">Description</label>
                     <textarea id="description" name="description" rows="4" maxlength="1000" placeholder="Notes, scent profile, fit, material — whatever's relevant." style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-family:inherit; resize:vertical;"></textarea>
                     <div id="descCount" style="font-size:11px; color:#999; text-align:right; margin-top:4px;">0 / 1000</div>
@@ -106,6 +166,13 @@
                         <div id="variantRows"></div>
                         <button type="button" id="addVariantBtn" style="width:auto; margin-top:8px; padding:8px 16px; background:#f0f0f0; color:#333; font-size:13px;">+ Add variant</button>
                     </div>
+                </div>
+
+                <p class="section-label">Notes</p>
+                <div class="section-card">
+                    <label style="margin-top:0;">Fragrance/ingredient notes (photo + name)</label>
+                    <div id="noteRows"></div>
+                    <button type="button" id="addNoteBtn" style="width:auto; margin-top:4px; padding:8px 16px; background:#f0f0f0; color:#333; font-size:13px; border:none; border-radius:8px; cursor:pointer;">+ Add note</button>
                 </div>
 
                 <div class="save-bar">
@@ -150,7 +217,7 @@
             <div class="section-card" id="deleteSection">
                 <input type="text" id="deleteSearchInput" placeholder="Search product name...">
                 <div id="deleteList" style="margin-top:12px;"></div>
-                <button type="button" id="deleteLoadMoreBtn" style="display:none; margin-top:12px; background:#f0f0f0; color:#333;">Load More</button>
+                <button type="button" id="deleteLoadMoreBtn" class="load-more-btn" style="display:none; margin-top:12px; width:100%;">Load More</button>
             </div>
         </div>
 
@@ -181,17 +248,110 @@
 
 </div>
 
+<div class="modal-overlay" id="editModalOverlay">
+    <div class="modal-card">
+        <div class="modal-head">
+            <h3>Edit Product</h3>
+            <button type="button" class="modal-close-btn" id="editModalClose" aria-label="Close">×</button>
+        </div>
+
+        <div id="editModalLoading" class="modal-loading">Loading product...</div>
+        <div id="editModalErrorBox" class="modal-error" style="display:none;"></div>
+
+        <form id="editProductForm" style="display:none;">
+            <input type="hidden" id="editId">
+
+            <label for="editName">Product Name</label>
+            <input type="text" id="editName" required>
+
+            <div class="form-row">
+                <div>
+                    <label for="editPrice">Price (₹)</label>
+                    <input type="number" id="editPrice" step="0.01" min="0" required>
+                </div>
+                <div>
+                    <label for="editGender">Gender</label>
+                    <select id="editGender" required>
+                        <option value="men">Men</option>
+                        <option value="women">Women</option>
+                        <option value="unisex">Unisex</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label for="editCategory">Category</label>
+                    <input type="text" id="editCategory" required>
+                </div>
+                <div>
+                    <label for="editBrand">Brand</label>
+                    <input type="text" id="editBrand" required>
+                </div>
+            </div>
+
+            <label for="editLongevity">Longevity</label>
+            <input type="text" id="editLongevity" placeholder="e.g. 6-8 hours">
+
+            <label for="editDescription">Description</label>
+            <textarea id="editDescription" rows="4" maxlength="1000"></textarea>
+
+            <label>Images (up to 4 total)</label>
+            <div class="modal-image-grid" id="editExistingImages"></div>
+            <div class="image-drop" id="editDropZone" style="margin-top:10px;">
+                Click to add images
+                <input type="file" id="editImageInput" accept=".jpg,.jpeg,.png,.webp" multiple>
+            </div>
+            <div class="preview-grid" id="editNewPreviewGrid"></div>
+
+            <label>Variants</label>
+            <div id="editVariantRows"></div>
+            <button type="button" id="editAddVariantBtn" class="modal-add-variant-btn">+ Add variant</button>
+
+            <label>Notes</label>
+            <div id="editNoteRows"></div>
+            <button type="button" id="editAddNoteBtn" class="modal-add-variant-btn">+ Add note</button>
+
+            <div class="modal-save-bar">
+                <div id="editFormMsg"></div>
+                <button type="submit" class="modal-save-btn" id="editSaveBtn">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 <script>
 const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
-const ADMIN_PASSWORD = 'upload'; // matches config.php on the backend — sent automatically, no prompt
 
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+const passwordGate = document.getElementById('passwordGate');
+const productForm = document.getElementById('productForm');
+const deleteSection = document.getElementById('deleteSection');
+const iconSection = document.getElementById('iconSection');
+const adminPasswordInput = document.getElementById('adminPasswordInput');
+const unlockBtn = document.getElementById('unlockBtn');
+const gateMsg = document.getElementById('gateMsg');
+
+let adminPassword = sessionStorage.getItem('adminPassword') || '';
+
+// ---- Mobile drawer open/close ----
+const adminHamburgerBtn = document.getElementById('adminHamburgerBtn');
+const adminDrawer = document.getElementById('adminDrawer');
+const adminDrawerOverlay = document.getElementById('adminDrawerOverlay');
+const adminDrawerClose = document.getElementById('adminDrawerClose');
+
+function openAdminDrawer() {
+    adminDrawer.classList.add('open');
+    adminDrawerOverlay.classList.add('open');
 }
+function closeAdminDrawer() {
+    adminDrawer.classList.remove('open');
+    adminDrawerOverlay.classList.remove('open');
+}
+if (adminHamburgerBtn) adminHamburgerBtn.addEventListener('click', openAdminDrawer);
+if (adminDrawerClose) adminDrawerClose.addEventListener('click', closeAdminDrawer);
+if (adminDrawerOverlay) adminDrawerOverlay.addEventListener('click', closeAdminDrawer);
 
 // ---- Tab switching: only one panel visible at a time ----
+// Keeps the desktop sidebar links AND the mobile drawer links in sync.
 function showPanel(name) {
     document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
     const panel = document.getElementById('panel-' + name);
@@ -200,6 +360,15 @@ function showPanel(name) {
     document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
     const link = document.querySelector(`.admin-nav-link[data-target="${name}"]`);
     if (link) link.classList.add('active');
+
+    document.querySelectorAll('.drawer-link').forEach(l => l.classList.remove('active'));
+    const drawerLink = document.querySelector(`.drawer-link[data-target="${name}"]`);
+    if (drawerLink) drawerLink.classList.add('active');
+
+    if (name === 'delete') {
+        deleteSearchInput.value = '';
+        loadDeleteList(1, false);
+    }
 }
 
 document.querySelectorAll('.admin-nav-link').forEach(link => {
@@ -210,6 +379,46 @@ document.querySelectorAll('.admin-nav-link').forEach(link => {
     });
 });
 
+document.querySelectorAll('.drawer-link').forEach(link => {
+    link.addEventListener('click', () => {
+        showPanel(link.dataset.target);
+        closeAdminDrawer();
+    });
+});
+
+function unlockUI() {
+    passwordGate.style.display = 'none';
+    showPanel('add');
+    loadDeleteList(1, false);
+    loadIconCategoryOptions();
+    loadCatalogSnapshot();
+}
+
+// (auto-unlock trigger moved to the end of this script — see bottom —
+// so it fires only after every const/function it depends on is defined)
+
+unlockBtn.addEventListener('click', () => {
+    const entered = adminPasswordInput.value.trim();
+    if (!entered) {
+        gateMsg.textContent = 'Enter a password.';
+        gateMsg.className = 'error';
+        return;
+    }
+    adminPassword = entered;
+    sessionStorage.setItem('adminPassword', entered);
+    unlockUI();
+});
+
+adminPasswordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') unlockBtn.click();
+});
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // ---- Description character counter ----
 const descriptionInput = document.getElementById('description');
 const descCount = document.getElementById('descCount');
@@ -218,7 +427,7 @@ descriptionInput.addEventListener('input', () => {
 });
 
 // ---- Image upload + preview ----
-const form = document.getElementById('productForm');
+const form = productForm;
 const msg = document.getElementById('formMsg');
 const btn = document.getElementById('submitBtn');
 const dropZone = document.getElementById('dropZone');
@@ -359,6 +568,62 @@ function getVariants() {
         .filter(v => v !== '');
 }
 
+// ---- Notes (name + circular photo per row) ----
+const noteRows = document.getElementById('noteRows');
+const addNoteBtn = document.getElementById('addNoteBtn');
+
+function addNoteRow() {
+    const row = document.createElement('div');
+    row.className = 'note-row';
+    row.innerHTML = `
+        <label class="note-row-thumb">
+            <span class="note-row-thumb-placeholder">Photo</span>
+            <input type="file" class="note-image-input" accept=".jpg,.jpeg,.png,.webp">
+        </label>
+        <input type="text" class="note-name-input" placeholder="e.g. Bergamot">
+        <button type="button" class="note-row-remove">×</button>
+    `;
+    const fileInput = row.querySelector('.note-image-input');
+    const thumb = row.querySelector('.note-row-thumb');
+    fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        thumb.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`;
+        thumb.appendChild(fileInput);
+    });
+    row.querySelector('.note-row-remove').addEventListener('click', () => row.remove());
+    noteRows.appendChild(row);
+}
+addNoteBtn.addEventListener('click', addNoteRow);
+
+function getNoteRowsData() {
+    return Array.from(noteRows.querySelectorAll('.note-row')).map(row => ({
+        name: row.querySelector('.note-name-input').value.trim(),
+        file: row.querySelector('.note-image-input').files[0] || null
+    })).filter(n => n.name !== '' && n.file);
+}
+
+async function saveNotesForProduct(productId, adminPassword) {
+    const notes = getNoteRowsData();
+    if (notes.length === 0) return;
+
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('product_id', productId);
+    notes.forEach(n => {
+        formData.append('new_note_names[]', n.name);
+        formData.append('new_note_images[]', n.file);
+    });
+
+    try {
+        await fetch(`${API_BASE}/set_product_notes.php`, { method: 'POST', body: formData });
+    } catch (err) {
+        // Product itself already saved successfully; notes failing silently
+        // here is better than blocking the whole flow — user can add them
+        // via Edit afterward if this fails.
+    }
+}
+
 // ---- Add product submit ----
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -375,12 +640,13 @@ form.addEventListener('submit', async (e) => {
     msg.className = '';
 
     const formData = new FormData();
-    formData.append('admin_password', ADMIN_PASSWORD);
+    formData.append('admin_password', adminPassword);
     formData.append('name', document.getElementById('name').value);
     formData.append('price', document.getElementById('price').value);
     formData.append('category', document.getElementById('category').value);
     formData.append('gender', document.getElementById('gender').value);
     formData.append('brand', document.getElementById('brand').value);
+    formData.append('longevity', document.getElementById('longevity').value.trim());
     formData.append('description', descriptionInput.value.trim());
     selectedFiles.forEach(file => formData.append('images[]', file));
     getVariants().forEach(v => formData.append('variants[]', v));
@@ -389,7 +655,36 @@ form.addEventListener('submit', async (e) => {
         const res = await fetch(`${API_BASE}/add_product.php`, { method: 'POST', body: formData });
         const data = await res.json();
 
+        if (res.status === 403) {
+            sessionStorage.removeItem('adminPassword');
+            msg.textContent = 'Incorrect admin password. Please re-enter.';
+            msg.className = 'error';
+            document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+            passwordGate.style.display = 'block';
+            adminPasswordInput.value = '';
+            return;
+        }
+
         if (res.ok && data.success) {
+            // If add_product.php returns the new id directly, use it. Otherwise
+            // resolve it by searching for the exact product name we just created.
+            let newProductId = data.id || data.product_id || null;
+            if (!newProductId) {
+                try {
+                    const searchName = document.getElementById('name').value.trim();
+                    const lookupRes = await fetch(`${API_BASE}/get_products.php?search=${encodeURIComponent(searchName)}&page=1`);
+                    const lookupData = await lookupRes.json();
+                    if (lookupData.success && lookupData.products && lookupData.products.length > 0) {
+                        newProductId = lookupData.products[0].id;
+                    }
+                } catch (lookupErr) {
+                    // fine — notes just won't attach for this product this time
+                }
+            }
+            if (newProductId) {
+                await saveNotesForProduct(newProductId, adminPassword);
+            }
+
             msg.textContent = 'Product added successfully!';
             msg.className = 'success';
             form.reset();
@@ -397,6 +692,7 @@ form.addEventListener('submit', async (e) => {
             renderPreviews();
             variantSection.style.display = 'none';
             variantRows.innerHTML = '';
+            noteRows.innerHTML = '';
             descCount.textContent = '0 / 1000';
             loadDeleteList(1, false);
             loadCatalogSnapshot();
@@ -435,21 +731,27 @@ async function loadDeleteList(page = 1, append = false) {
 
         deletePage = data.page;
         const rowsHtml = data.products.map(p => `
-            <div class="delete-row" data-id="${p.id}" style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #eee;">
-                <img src="${p.image ? escapeHtml(p.image) : ''}" style="width:44px; height:44px; object-fit:cover; border-radius:6px; background:#eee;">
-                <div style="flex:1; min-width:0;">
-                    <div style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.name)}</div>
-                    <div style="font-size:12px; color:#888;">₹${p.price.toFixed(2)}</div>
+            <div class="delete-row" data-id="${p.id}">
+                <img class="delete-row-thumb" src="${p.image ? escapeHtml(p.image) : ''}" alt="${escapeHtml(p.name)}">
+                <div class="delete-row-info">
+                    <div class="delete-row-name">${escapeHtml(p.name)}</div>
+                    <div class="delete-row-price">₹${p.price.toFixed(2)}</div>
                 </div>
-                <button type="button" class="delete-btn" data-id="${p.id}" style="width:auto; padding:6px 12px; background:#fbeaea; color:#c0392b; font-size:12px;">Delete</button>
+                <div class="delete-row-actions">
+                    <button type="button" class="btn-pill btn-edit" data-id="${p.id}">Edit</button>
+                    <button type="button" class="btn-pill btn-delete" data-id="${p.id}">Delete</button>
+                </div>
             </div>
         `).join('');
 
         deleteList.innerHTML = append ? deleteList.innerHTML + rowsHtml : (rowsHtml || '<div style="font-size:13px; color:#888; padding:10px 0;">No products yet.</div>');
         deleteLoadMoreBtn.style.display = data.hasMore ? 'block' : 'none';
 
-        deleteList.querySelectorAll('.delete-btn').forEach(b => {
+        deleteList.querySelectorAll('.btn-delete').forEach(b => {
             b.addEventListener('click', () => handleDelete(b.dataset.id, b));
+        });
+        deleteList.querySelectorAll('.btn-edit').forEach(b => {
+            b.addEventListener('click', () => openEditModal(b.dataset.id));
         });
     } catch (err) {
         deleteList.innerHTML = `<div style="font-size:13px; color:#c0392b; padding:10px 0;">${escapeHtml(err.message)}</div>`;
@@ -458,7 +760,7 @@ async function loadDeleteList(page = 1, append = false) {
 
 async function handleDelete(id, btnEl) {
     const row = btnEl.closest('.delete-row');
-    const name = row.querySelector('div div').textContent;
+    const name = row.querySelector('.delete-row-name').textContent;
 
     if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
 
@@ -467,7 +769,7 @@ async function handleDelete(id, btnEl) {
 
     try {
         const formData = new FormData();
-        formData.append('admin_password', ADMIN_PASSWORD);
+        formData.append('admin_password', adminPassword);
         formData.append('id', id);
 
         const res = await fetch(`${API_BASE}/delete_product.php`, { method: 'POST', body: formData });
@@ -478,6 +780,17 @@ async function handleDelete(id, btnEl) {
         } catch (parseErr) {
             const raw = await res.text();
             alert(`Server returned an unexpected response (status ${res.status}):\n\n${raw.slice(0, 300)}`);
+            btnEl.disabled = false;
+            btnEl.textContent = 'Delete';
+            return;
+        }
+
+        if (res.status === 403) {
+            alert('Incorrect admin password saved in this session. Re-enter it below, then try deleting again — no page reload needed.');
+            sessionStorage.removeItem('adminPassword');
+            adminPassword = '';
+            document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+            passwordGate.style.display = 'block';
             btnEl.disabled = false;
             btnEl.textContent = 'Delete';
             return;
@@ -551,13 +864,23 @@ uploadIconBtn.addEventListener('click', async () => {
     iconMsg.className = '';
 
     const formData = new FormData();
-    formData.append('admin_password', ADMIN_PASSWORD);
+    formData.append('admin_password', adminPassword);
     formData.append('category_name', iconCategorySelect.value);
     formData.append('icon', file);
 
     try {
         const res = await fetch(`${API_BASE}/set_category_icon.php`, { method: 'POST', body: formData });
         const data = await res.json();
+
+        if (res.status === 403) {
+            iconMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
+            iconMsg.className = 'error';
+            sessionStorage.removeItem('adminPassword');
+            adminPassword = '';
+            document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+            passwordGate.style.display = 'block';
+            return;
+        }
 
         if (res.ok && data.success) {
             iconMsg.textContent = 'Icon updated!';
@@ -577,10 +900,288 @@ uploadIconBtn.addEventListener('click', async () => {
     }
 });
 
-// ---- Init (runs immediately, no password gate) ----
-loadDeleteList(1, false);
-loadIconCategoryOptions();
-loadCatalogSnapshot();
+// ---- Edit Product modal ----
+const editModalOverlay = document.getElementById('editModalOverlay');
+const editModalClose = document.getElementById('editModalClose');
+const editModalLoading = document.getElementById('editModalLoading');
+const editModalErrorBox = document.getElementById('editModalErrorBox');
+const editProductForm = document.getElementById('editProductForm');
+const editExistingImages = document.getElementById('editExistingImages');
+const editDropZone = document.getElementById('editDropZone');
+const editImageInput = document.getElementById('editImageInput');
+const editNewPreviewGrid = document.getElementById('editNewPreviewGrid');
+const editVariantRows = document.getElementById('editVariantRows');
+const editAddVariantBtn = document.getElementById('editAddVariantBtn');
+const editFormMsg = document.getElementById('editFormMsg');
+const editSaveBtn = document.getElementById('editSaveBtn');
+
+let editKeptImages = [];   // URLs of existing images the user hasn't removed
+let editNewFiles = [];     // newly selected File objects
+
+function closeEditModal() {
+    editModalOverlay.classList.remove('open');
+}
+editModalClose.addEventListener('click', closeEditModal);
+editModalOverlay.addEventListener('click', (e) => {
+    if (e.target === editModalOverlay) closeEditModal();
+});
+
+function renderEditExistingImages() {
+    editExistingImages.innerHTML = editKeptImages.map((url, i) => `
+        <div class="modal-image-item">
+            <img src="${escapeHtml(url)}" alt="">
+            <button type="button" class="modal-image-remove" onclick="removeEditExistingImage(${i})">×</button>
+        </div>
+    `).join('');
+}
+function removeEditExistingImage(i) {
+    editKeptImages.splice(i, 1);
+    renderEditExistingImages();
+}
+
+function renderEditNewPreviews() {
+    editNewPreviewGrid.innerHTML = editNewFiles.map((file, i) => `
+        <div class="preview-item">
+            <img src="${URL.createObjectURL(file)}" alt="preview">
+            <button type="button" class="remove-btn" onclick="removeEditNewFile(${i})">×</button>
+        </div>
+    `).join('');
+}
+function removeEditNewFile(i) {
+    editNewFiles.splice(i, 1);
+    renderEditNewPreviews();
+}
+
+editDropZone.addEventListener('click', () => editImageInput.click());
+editImageInput.addEventListener('change', () => {
+    const validExt = ['jpg', 'jpeg', 'png', 'webp'];
+    for (const file of Array.from(editImageInput.files)) {
+        if (editKeptImages.length + editNewFiles.length >= 4) {
+            editFormMsg.textContent = 'Maximum 4 images allowed.';
+            editFormMsg.className = 'error';
+            break;
+        }
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!validExt.includes(ext)) continue;
+        if (file.size > 5 * 1024 * 1024) continue;
+        editNewFiles.push(file);
+    }
+    editImageInput.value = '';
+    renderEditNewPreviews();
+});
+
+function addEditVariantRow(value = '') {
+    const row = document.createElement('div');
+    row.className = 'modal-variant-row';
+    row.innerHTML = `
+        <input type="text" class="edit-variant-input" placeholder="e.g. 20ml" value="${escapeHtml(value)}">
+        <button type="button" class="modal-variant-remove">×</button>
+    `;
+    row.querySelector('.modal-variant-remove').addEventListener('click', () => row.remove());
+    editVariantRows.appendChild(row);
+}
+editAddVariantBtn.addEventListener('click', () => addEditVariantRow());
+
+function getEditVariants() {
+    return Array.from(document.querySelectorAll('.edit-variant-input'))
+        .map(i => i.value.trim())
+        .filter(v => v !== '');
+}
+
+// ---- Notes (Edit modal) ----
+const editNoteRows = document.getElementById('editNoteRows');
+const editAddNoteBtn = document.getElementById('editAddNoteBtn');
+
+function addEditNoteRow(name = '', existingImageUrl = null) {
+    const row = document.createElement('div');
+    row.className = 'note-row';
+    row.dataset.existingUrl = existingImageUrl || '';
+
+    const thumbInner = existingImageUrl
+        ? `<img src="${escapeHtml(existingImageUrl)}" alt="">`
+        : `<span class="note-row-thumb-placeholder">Photo</span>`;
+
+    row.innerHTML = `
+        <label class="note-row-thumb">
+            ${thumbInner}
+            <input type="file" class="edit-note-image-input" accept=".jpg,.jpeg,.png,.webp">
+        </label>
+        <input type="text" class="edit-note-name-input" placeholder="e.g. Bergamot" value="${escapeHtml(name)}">
+        <button type="button" class="note-row-remove">×</button>
+    `;
+    const fileInput = row.querySelector('.edit-note-image-input');
+    const thumb = row.querySelector('.note-row-thumb');
+    fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        row.dataset.existingUrl = '';
+        thumb.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="">`;
+        thumb.appendChild(fileInput);
+    });
+    row.querySelector('.note-row-remove').addEventListener('click', () => row.remove());
+    editNoteRows.appendChild(row);
+}
+editAddNoteBtn.addEventListener('click', () => addEditNoteRow());
+
+function getEditNoteRowsData() {
+    return Array.from(editNoteRows.querySelectorAll('.note-row')).map(row => {
+        const name = row.querySelector('.edit-note-name-input').value.trim();
+        const file = row.querySelector('.edit-note-image-input').files[0] || null;
+        const existingUrl = row.dataset.existingUrl || '';
+        return { name, file, existingUrl };
+    }).filter(n => n.name !== '' && (n.file || n.existingUrl));
+}
+
+async function saveEditNotes(productId) {
+    const notes = getEditNoteRowsData();
+
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('product_id', productId);
+
+    notes.forEach(n => {
+        if (n.existingUrl && !n.file) {
+            formData.append('existing_note_names[]', n.name);
+            formData.append('existing_note_images[]', n.existingUrl);
+        }
+    });
+    notes.forEach(n => {
+        if (n.file) {
+            formData.append('new_note_names[]', n.name);
+            formData.append('new_note_images[]', n.file);
+        }
+    });
+
+    await fetch(`${API_BASE}/set_product_notes.php`, { method: 'POST', body: formData });
+}
+
+async function openEditModal(id) {
+    if (!editModalOverlay) {
+        alert('Edit modal HTML is missing from this page — the file may be out of date. Re-upload the latest admin.html.');
+        return;
+    }
+    editModalOverlay.classList.add('open');
+    editModalLoading.style.display = 'block';
+    editModalErrorBox.style.display = 'none';
+    editProductForm.style.display = 'none';
+    editFormMsg.textContent = '';
+    editFormMsg.className = '';
+    editKeptImages = [];
+    editNewFiles = [];
+    editVariantRows.innerHTML = '';
+    editNoteRows.innerHTML = '';
+
+    try {
+        const res = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(id)}`);
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            editModalLoading.style.display = 'none';
+            editModalErrorBox.textContent = data.error || 'Product not found.';
+            editModalErrorBox.style.display = 'block';
+            return;
+        }
+
+        const p = data.product;
+        document.getElementById('editId').value = p.id;
+        document.getElementById('editName').value = p.name || '';
+        document.getElementById('editPrice').value = p.price || '';
+        document.getElementById('editGender').value = p.gender || 'men';
+        document.getElementById('editCategory').value = p.category || '';
+        document.getElementById('editBrand').value = p.brand || '';
+        document.getElementById('editLongevity').value = p.longevity || '';
+        document.getElementById('editDescription').value = p.description || '';
+
+        editKeptImages = (p.images || []).slice();
+        renderEditExistingImages();
+        renderEditNewPreviews();
+
+        (p.variants || []).forEach(v => addEditVariantRow(v));
+
+        try {
+            const notesRes = await fetch(`${API_BASE}/get_product_notes.php?product_id=${encodeURIComponent(id)}`);
+            const notesData = await notesRes.json();
+            if (notesData.success) {
+                (notesData.notes || []).forEach(n => addEditNoteRow(n.name, n.image));
+            }
+        } catch (notesErr) {
+            // notes just start empty if this fails — rest of the modal still works
+        }
+
+        editModalLoading.style.display = 'none';
+        editProductForm.style.display = 'block';
+    } catch (err) {
+        editModalLoading.style.display = 'none';
+        editModalErrorBox.textContent = 'Network error: ' + err.message;
+        editModalErrorBox.style.display = 'block';
+    }
+}
+
+editProductForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (editKeptImages.length + editNewFiles.length === 0) {
+        editFormMsg.textContent = 'At least one image is required.';
+        editFormMsg.className = 'error';
+        return;
+    }
+
+    editSaveBtn.disabled = true;
+    editSaveBtn.textContent = 'Saving...';
+    editFormMsg.textContent = '';
+    editFormMsg.className = '';
+
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('id', document.getElementById('editId').value);
+    formData.append('name', document.getElementById('editName').value);
+    formData.append('price', document.getElementById('editPrice').value);
+    formData.append('category', document.getElementById('editCategory').value);
+    formData.append('gender', document.getElementById('editGender').value);
+    formData.append('brand', document.getElementById('editBrand').value);
+    formData.append('longevity', document.getElementById('editLongevity').value.trim());
+    formData.append('description', document.getElementById('editDescription').value.trim());
+    editKeptImages.forEach(url => formData.append('existing_images[]', url));
+    editNewFiles.forEach(file => formData.append('images[]', file));
+    getEditVariants().forEach(v => formData.append('variants[]', v));
+
+    try {
+        const res = await fetch(`${API_BASE}/update_product.php`, { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (res.status === 403) {
+            sessionStorage.removeItem('adminPassword');
+            editFormMsg.textContent = 'Incorrect admin password. Please re-enter it on the main screen.';
+            editFormMsg.className = 'error';
+            return;
+        }
+
+        if (res.ok && data.success) {
+            const productId = document.getElementById('editId').value;
+            await saveEditNotes(productId);
+
+            editFormMsg.textContent = 'Saved!';
+            editFormMsg.className = 'success';
+            loadDeleteList(1, false);
+            loadCatalogSnapshot();
+            setTimeout(closeEditModal, 700);
+        } else {
+            editFormMsg.textContent = data.error || 'Something went wrong.';
+            editFormMsg.className = 'error';
+        }
+    } catch (err) {
+        editFormMsg.textContent = 'Network error: ' + err.message;
+        editFormMsg.className = 'error';
+    } finally {
+        editSaveBtn.disabled = false;
+        editSaveBtn.textContent = 'Save Changes';
+    }
+});
+
+// Fires now that every const/function above it is fully defined —
+// prevents the temporal-dead-zone crash that happened when this ran
+// too early (before deleteList/editModalOverlay etc. were declared).
+if (adminPassword) unlockUI();
 </script>
 
 </body>
