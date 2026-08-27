@@ -1977,3 +1977,11 @@ body.admin-page { padding-top: 0; }
 }
 .modal-save-btn:hover { background: #c22b26; }
 .modal-save-btn:disabled { background: #999; cursor: not-allowed; }
+
+/* Price hidden site-wide (catalog cards + product detail page) */
+.card-body .price,
+.detail-price {
+    display: none;
+}
+
+
