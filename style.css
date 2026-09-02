@@ -1798,6 +1798,7 @@ body.admin-page { padding-top: 0; }
 .modal-save-btn:hover { background: #c22b26; }
 .modal-save-btn:disabled { background: #999; cursor: not-allowed; }
 
+<<<<<<< HEAD
 /* =========================================================
    HERO SLIDER — added without changing existing site colors
    ========================================================= */
@@ -1932,3 +1933,12 @@ body.admin-page { padding-top: 0; }
 @media (min-width: 900px) {
     .hero-slider { margin-left: 0; margin-right: 0; }
 }
+=======
+/* Price hidden site-wide (catalog cards + product detail page) */
+.card-body .price,
+.detail-price {
+    display: none;
+}
+
+
+>>>>>>> 15ecf9c444c3bedd93cddb752c5c9fa63e9b86e0
