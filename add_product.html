@@ -50,6 +50,12 @@
                 </span>
                 Category icons
             </div>
+            <div class="drawer-link" data-target="hero">
+                <span class="drawer-icon admin-drawer-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </span>
+                Hero Slider
+            </div>
         </div>
         <a href="index.html" class="admin-nav-back" style="border-top:1px solid #eee; margin-top:auto;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -69,11 +75,15 @@
             </a>
             <a class="admin-nav-link" data-target="delete">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-                Delete product
+                Edit / Delete product
             </a>
             <a class="admin-nav-link" data-target="icons">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
                 Category icons
+            </a>
+            <a class="admin-nav-link" data-target="hero">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Hero Slider
             </a>
         </nav>
         <a href="index.html" class="admin-nav-back">
@@ -244,6 +254,85 @@
             </div>
         </div>
 
+        <!-- Panel: Hero Slider -->
+        <div class="admin-panel" id="panel-hero" style="display:none;">
+            <p class="section-label" id="heroFormLabel">Add a hero slide</p>
+            <div class="section-card">
+                <input type="hidden" id="heroEditId" value="">
+
+                <label for="heroImage">Slide Image</label>
+                <div class="icon-preview-row">
+                    <div class="icon-preview-circle" id="heroImagePreview" style="border-radius:8px; width:70px; height:70px;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                    <div style="flex:1;">
+                        <input type="file" id="heroImageInput" accept=".jpg,.jpeg,.png,.webp">
+                        <div style="font-size:11px; color:#999; margin-top:4px;">Transparent PNG recommended. Leave empty when editing to keep the current image.</div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div>
+                        <label for="heroKicker">Kicker (small label above headline)</label>
+                        <input type="text" id="heroKicker" placeholder="e.g. GUCCI">
+                    </div>
+                    <div>
+                        <label for="heroSortOrder">Order</label>
+                        <input type="number" id="heroSortOrder" min="0" step="1" value="0">
+                    </div>
+                </div>
+
+                <label for="heroImageSize">Image size (max height, px) — <span id="heroImageSizeVal">400</span>px</label>
+                <input type="range" id="heroImageSize" min="150" max="700" step="10" value="400" style="width:100%;">
+
+                <label for="heroHeadline">Headline</label>
+                <input type="text" id="heroHeadline" placeholder="e.g. Gucci Guilty" required>
+
+                <label for="heroHeadlineAccent">Headline accent (optional, shown in red italic after the headline)</label>
+                <input type="text" id="heroHeadlineAccent" placeholder="e.g. Essence Pour Homme.">
+
+                <label for="heroDescription">Description</label>
+                <textarea id="heroDescription" rows="3" maxlength="300" placeholder="One or two lines about this slide."></textarea>
+
+                <div class="form-row">
+                    <div>
+                        <label for="heroBtn1Text">Button 1 text</label>
+                        <input type="text" id="heroBtn1Text" value="Explore more">
+                    </div>
+                    <div>
+                        <label for="heroBtn1Link">Button 1 link</label>
+                        <input type="text" id="heroBtn1Link" placeholder="product.html?id=12">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div>
+                        <label for="heroBtn2Text">Button 2 text</label>
+                        <input type="text" id="heroBtn2Text" value="Inquiry">
+                    </div>
+                    <div>
+                        <label for="heroBtn2Link">Button 2 link</label>
+                        <input type="text" id="heroBtn2Link" placeholder="https://wa.me/91XXXXXXXXXX">
+                    </div>
+                </div>
+
+                <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+                    <input type="checkbox" id="heroActive" checked style="width:auto;"> Active (shown in the slider)
+                </label>
+
+                <div style="display:flex; gap:10px; margin-top:16px;">
+                    <button type="button" id="heroSaveBtn" style="width:auto; margin-top:0; padding:12px 24px;">Add Slide</button>
+                    <button type="button" id="heroCancelEditBtn" style="width:auto; margin-top:0; padding:12px 24px; background:#f0f0f0; color:#333; display:none;">Cancel edit</button>
+                </div>
+                <div id="heroFormMsg"></div>
+            </div>
+
+            <p class="section-label">Current slides</p>
+            <div class="section-card" id="heroListSection">
+                <div id="heroList"><p style="font-size:12px;color:#999;">Loading...</p></div>
+            </div>
+        </div>
+
     </main>
 
 </div>
@@ -369,6 +458,10 @@ function showPanel(name) {
         deleteSearchInput.value = '';
         loadDeleteList(1, false);
     }
+
+    if (name === 'hero') {
+        loadHeroList();
+    }
 }
 
 document.querySelectorAll('.admin-nav-link').forEach(link => {
@@ -392,6 +485,7 @@ function unlockUI() {
     loadDeleteList(1, false);
     loadIconCategoryOptions();
     loadCatalogSnapshot();
+    loadHeroList();
 }
 
 // (auto-unlock trigger moved to the end of this script — see bottom —
@@ -899,6 +993,245 @@ uploadIconBtn.addEventListener('click', async () => {
         uploadIconBtn.textContent = 'Upload Icon';
     }
 });
+
+// ---- Hero Slider manager ----
+const heroImageInput = document.getElementById('heroImageInput');
+const heroImagePreview = document.getElementById('heroImagePreview');
+const heroEditId = document.getElementById('heroEditId');
+const heroKicker = document.getElementById('heroKicker');
+const heroSortOrder = document.getElementById('heroSortOrder');
+const heroImageSize = document.getElementById('heroImageSize');
+const heroImageSizeVal = document.getElementById('heroImageSizeVal');
+if (heroImageSize) {
+    heroImageSize.addEventListener('input', () => {
+        heroImageSizeVal.textContent = heroImageSize.value;
+    });
+}
+const heroHeadline = document.getElementById('heroHeadline');
+const heroHeadlineAccent = document.getElementById('heroHeadlineAccent');
+const heroDescription = document.getElementById('heroDescription');
+const heroBtn1Text = document.getElementById('heroBtn1Text');
+const heroBtn1Link = document.getElementById('heroBtn1Link');
+const heroBtn2Text = document.getElementById('heroBtn2Text');
+const heroBtn2Link = document.getElementById('heroBtn2Link');
+const heroActive = document.getElementById('heroActive');
+const heroSaveBtn = document.getElementById('heroSaveBtn');
+const heroCancelEditBtn = document.getElementById('heroCancelEditBtn');
+const heroFormMsg = document.getElementById('heroFormMsg');
+const heroFormLabel = document.getElementById('heroFormLabel');
+const heroList = document.getElementById('heroList');
+
+const HERO_ICON_SVG = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+
+if (heroImageInput) {
+    heroImageInput.addEventListener('change', () => {
+        const file = heroImageInput.files[0];
+        if (file) {
+            heroImagePreview.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="preview" style="width:100%;height:100%;object-fit:cover;">`;
+        }
+    });
+}
+
+function resetHeroForm() {
+    heroEditId.value = '';
+    heroImageInput.value = '';
+    heroImagePreview.innerHTML = HERO_ICON_SVG;
+    heroKicker.value = '';
+    heroSortOrder.value = '0';
+    heroImageSize.value = '400';
+    heroImageSizeVal.textContent = '400';
+    heroHeadline.value = '';
+    heroHeadlineAccent.value = '';
+    heroDescription.value = '';
+    heroBtn1Text.value = 'Explore more';
+    heroBtn1Link.value = '';
+    heroBtn2Text.value = 'Inquiry';
+    heroBtn2Link.value = '';
+    heroActive.checked = true;
+    heroFormLabel.textContent = 'Add a hero slide';
+    heroSaveBtn.textContent = 'Add Slide';
+    heroCancelEditBtn.style.display = 'none';
+    heroFormMsg.textContent = '';
+    heroFormMsg.className = '';
+}
+
+function fillHeroFormForEdit(slide) {
+    heroEditId.value = slide.id;
+    heroImageInput.value = '';
+    heroImagePreview.innerHTML = slide.image
+        ? `<img src="${escapeHtml(slide.image)}" alt="preview" style="width:100%;height:100%;object-fit:cover;">`
+        : HERO_ICON_SVG;
+    heroKicker.value = slide.kicker || '';
+    heroSortOrder.value = slide.sort_order != null ? slide.sort_order : '0';
+    heroImageSize.value = slide.image_size != null ? slide.image_size : '400';
+    heroImageSizeVal.textContent = heroImageSize.value;
+    heroHeadline.value = slide.headline || '';
+    heroHeadlineAccent.value = slide.headline_accent || '';
+    heroDescription.value = slide.description || '';
+    heroBtn1Text.value = slide.button1_text || 'Explore more';
+    heroBtn1Link.value = slide.button1_link || '';
+    heroBtn2Text.value = slide.button2_text || 'Inquiry';
+    heroBtn2Link.value = slide.button2_link || '';
+    heroActive.checked = !!Number(slide.active);
+    heroFormLabel.textContent = 'Edit hero slide';
+    heroSaveBtn.textContent = 'Save Changes';
+    heroCancelEditBtn.style.display = 'inline-block';
+    heroFormMsg.textContent = '';
+    heroFormMsg.className = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+if (heroCancelEditBtn) {
+    heroCancelEditBtn.addEventListener('click', resetHeroForm);
+}
+
+async function loadHeroList() {
+    if (!heroList) return;
+    heroList.innerHTML = '<p style="font-size:12px;color:#999;">Loading...</p>';
+
+    try {
+        const res = await fetch(`${API_BASE}/get_hero_slides.php?all=1`);
+        const data = await res.json();
+
+        if (!data.success || !Array.isArray(data.slides) || !data.slides.length) {
+            heroList.innerHTML = '<p style="font-size:12px;color:#999;">No hero slides yet.</p>';
+            return;
+        }
+
+        heroList.innerHTML = data.slides.map(s => `
+            <div class="delete-row">
+                <img class="delete-row-thumb" src="${s.image ? escapeHtml(s.image) : ''}" alt="${escapeHtml(s.headline || '')}">
+                <div class="delete-row-info">
+                    <div class="delete-row-name">${escapeHtml(s.headline || '(no headline)')} ${Number(s.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
+                    <div class="delete-row-price">Order ${escapeHtml(String(s.sort_order != null ? s.sort_order : 0))}</div>
+                </div>
+                <div class="delete-row-actions">
+                    <button type="button" class="btn-pill btn-edit" data-hero-edit="${s.id}">Edit</button>
+                    <button type="button" class="btn-pill btn-delete" data-hero-delete="${s.id}">Delete</button>
+                </div>
+            </div>
+        `).join('');
+
+        heroList.querySelectorAll('[data-hero-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const slide = data.slides.find(s => String(s.id) === btn.dataset.heroEdit);
+                if (slide) fillHeroFormForEdit(slide);
+            });
+        });
+
+        heroList.querySelectorAll('[data-hero-delete]').forEach(btn => {
+            btn.addEventListener('click', () => deleteHeroSlide(btn.dataset.heroDelete, btn));
+        });
+    } catch (err) {
+        heroList.innerHTML = `<p style="font-size:12px;color:#e0342e;">Couldn't load slides: ${escapeHtml(err.message)}</p>`;
+    }
+}
+
+async function deleteHeroSlide(id, btn) {
+    if (!confirm('Delete this hero slide?')) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('id', id);
+
+    try {
+        const res = await fetch(`${API_BASE}/delete_hero_slide.php`, { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (res.status === 403) {
+            sessionStorage.removeItem('adminPassword');
+            alert('Incorrect admin password saved in this session. Please re-enter it.');
+            document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+            passwordGate.style.display = 'block';
+            return;
+        }
+
+        if (res.ok && data.success) {
+            loadHeroList();
+        } else {
+            alert(data.error || 'Delete failed.');
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+    }
+}
+
+if (heroSaveBtn) {
+    heroSaveBtn.addEventListener('click', async () => {
+        if (!heroHeadline.value.trim()) {
+            heroFormMsg.textContent = 'Headline is required.';
+            heroFormMsg.className = 'error';
+            return;
+        }
+
+        const isEdit = !!heroEditId.value;
+        if (!isEdit && !heroImageInput.files[0]) {
+            heroFormMsg.textContent = 'Choose an image for this slide.';
+            heroFormMsg.className = 'error';
+            return;
+        }
+
+        heroSaveBtn.disabled = true;
+        heroSaveBtn.textContent = 'Saving...';
+        heroFormMsg.textContent = '';
+        heroFormMsg.className = '';
+
+        const formData = new FormData();
+        formData.append('admin_password', adminPassword);
+        if (isEdit) formData.append('id', heroEditId.value);
+        if (heroImageInput.files[0]) formData.append('image', heroImageInput.files[0]);
+        formData.append('kicker', heroKicker.value.trim());
+        formData.append('sort_order', heroSortOrder.value || '0');
+        formData.append('image_size', heroImageSize.value || '400');
+        formData.append('headline', heroHeadline.value.trim());
+        formData.append('headline_accent', heroHeadlineAccent.value.trim());
+        formData.append('description', heroDescription.value.trim());
+        formData.append('button1_text', heroBtn1Text.value.trim());
+        formData.append('button1_link', heroBtn1Link.value.trim());
+        formData.append('button2_text', heroBtn2Text.value.trim());
+        formData.append('button2_link', heroBtn2Link.value.trim());
+        formData.append('active', heroActive.checked ? '1' : '0');
+
+        const endpoint = isEdit ? 'update_hero_slide.php' : 'add_hero_slide.php';
+
+        try {
+            const res = await fetch(`${API_BASE}/${endpoint}`, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (res.status === 403) {
+                sessionStorage.removeItem('adminPassword');
+                heroFormMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
+                heroFormMsg.className = 'error';
+                document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+                passwordGate.style.display = 'block';
+                return;
+            }
+
+            if (res.ok && data.success) {
+                heroFormMsg.textContent = isEdit ? 'Saved!' : 'Slide added!';
+                heroFormMsg.className = 'success';
+                resetHeroForm();
+                loadHeroList();
+            } else {
+                heroFormMsg.textContent = data.error || 'Something went wrong.';
+                heroFormMsg.className = 'error';
+            }
+        } catch (err) {
+            heroFormMsg.textContent = 'Network error: ' + err.message;
+            heroFormMsg.className = 'error';
+        } finally {
+            heroSaveBtn.disabled = false;
+            heroSaveBtn.textContent = isEdit ? 'Save Changes' : 'Add Slide';
+        }
+    });
+}
 
 // ---- Edit Product modal ----
 const editModalOverlay = document.getElementById('editModalOverlay');

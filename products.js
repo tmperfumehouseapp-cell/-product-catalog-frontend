@@ -1,13 +1,20 @@
-const API_BASE = 'https://fourpirates.tmfragrance.com/visitor/product-api';
+/* =========================================================
+   PRODUCTS.JS
+   Categories, brands, product grid, filter drawer, search-filtering.
+   Only used on products.html. Requires common.js loaded first
+   (uses its API_BASE, escapeHtml, searchInput, searchBox, titleRow,
+   drawerNav, updateHeroForSearch from that shared scope).
+   ========================================================= */
 
 const grid = document.getElementById('productGrid');
-const searchInput = document.getElementById('searchInput');
 const categoryRow = document.getElementById('categoryRow');
 const brandFilter = document.getElementById('brandFilter');
 const genderFilter = document.getElementById('genderFilter');
 const resultsCount = document.getElementById('resultsCount');
 const loadMoreBtn = document.getElementById('loadMoreBtn');
 
+/* ---- (kept from the original file — currently inert since no
+   #viewToggleBtn exists in the markup; harmless either way) ---- */
 const viewToggleBtn = document.getElementById('viewToggleBtn');
 if (viewToggleBtn) {
     viewToggleBtn.addEventListener('click', () => {
@@ -16,51 +23,20 @@ if (viewToggleBtn) {
     });
 }
 
-const hamburgerBtn = document.getElementById('hamburgerBtn');
-const drawer = document.getElementById('drawer');
-const drawerOverlay = document.getElementById('drawerOverlay');
-const drawerClose = document.getElementById('drawerClose');
-const drawerNav = document.getElementById('drawerNav');
-
-const searchBox = document.getElementById('searchBox');
-const searchToggle = document.getElementById('searchToggle');
-
-function openDrawer() {
-    drawer.classList.add('open');
-    drawerOverlay.classList.add('open');
-}
-function closeDrawer() {
-    drawer.classList.remove('open');
-    drawerOverlay.classList.remove('open');
-}
-hamburgerBtn.addEventListener('click', openDrawer);
-drawerClose.addEventListener('click', closeDrawer);
-drawerOverlay.addEventListener('click', closeDrawer);
-
-const titleRow = document.querySelector('.title-row');
-searchToggle.addEventListener('click', () => {
-    const expanding = !searchBox.classList.contains('expanded');
-    searchBox.classList.toggle('expanded');
-    titleRow.classList.toggle('search-open', expanding);
-    if (expanding) {
-        searchInput.focus();
-    } else if (!searchInput.value) {
-        searchInput.blur();
-    }
-});
-document.addEventListener('click', (e) => {
-    if (!searchBox.contains(e.target) && !searchInput.value) {
-        searchBox.classList.remove('expanded');
-        titleRow.classList.remove('search-open');
-    }
-});
-
 let currentPage = 1;
 let currentProducts = [];
 let selectedCategory = '';
 let debounceTimer;
 
-// ---- Persist filter state across page navigation (product.html and back) ----
+/*
+ * Set by the filter-drawer IIFE further down.
+ * Called whenever selected category changes.
+ */
+let refreshFilterDrawerForCategory = null;
+
+/* =========================================================
+   PERSIST FILTER STATE
+   ========================================================= */
 const FILTER_KEY = 'catalogFilters';
 
 function saveFilterState() {
@@ -80,17 +56,16 @@ function loadFilterState() {
     }
 }
 
-function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
-
-// ---- Price formatting: "Rs. 1,199" style (Indian comma grouping, no decimals) ----
+/* =========================================================
+   PRICE
+   ========================================================= */
 function formatPrice(price) {
     return 'Rs. ' + Math.round(price).toLocaleString('en-IN');
 }
 
+/* =========================================================
+   SKELETON
+   ========================================================= */
 function skeletonHtml(count) {
     return Array.from({ length: count }).map(() => `
         <div class="skeleton-card">
@@ -101,7 +76,9 @@ function skeletonHtml(count) {
     `).join('');
 }
 
-// ---- Category buttons (independent of pagination, always complete) ----
+/* =========================================================
+   CATEGORIES
+   ========================================================= */
 async function loadCategories() {
     try {
         const res = await fetch(`${API_BASE}/get_categories.php`);
@@ -117,19 +94,7 @@ async function loadCategories() {
             </div>
         `).join('');
 
-        const allIconHtml = data.all_icon
-            ? `<img src="${escapeHtml(data.all_icon)}" alt="All Category">`
-            : `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`;
-
-        categoryRow.innerHTML = `
-            <div class="story-item" data-category="">
-                <div class="story-circle ${data.all_icon ? '' : 'all-circle'} active">
-                    ${allIconHtml}
-                    <div class="story-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
-                </div>
-                <div class="story-label active">All Category</div>
-            </div>
-        ` + circles;
+        categoryRow.innerHTML = circles;
 
         const drawerLinks = data.categories.map(c => `
             <a class="drawer-link" data-category="${escapeHtml(c.category)}">
@@ -138,12 +103,7 @@ async function loadCategories() {
             </a>
         `).join('');
 
-        drawerNav.innerHTML = `
-            <a class="drawer-link active" data-category="">
-                <span class="drawer-icon">${data.all_icon ? `<img src="${escapeHtml(data.all_icon)}" alt="All Category">` : ''}</span>
-                All Category
-            </a>
-        ` + drawerLinks;
+        drawerNav.innerHTML = drawerLinks;
 
         const footerCollection = document.getElementById('footerCollection');
         if (footerCollection) {
@@ -176,12 +136,19 @@ async function loadCategories() {
             if (drawerMatch) drawerMatch.classList.add('active');
         }
 
-        function selectCategory(category) {
+        async function selectCategory(category) {
             selectedCategory = category;
             searchInput.value = '';
+            updateHeroForSearch();
             searchBox.classList.remove('expanded');
             titleRow.classList.remove('search-open');
+
             applyActiveState(category);
+
+            if (refreshFilterDrawerForCategory) {
+                await refreshFilterDrawerForCategory(category);
+            }
+
             saveFilterState();
             resetAndReload();
         }
@@ -197,18 +164,19 @@ async function loadCategories() {
             });
         });
 
-        // Restore previously selected category (if any) now that circles exist
         const saved = loadFilterState();
         if (saved && saved.category) {
             selectedCategory = saved.category;
             applyActiveState(saved.category);
         }
     } catch (err) {
-        // Circles failing silently is fine — filters via product data still work
+        // Categories failing silently is fine.
     }
 }
 
-// ---- Brands (independent of pagination, always complete) ----
+/* =========================================================
+   BRANDS
+   ========================================================= */
 async function loadBrands() {
     try {
         const res = await fetch(`${API_BASE}/get_brands.php`);
@@ -222,21 +190,36 @@ async function loadBrands() {
             brandFilter.appendChild(opt);
         });
     } catch (err) {
-        // Fine — brand filter just stays empty
+        // Brand filter stays empty.
     }
 }
 
-// ---- Products ----
+/* =========================================================
+   PRODUCT PARAMS
+   ========================================================= */
 function buildParams(page) {
     const params = new URLSearchParams();
-    if (searchInput.value.trim()) params.set('search', searchInput.value.trim());
-    if (selectedCategory) params.set('category', selectedCategory);
-    if (genderFilter.value) params.set('gender', genderFilter.value);
-    if (brandFilter.value) params.set('brand', brandFilter.value);
+
+    if (searchInput.value.trim()) {
+        params.set('search', searchInput.value.trim());
+    }
+    if (selectedCategory) {
+        params.set('category', selectedCategory);
+    }
+    if (genderFilter.value) {
+        params.set('gender', genderFilter.value);
+    }
+    if (brandFilter.value) {
+        params.set('brand', brandFilter.value);
+    }
     params.set('page', page);
+
     return params;
 }
 
+/* =========================================================
+   LOAD PRODUCTS
+   ========================================================= */
 async function loadProducts(page = 1, append = false) {
     if (!append) {
         grid.innerHTML = skeletonHtml(8);
@@ -251,7 +234,9 @@ async function loadProducts(page = 1, append = false) {
         const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
         const data = await res.json();
 
-        if (!data.success) throw new Error(data.error || 'Failed to load');
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to load');
+        }
 
         currentProducts = append ? currentProducts.concat(data.products) : data.products;
         currentPage = data.page;
@@ -268,6 +253,9 @@ async function loadProducts(page = 1, append = false) {
     }
 }
 
+/* =========================================================
+   RENDER PRODUCTS
+   ========================================================= */
 function renderProducts(products) {
     if (products.length === 0) {
         grid.innerHTML = `
@@ -289,62 +277,132 @@ function renderProducts(products) {
                 <h3>${escapeHtml(p.name)}</h3>
                 <div class="price-row">
                     <div class="price">${formatPrice(p.price)}</div>
-                    <div class="meta">
-                        <span class="tag">${escapeHtml(p.gender)}</span>
-                    </div>
+                    <div class="meta"><span class="tag">${escapeHtml(p.gender)}</span></div>
                 </div>
             </div>
         </a>
     `).join('');
 }
 
+/*
+ * When a product card is clicked, clear the saved search term before
+ * navigating away — otherwise the search box shows the old term again
+ * the next time products.html loads (e.g. via the back button).
+ * Category/brand/gender filters are left as-is, since those are
+ * meant to stick around when browsing within a category.
+ */
+grid.addEventListener('click', (e) => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+
+    const existing = loadFilterState() || {};
+    if (existing.search) {
+        existing.search = '';
+        sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
+    }
+});
+
+/* =========================================================
+   RESET + RELOAD
+   ========================================================= */
 function resetAndReload() {
     saveFilterState();
     loadProducts(1, false);
 }
 
+/* =========================================================
+   SEARCH — live filtering as you type, 300ms debounce
+   ========================================================= */
 searchInput.addEventListener('input', () => {
+    updateHeroForSearch();
+
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(resetAndReload, 350);
+    debounceTimer = setTimeout(() => {
+        resetAndReload();
+    }, 300);
 });
+
+/* =========================================================
+   FILTER EVENTS
+   ========================================================= */
 genderFilter.addEventListener('change', resetAndReload);
 brandFilter.addEventListener('change', resetAndReload);
 
+/* =========================================================
+   LOAD MORE
+   ========================================================= */
 loadMoreBtn.addEventListener('click', () => {
     loadProducts(currentPage + 1, true);
 });
 
-// ---- Restore search/brand/gender before first load (category restored inside loadCategories) ----
+/* =========================================================
+   RESTORE URL CATEGORY / SEARCH
+   ========================================================= */
 const urlParams = new URLSearchParams(window.location.search);
 const urlCategory = urlParams.get('category');
+const urlSearch = urlParams.get('search');
+
 if (urlCategory) {
     const existing = loadFilterState() || {};
     existing.category = urlCategory;
     sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
+} else if (urlSearch) {
+    // A header search with no category in the URL means "search everywhere" —
+    // clear out any category left over from previous browsing so the search
+    // isn't silently scoped to whatever category was last selected.
+    const existing = loadFilterState() || {};
+    existing.category = '';
+    sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
 }
 
+if (urlSearch) {
+    const existing = loadFilterState() || {};
+    existing.search = urlSearch;
+    sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
+}
+
+/* =========================================================
+   RESTORE SAVED FILTERS
+   ========================================================= */
 const savedFilters = loadFilterState();
+
 if (savedFilters) {
     searchInput.value = savedFilters.search || '';
-    // brand/gender <select> options aren't populated yet — set once loadBrands() finishes
+    updateHeroForSearch();
 }
 
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
 async function init() {
     await loadCategories();
     await loadBrands();
 
     if (savedFilters) {
-        if (savedFilters.brand) brandFilter.value = savedFilters.brand;
-        if (savedFilters.gender) genderFilter.value = savedFilters.gender;
+        if (savedFilters.brand) {
+            brandFilter.value = savedFilters.brand;
+        }
+        if (savedFilters.gender) {
+            genderFilter.value = savedFilters.gender;
+        }
+    }
+
+    if (refreshFilterDrawerForCategory) {
+        await refreshFilterDrawerForCategory(selectedCategory);
     }
 
     loadProducts(1, false);
+
+    /* No hero element on products.html — loadHeroSlider() from
+       common.js already ran once at load and no-op'd via its own
+       guard, so nothing further to do here. */
 }
 
 init();
 
-// ---- Filter drawer (opened by the Filter button on mobile; a permanent
-// left sidebar on desktop via the >=900px media query in style.css) ----
+/* =========================================================
+   FILTER DRAWER
+   ========================================================= */
 (function () {
     const openBtn = document.getElementById('filterToggleBtn');
     const drawer = document.getElementById('filterDrawer');
@@ -353,6 +411,7 @@ init();
     const genderBody = document.getElementById('fdGender');
     const brandBody = document.getElementById('fdBrand');
     const clearBtn = document.getElementById('fdClearBtn');
+
     if (!openBtn || !drawer) return;
 
     let brandList = [];
@@ -363,6 +422,7 @@ init();
         { value: 'women', label: 'Women' },
         { value: 'unisex', label: 'Unisex' }
     ];
+
     const BRAND_VISIBLE = 8;
 
     function openDrawerPanel() {
@@ -371,10 +431,12 @@ init();
         renderGender();
         renderBrand();
     }
+
     function closeDrawerPanel() {
         drawer.classList.remove('open');
         overlay.classList.remove('open');
     }
+
     openBtn.addEventListener('click', openDrawerPanel);
     closeBtn.addEventListener('click', closeDrawerPanel);
     overlay.addEventListener('click', closeDrawerPanel);
@@ -392,7 +454,12 @@ init();
         genderCounts = {};
         await Promise.all(GENDER_OPTIONS.map(async (g) => {
             try {
-                const res = await fetch(`${API_BASE}/get_products.php?gender=${encodeURIComponent(g.value)}&page=1`);
+                const params = new URLSearchParams();
+                params.set('gender', g.value);
+                if (selectedCategory) params.set('category', selectedCategory);
+                if (brandFilter.value) params.set('brand', brandFilter.value);
+                params.set('page', '1');
+                const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
                 const data = await res.json();
                 genderCounts[g.value] = data.success ? data.total : null;
             } catch (e) {
@@ -400,6 +467,57 @@ init();
             }
         }));
         return genderCounts;
+    }
+
+    async function fetchBrandList(category) {
+        const gender = genderFilter.value;
+
+        if (!category && !gender) {
+            try {
+                const res = await fetch(`${API_BASE}/get_brands.php`);
+                const data = await res.json();
+                brandList = data.success ? data.brands : [];
+            } catch (e) {
+                brandList = [];
+            }
+            return;
+        }
+
+        try {
+            let products = [];
+            let page = 1;
+            let hasMore = true;
+
+            while (hasMore && page <= 30) {
+                const params = new URLSearchParams();
+                if (category) params.set('category', category);
+                if (gender) params.set('gender', gender);
+                params.set('page', page);
+                const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
+                const data = await res.json();
+                if (!data.success) break;
+                products = products.concat(data.products);
+                hasMore = !!data.hasMore;
+                page++;
+            }
+
+            const counts = {};
+            products.forEach(p => {
+                if (!p.brand) return;
+                counts[p.brand] = (counts[p.brand] || 0) + 1;
+            });
+            brandList = Object.keys(counts)
+                .sort((a, b) => a.localeCompare(b))
+                .map(brand => ({ brand, count: counts[brand] }));
+        } catch (e) {
+            brandList = [];
+        }
+    }
+
+    function pruneInvalidBrandSelection() {
+        const valid = new Set(brandList.map(b => b.brand));
+        const kept = selectedBrands().filter(b => valid.has(b));
+        brandFilter.value = kept.join(',');
     }
 
     function optionRow(name, value, label, count, checked, extraClass) {
@@ -416,6 +534,7 @@ init();
         ).join('');
         bindExclusiveGroup(genderBody, 'fdGenderOpt', (val) => {
             genderFilter.value = val;
+            refreshForCategory(selectedCategory);
             resetAndReload();
         });
 
@@ -451,10 +570,10 @@ init();
             : '';
         brandBody.innerHTML = rows + showMoreHtml;
 
-        // Brand is multi-select: checking a box adds it to the list, unchecking
-        // removes it — unlike gender, other brand checkboxes stay as they are.
         bindMultiGroup(brandBody, 'fdBrandOpt', (values) => {
             brandFilter.value = values.join(',');
+            genderCounts = null;
+            renderGender();
             resetAndReload();
         });
 
@@ -469,7 +588,6 @@ init();
         }
     }
 
-    // Gender stays single-select: checking one unchecks the others in the group.
     function bindExclusiveGroup(container, name, onChange) {
         container.querySelectorAll(`input[name="${name}"]`).forEach(input => {
             input.addEventListener('change', () => {
@@ -485,8 +603,6 @@ init();
         });
     }
 
-    // Brand is multi-select: every checked box in the group is collected and
-    // passed back together, nothing else gets unchecked automatically.
     function bindMultiGroup(container, name, onChange) {
         container.querySelectorAll(`input[name="${name}"]`).forEach(input => {
             input.addEventListener('change', () => {
@@ -504,19 +620,13 @@ init();
         resetAndReload();
     });
 
-    // Fetch the same brand list used to populate the hidden <select>, so the
-    // drawer's checkboxes show the identical names and counts. Render
-    // immediately on load too — the desktop sidebar is always visible,
-    // it doesn't wait for a Filter button click like mobile does.
-    (async () => {
-        try {
-            const res = await fetch(`${API_BASE}/get_brands.php`);
-            const data = await res.json();
-            if (data.success) brandList = data.brands;
-        } catch (e) {
-            brandList = [];
-        }
+    async function refreshForCategory(category) {
+        genderCounts = null;
+        await fetchBrandList(category);
+        pruneInvalidBrandSelection();
         renderGender();
         renderBrand();
-    })();
+    }
+
+    refreshFilterDrawerForCategory = refreshForCategory;
 })();
