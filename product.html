@@ -8,6 +8,402 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+/* Product video gallery thumb — sized by JS to exactly match the image
+   thumbs next to it (style.css controls those), so they always align. */
+.gallery-thumb-video {
+    width: 60px; height: 60px; /* fallback only — JS overrides */
+    border-radius: 10px; background: #111;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    border: 2px solid transparent;
+    vertical-align: top;
+}
+.gallery-thumb-video.active { border-color: #e0342e; }
+.gallery-thumb-video svg { width: 40%; height: 40%; }
+#mainMedia { position: relative; }
+#mainMedia video.gallery-main {
+    background: #000;
+    object-fit: contain;
+    width: 100%;
+    max-width: 100%;
+    display: block;
+}
+
+/* Nothing on this page may push the layout wider than the screen */
+html, body { overflow-x: hidden; }
+
+/* =========================================================
+   GRID OVERFLOW CURE
+   style.css's .detail-card is a CSS grid; any wide child
+   (note images, videos) inflates its 1fr column past the
+   viewport, cutting the whole page off on the right.
+   min-width:0 stops grid items from growing to content size.
+   ========================================================= */
+.detail-card { max-width: 100%; }
+.detail-card > * { min-width: 0; }
+.detail-info { min-width: 0; max-width: 100%; }
+.detail-info img, .detail-info video { max-width: 100%; }
+.pspec-grid, .pspec-item { min-width: 0; }
+.pspec-label, .pspec-value { overflow-wrap: anywhere; }
+
+/* =========================================================
+   NOTES SCROLLER — style.css has no rules for these classes,
+   so note images rendered full-size and broke the layout.
+   Horizontal scroll row, circular thumbs, arrow + fade
+   affordances (shown only when the row overflows).
+   ========================================================= */
+.product-notes-scroll-wrap { position: relative; max-width: 100%; overflow: hidden; }
+.product-notes-row {
+    display: flex; gap: 14px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 2px 8px;
+}
+.product-notes-row::-webkit-scrollbar { display: none; }
+.product-note { flex: 0 0 auto; width: 84px; text-align: center; }
+.product-note-img {
+    width: 72px; height: 72px; border-radius: 50%;
+    overflow: hidden; margin: 0 auto 6px; background: #f2f2f2;
+}
+.product-note-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.product-note-name { font-size: 12px; color: #444; margin: 0; overflow-wrap: anywhere; }
+
+.pn-arrow {
+    position: absolute; top: 34px; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid #eee; background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    display: none; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 2; padding: 0;
+}
+.pn-arrow.show { display: flex; }
+.pn-arrow.left { left: 0; }
+.pn-arrow.right { right: 0; }
+.pn-fade {
+    position: absolute; top: 0; bottom: 0; width: 32px;
+    pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 1;
+}
+.pn-fade.show { opacity: 1; }
+.pn-fade.left { left: 0; background: linear-gradient(to right, #fff, rgba(255,255,255,0)); }
+.pn-fade.right { right: 0; background: linear-gradient(to left, #fff, rgba(255,255,255,0)); }
+
+/* =========================================================
+   MOBILE GALLERY (≤767px): square media box + tidy thumb row.
+   Keeps portrait/landscape images and videos from blowing up
+   the page height; desktop keeps style.css sizing untouched.
+   ========================================================= */
+@media (max-width: 767px) {
+    #mainMedia {
+        width: 100%;
+        aspect-ratio: 1 / 1;   /* consistent square stage */
+        overflow: hidden;
+        background: #f5f5f5;
+    }
+    #mainMedia img.gallery-main {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover;     /* fills the square, crops edges */
+        display: block;
+    }
+    #mainMedia video.gallery-main {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain;   /* whole video visible, letterboxed */
+    }
+    .gallery-thumbs {
+        display: flex !important;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 10px 2px;
+        -webkit-overflow-scrolling: touch;
+    }
+    .gallery-thumbs img,
+    .gallery-thumb-video {
+        width: 56px !important;
+        height: 56px !important;
+        min-width: 56px !important;
+        border-radius: 10px !important;
+        object-fit: cover;
+        flex: 0 0 auto;
+    }
+}
+
+/* Specifications grid (category metafields) */
+.pspec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.pspec-item {
+    display: flex; flex-direction: column; gap: 5px;
+    background: #f7f7f7; border-radius: 10px; padding: 12px 14px;
+}
+.pspec-item svg { width: 18px; height: 18px; stroke: #e0342e; }
+.pspec-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.pspec-value { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+@media (min-width: 640px) { .pspec-grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* HIDE ALL PRICES (site-wide request) */
+.detail-price, .search-suggest-price, .related-card-price { display: none !important; }
+
+/* =========================================================
+   PRODUCT-OPEN TRANSITION (View Transitions API)
+   The tapped product image morphs into the product page's
+   main image. Browsers without support fall back to normal
+   instant navigation — nothing breaks.
+   ========================================================= */
+@view-transition { navigation: auto; }
+::view-transition-group(product-hero) {
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(.25,.9,.3,1);
+}
+::view-transition-old(product-hero), ::view-transition-new(product-hero) {
+    height: 100%;
+    object-fit: cover;
+}
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.3s; }
+
+/* The product page's main image is the landing spot of the morph */
+#mainImage.gallery-main { view-transition-name: product-hero; }
+
+/* Main product image: natural ratio — full photo, no crop, no bands */
+#mainMedia img.gallery-main {
+    width: 100%;
+    height: auto !important;
+    aspect-ratio: auto;
+    object-fit: contain;
+    display: block;
+}
+
+/* =========================================================
+   PAGE PEEL transition (product open)
+   A gold-edged "page corner" sweeps from the bottom-right,
+   covers the screen, the next page loads, then it peels back
+   away to the corner. Runs alongside the image-fly morph.
+   ========================================================= */
+#peelLayer {
+    position: fixed;
+    right: 0; bottom: 0;
+    width: 260vmax; height: 260vmax;
+    z-index: 99999;
+    pointer-events: none;
+    background: linear-gradient(315deg,
+        #171310 0%, #171310 46%,
+        #3a3020 48%, #c9a35d 50%, #f0d9a8 51%, #c9a35d 52%,
+        #12100b 54%, #0d0b08 100%);
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    box-shadow: -14px -14px 40px rgba(0,0,0,0.65);
+    /* transform-based = GPU compositing, no layout work per frame */
+    transform: scale(0);
+    transform-origin: bottom right;
+    transition: transform 0.55s cubic-bezier(.65, 0, .35, 1);
+    will-change: transform;
+}
+#peelLayer.cover { transform: scale(1); }
+#peelLayer.instant { transition: none; }
+</style>
+<style>
+/* =========================================================
+   LUXE DARK-GOLD THEME — product page override layer.
+   Matches the homepage + products page. style.css untouched.
+   ========================================================= */
+body { background: #0d0b08 !important; color: #e9e2d4; }
+
+.top-header {
+    background: rgba(13,11,8,0.92) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(212,175,106,0.16) !important;
+    box-shadow: none !important;
+}
+.hamburger-btn, .search-icon-btn {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(212,175,106,0.4) !important;
+    color: #f2ecdf !important;
+}
+/* Back button sits ON the product photo (light background) —
+   solid dark disc so it's always clearly visible */
+.back-icon-btn {
+    background: rgba(13,11,8,0.85) !important;
+    border: 1px solid rgba(212,175,106,0.7) !important;
+    color: #f2ecdf !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.back-icon-btn svg { stroke: #f2ecdf !important; color: #f2ecdf !important; }
+.hamburger-btn:hover, .search-icon-btn:hover {
+    background: rgba(212,175,106,0.12) !important;
+    border-color: rgba(212,175,106,0.9) !important;
+}
+.back-icon-btn:hover { border-color: #d4af6a !important; background: rgba(13,11,8,0.95) !important; }
+.search-input-hidden { background: #15130e !important; border-color: rgba(212,175,106,0.3) !important; color: #f2ecdf !important; }
+.search-suggest { background: #15130e !important; border: 1px solid rgba(212,175,106,0.25) !important; }
+.search-suggest-name { color: #f2ecdf !important; }
+.search-suggest-price { color: #d4af6a !important; }
+
+.drawer { background: #0f0d09 !important; }
+.drawer-head { border-bottom: 1px solid rgba(212,175,106,0.16) !important; }
+.drawer-logo, .drawer-close-btn { color: #f2ecdf !important; }
+.drawer-close-btn { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(212,175,106,0.4) !important; }
+.drawer-link { color: #cfc8bb !important; }
+.drawer-link:hover, .drawer-link.active { background: #17140e !important; color: #d4af6a !important; }
+
+/* Detail card + gallery */
+.detail-card { background: #15130e !important; border: 1px solid rgba(212,175,106,0.18) !important; box-shadow: 0 14px 30px rgba(0,0,0,0.4) !important; }
+.gallery-main { background: #100e0a !important; }
+.gallery-thumbs { background: #100e0a !important; border-top: 1px solid rgba(212,175,106,0.12); }
+.gallery-thumbs img { border-color: rgba(212,175,106,0.2) !important; }
+.gallery-thumbs img.active { border-color: #d4af6a !important; }
+.gallery-thumb-video {
+    background-color: #15130e !important;
+    border-color: rgba(212,175,106,0.3) !important;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+/* the video's own frame (paused at ~1.2s) is the thumbnail */
+.gallery-thumb-video .vthumb-frame {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+/* dark scrim so the play icon reads on any photo */
+.gallery-thumb-video::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.45);
+}
+.gallery-thumb-video svg { position: relative; z-index: 1; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8)); }
+.gallery-thumb-video.active { border-color: #d4af6a !important; }
+
+.detail-brand { color: #d4af6a !important; }
+.detail-info h1 { color: #f2ecdf !important; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.detail-price { color: #d4af6a !important; }
+.detail-longevity { color: #d4af6a !important; }
+.detail-longevity p, .detail-longevity h3 { color: #f2ecdf !important; }
+.badge-pill, .badge-pill-longevity {
+    background: #000 !important;
+    color: #d4af6a !important;
+    border: 1px solid rgba(212,175,106,0.3) !important;
+}
+
+/* Variants */
+.variant-label { color: #a89a7c !important; }
+.variant-chip { background: #100e0a !important; border: 1px solid rgba(212,175,106,0.3) !important; color: #e9e2d4 !important; }
+.variant-chip.active { background: #d4af6a !important; border-color: #d4af6a !important; color: #1a1508 !important; }
+
+/* CTA buttons */
+.back-btn-full { background: #e0342e !important; color: #fff !important; }
+.back-btn-full:hover { background: #ef4038 !important; }
+.bundle-upsell { background: #100e0a !important; border: 1px solid rgba(212,175,106,0.25) !important; }
+.bundle-upsell-line { color: #e9e2d4 !important; }
+.bundle-upsell-btn { background: transparent !important; border: 1px solid rgba(212,175,106,0.6) !important; color: #d4af6a !important; }
+
+/* Description accordion — one clean dark card */
+.description-accordion {
+    background: #15130e !important;
+    border: 1px solid rgba(212,175,106,0.28) !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+}
+.description-toggle {
+    color: #f2ecdf !important;
+    background: transparent !important;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 400 !important;
+    padding: 15px 16px !important;
+}
+.description-chevron { color: #d4af6a !important; stroke: #d4af6a !important; }
+.description-body {
+    background: transparent !important;
+    border: none !important;
+    border-top: 1px solid rgba(212,175,106,0.16) !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 14px 16px 16px !important;
+}
+.description-card-text { color: #b7ae9d !important; background: transparent !important; line-height: 1.8; }
+
+/* Specifications: no outer container box — cards float on the page */
+.product-specs {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* Specifications */
+.pspec-grid { gap: 12px !important; }
+.pspec-item {
+    background: linear-gradient(165deg, #17140e, #100e0a) !important;
+    border: 1px solid rgba(212,175,106,0.28) !important;
+    border-radius: 12px !important;
+    padding: 14px 15px !important;
+    gap: 7px !important;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+}
+.pspec-item svg { stroke: #d4af6a !important; width: 20px !important; height: 20px !important; }
+.pspec-label { color: #a89a7c !important; font-size: 9px !important; letter-spacing: 1.5px !important; }
+.pspec-value { color: #f2ecdf !important; font-family: Georgia, 'Times New Roman', serif; font-weight: 400 !important; font-size: 14px !important; }
+.product-specs h2, .product-specs .pspec-heading { color: #f2ecdf !important; font-family: Georgia, serif; font-weight: 400; }
+
+/* Fragrance notes scroller */
+.product-notes { background: #15130e !important; border: 1px solid rgba(212,175,106,0.18) !important; }
+.product-notes-heading { color: #f2ecdf !important; font-family: Georgia, serif; font-weight: 400; }
+.product-note-img { border: 2px solid rgba(212,175,106,0.45) !important; background: #100e0a; }
+.product-note-name { color: #cfc8bb !important; }
+.pn-arrow { background: rgba(13,11,8,0.85) !important; color: #d4af6a !important; border: 1px solid rgba(212,175,106,0.4) !important; }
+.pn-fade.left { background: linear-gradient(90deg, #15130e, transparent) !important; }
+.pn-fade.right { background: linear-gradient(270deg, #15130e, transparent) !important; }
+
+/* Trust cards (delivery / return / support) */
+.trust-badges { background: transparent !important; border: none !important; }
+.trust-item {
+    background: #15130e !important;
+    border: 1px solid rgba(212,175,106,0.22) !important;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35) !important;
+    color: #cfc8bb !important;
+}
+.trust-item svg { color: #d4af6a !important; }
+.trust-item h4 { color: #f2ecdf !important; }
+.trust-item p { color: #8f897d !important; }
+.trust-pill { background: #000 !important; color: #d4af6a !important; border: 1px solid rgba(212,175,106,0.3) !important; }
+.trust-dot { background: #d4af6a !important; }
+
+/* "Things we do" cards */
+.why-us { background: transparent !important; border: none !important; }
+.why-us-heading { color: #f2ecdf !important; font-family: Georgia, serif; font-weight: 400; }
+.why-us-item {
+    background: #15130e !important;
+    border: 1px solid rgba(212,175,106,0.22) !important;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35) !important;
+}
+.why-us-item h4 { color: #f2ecdf !important; }
+.why-us-item p { color: #b7ae9d !important; }
+.why-us-icon {
+    background: rgba(212,175,106,0.12) !important;
+    border: 1px solid rgba(212,175,106,0.5) !important;
+    color: #d4af6a !important;
+}
+.why-us-icon svg { color: #d4af6a !important; stroke: #d4af6a !important; }
+
+/* Related products */
+.related-products { background: #0d0b08 !important; }
+.related-heading { color: #f2ecdf !important; font-family: Georgia, serif; font-weight: 400; }
+.related-heading span { color: #d4af6a !important; }
+.related-card-img { border: 1px solid rgba(212,175,106,0.25) !important; background: #100e0a; }
+.related-card.rc-active .related-card-img { border-color: #d4af6a !important; box-shadow: 0 0 16px rgba(212,175,106,0.25) !important; }
+.related-card-name { color: #cfc8bb !important; }
+
+/* Footer */
+.site-footer, .footer-brand-banner { background: #000 !important; border-top: 1px solid rgba(212,175,106,0.18) !important; }
+.footer-brand-copy { color: #8f897d !important; }
+.footer-brand-copyright { color: #5b564c !important; }
+</style>
 </head>
 <body>
 
@@ -224,9 +620,59 @@ function formatPrice(price) {
     return 'Rs. ' + Math.round(price).toLocaleString('en-IN');
 }
 
+function clearMediaActive() {
+    document.querySelectorAll('.gallery-thumbs img, .gallery-thumb-video').forEach(t => t.classList.remove('active'));
+}
+
+/*
+ * Make the video play-tile exactly the same size as the image thumbs
+ * beside it (whatever size style.css gives them, on any screen size).
+ */
+function syncVideoThumbSize() {
+    if (window.innerWidth < 768) return; // mobile size is fixed in CSS
+    const vThumb = document.querySelector('.gallery-thumb-video');
+    if (!vThumb) return;
+    const imgThumb = document.querySelector('.gallery-thumbs img');
+    if (!imgThumb) return;
+    const r = imgThumb.getBoundingClientRect();
+    if (r.width > 10 && r.height > 10) {
+        vThumb.style.width = r.width + 'px';
+        vThumb.style.height = r.height + 'px';
+        vThumb.style.borderRadius = getComputedStyle(imgThumb).borderRadius;
+    }
+}
+window.addEventListener('resize', syncVideoThumbSize);
+
 function switchImage(src, thumbEl) {
-    document.getElementById('mainImage').src = src;
-    document.querySelectorAll('.gallery-thumbs img').forEach(t => t.classList.remove('active'));
+    const mm = document.getElementById('mainMedia');
+    if (mm) {
+        mm.style.height = '';
+        mm.innerHTML = `<img id="mainImage" class="gallery-main" src="${src}" alt="">`;
+    }
+    clearMediaActive();
+    thumbEl.classList.add('active');
+}
+
+function switchVideo(src, thumbEl) {
+    const mm = document.getElementById('mainMedia');
+    if (mm) {
+        // Desktop: freeze the height the image had so layout doesn't jump.
+        // Mobile (≤767px): the CSS square stage already fixes the size.
+        if (window.innerWidth >= 768) {
+            const h = mm.offsetHeight;
+            if (h > 50) mm.style.height = h + 'px';
+        }
+        // Product photo as poster so the frame is never a blank black box
+        // while the video loads; if the video fails, jump back to the photo.
+        const posterSrc = (window.__galleryImages && window.__galleryImages[0]) || '';
+        mm.innerHTML = `<video class="gallery-main" src="${src}"${posterSrc ? ` poster="${posterSrc}"` : ''} controls autoplay muted loop playsinline style="height:100%;"></video>`;
+        const vid = mm.querySelector('video');
+        vid.addEventListener('error', () => {
+            const firstThumb = document.querySelector('.gallery-thumbs img');
+            if (firstThumb) switchImage(firstThumb.src, firstThumb);
+        }, { once: true });
+    }
+    clearMediaActive();
     thumbEl.classList.add('active');
 }
 
@@ -295,14 +741,25 @@ async function loadProduct() {
         const p = data.product;
         const images = p.images && p.images.length ? p.images : [];
         const mainImg = images[0] || '';
+    window.__galleryImages = (p.images && p.images.length ? p.images : [p.image]).filter(Boolean);
         const variants = p.variants || [];
 
-        const thumbsHtml = images.length > 1 ? `
+        // Video thumb: dark tile with play icon; tapping it swaps the main
+        // image area into an autoplaying (muted, looped) video player.
+        const videoThumbHtml = p.video ? `
+            <div class="gallery-thumb-video" onclick="switchVideo('${escapeHtml(p.video)}', this)" title="Watch video">
+                <video class="vthumb-frame" src="${escapeHtml(p.video)}#t=1.2" muted playsinline preload="metadata" tabindex="-1"></video>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="8 5 19 12 8 19 8 5"/></svg>
+            </div>
+        ` : '';
+
+        const thumbsHtml = (images.length > 1 || p.video) ? `
             <div class="gallery-thumbs">
                 ${images.map((img, i) => `
                     <img src="${escapeHtml(img)}" class="${i === 0 ? 'active' : ''}"
                          onclick="switchImage('${escapeHtml(img)}', this)">
                 `).join('')}
+                ${videoThumbHtml}
             </div>
         ` : '';
 
@@ -332,10 +789,12 @@ async function loadProduct() {
         wrap.innerHTML = `
             <div class="detail-card">
                 <div style="position:relative;">
-                    <a href="index.html" class="back-icon-btn" aria-label="Back to catalog">
+                    <a href="products.html?category=${encodeURIComponent(p.category || '')}" class="back-icon-btn" data-smart-back aria-label="Back to catalog">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                     </a>
-                    <img id="mainImage" class="gallery-main" src="${escapeHtml(mainImg)}" alt="${escapeHtml(p.name)}">
+                    <div id="mainMedia">
+                        <img id="mainImage" class="gallery-main" src="${escapeHtml(mainImg)}" alt="${escapeHtml(p.name)}">
+                    </div>
                     ${thumbsHtml}
                 </div>
                 <div class="detail-info">
@@ -362,10 +821,15 @@ async function loadProduct() {
 
                     ${p.longevity ? `
                     <div class="detail-longevity" style="margin-bottom:18px;">
-                        <p style="font-size:18px;font-weight:800;color:#1a1a1a;padding:16px 0;margin:0;">Longevity</p>
+                        <p style="font-size:18px;font-weight:600;color:#f2ecdf;font-family:Georgia,serif;padding:16px 0;margin:0;">Longevity</p>
                         <span class="badge-pill badge-pill-longevity">⏱ ${escapeHtml(p.longevity)}</span>
                     </div>
                     ` : ''}
+
+                    <div class="product-specs" id="productSpecs" style="display:none;">
+                        <p style="font-size:18px;font-weight:600;color:#f2ecdf;font-family:Georgia,serif;padding:16px 0;margin:0 0 10px;">Specifications</p>
+                        <div class="pspec-grid" id="pspecGrid"></div>
+                    </div>
 
                     <div class="product-notes" id="productNotes" style="display:none;">
                         <p class="product-notes-heading" style="font-size:18px;font-weight:800;color:#1a1a1a;text-transform:none;letter-spacing:normal;text-align:left;padding:16px 0;margin:0 0 14px;">Notes</p>
@@ -382,7 +846,7 @@ async function loadProduct() {
                         </div>
                     </div>
 
-                    <a href="index.html" class="back-btn-full">← Back to catalog</a>
+                    <a href="products.html?category=${encodeURIComponent(p.category || '')}" class="back-btn-full" data-smart-back>← Back to catalog</a>
                 </div>
             </div>
 
@@ -439,14 +903,94 @@ async function loadProduct() {
 
         `;
 
-        loadRelatedByBrand(p.brand, p.id);
+        loadRelatedByBrand(p.brand, p.id, p.category);
         loadProductNotes(p.id);
+        loadSpecs(p);
+
+        // Match the video tile to the image-thumb size once thumbs lay out
+        syncVideoThumbSize();
+        setTimeout(syncVideoThumbSize, 150);
+        setTimeout(syncVideoThumbSize, 600);
+        const firstThumbImg = document.querySelector('.gallery-thumbs img');
+        if (firstThumbImg) firstThumbImg.addEventListener('load', syncVideoThumbSize);
     } catch (err) {
         wrap.innerHTML = `<div class="empty">Error: ${escapeHtml(err.message)}</div>`;
     }
 }
 
 loadProduct();
+
+/* =========================================================
+   SPECIFICATIONS (category metafields: watch/perfume/shoes)
+   Rendered from p.details_kind + p.details returned by
+   get_product.php — no extra request needed.
+   ========================================================= */
+const SPEC_ICONS = {
+    gear:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    ruler:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="9" width="20" height="6" rx="2"/><path d="M7 9v3"/><path d="M12 9v3"/><path d="M17 9v3"/></svg>',
+    watch:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="6"/><path d="M12 10v2l1.5 1.5"/><path d="M16.5 17.5 15 22H9l-1.5-4.5"/><path d="M7.5 6.5 9 2h6l1.5 4.5"/></svg>',
+    drop:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.7 6.3 9.6a7 7 0 1 0 11.4 0z"/></svg>',
+    gem:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/><path d="m9 3 3 6 3-6"/></svg>',
+    strap:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="7" width="8" height="10" rx="4"/><path d="M10 7V2h4v5"/><path d="M10 17v5h4v-5"/></svg>',
+    lock:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
+    palette:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="16" cy="10" r="1"/><path d="M12 22a3 3 0 0 0 0-6h-1a2 2 0 0 1 0-4"/></svg>',
+    spray:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="8" y="9" width="8" height="13" rx="2"/><path d="M10 9V6h4v3"/><path d="M12 3v1"/><path d="M17 4l-1 1"/><path d="M7 4l1 1"/></svg>',
+    leaf:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 20A7 7 0 0 1 4 13c0-6 7-10 16-10-1 9-5 16-9 17z"/><path d="M4 21c3-3 6-5 10-7"/></svg>',
+    flask:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 2v6L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 8V2"/><path d="M8 2h8"/><path d="M7 14h10"/></svg>',
+    bottle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="8" width="10" height="14" rx="2"/><path d="M10 8V4h4v4"/><path d="M10 2h4"/></svg>',
+    shoe:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 16h20v3H2z"/><path d="M2 16c0-3 2-5 4-6l3 2 2-3c4 1 9 3 11 7"/></svg>',
+    layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>'
+};
+
+const SPEC_CONFIG = {
+    watch: [
+        ['movement','Movement','gear'],
+        ['case_diameter','Case Size','ruler'],
+        ['case_material','Case Material','watch'],
+        ['dial_color','Dial Color','palette'],
+        ['glass_type','Glass','gem'],
+        ['strap_material','Strap','strap'],
+        ['water_resistance','Water Resistance','drop'],
+        ['clasp_type','Clasp','lock'],
+        ['warranty','Warranty','shield']
+    ],
+    perfume: [
+        ['fragrance','Fragrance','spray'],
+        ['family','Family','leaf'],
+        ['formulation','Formulation','flask'],
+        ['bottle_size','Bottle Size','bottle']
+    ],
+    shoes: [
+        ['colour','Colour','palette'],
+        ['material','Material','layers'],
+        ['shoe_type','Shoe Type','shoe']
+    ]
+};
+
+function loadSpecs(p) {
+    const wrapEl = document.getElementById('productSpecs');
+    const gridEl = document.getElementById('pspecGrid');
+    if (!wrapEl || !gridEl) return;
+
+    const kind = p.details_kind;
+    const details = p.details;
+    if (!kind || !details || !SPEC_CONFIG[kind]) return;
+
+    const items = SPEC_CONFIG[kind]
+        .filter(([key]) => details[key] && String(details[key]).trim() !== '')
+        .map(([key, label, icon]) => `
+            <div class="pspec-item">
+                ${SPEC_ICONS[icon]}
+                <span class="pspec-label">${escapeHtml(label)}</span>
+                <span class="pspec-value">${escapeHtml(String(details[key]))}</span>
+            </div>
+        `).join('');
+
+    if (!items) return;
+    gridEl.innerHTML = items;
+    wrapEl.style.display = 'block';
+}
 
 function initNotesScroller() {
     const row = document.getElementById('productNotesRow');
@@ -502,11 +1046,10 @@ async function loadProductNotes(productId) {
     }
 }
 
-async function loadRelatedByBrand(brand, currentId) {
+async function loadRelatedByBrand(brand, currentId, category) {
     const section = document.getElementById('relatedProducts');
     const scroll = document.getElementById('relatedScroll');
     const brandNameEl = document.getElementById('relatedBrandName');
-    if (!brand) return;
 
     const normalize = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const targetNorm = normalize(brand);
@@ -537,10 +1080,22 @@ async function loadRelatedByBrand(brand, currentId) {
             });
         }
 
-        items = items.slice(0, 5);
+        // Still nothing from this brand? Suggest from the same category
+        // so every product always shows suggestions.
+        let headingName = brand;
+        if (items.length === 0 && category) {
+            const catNorm = normalize(category);
+            items = allProducts.filter(p =>
+                normalize(p.category) === catNorm && String(p.id) !== String(currentId)
+            ).sort(() => Math.random() - 0.5);
+            headingName = category;
+        }
+
+        // Shuffle every time so suggestions feel fresh on each visit
+        items = items.sort(() => Math.random() - 0.5).slice(0, 5);
         if (items.length === 0) return;
 
-        brandNameEl.textContent = brand;
+        brandNameEl.textContent = headingName;
         scroll.innerHTML = items.map(p => `
             <a class="related-card" href="product.html?id=${p.id}">
                 <div class="related-card-img">
@@ -576,5 +1131,77 @@ async function loadRelatedByBrand(brand, currentId) {
 }
 </script>
 
+
+<script>
+/* Name the tapped product image just before navigation so the
+   browser morphs it into the product page's main image. */
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href*="product.html?id="]');
+    if (!link) return;
+    const img = link.querySelector('img');
+    if (img && img.offsetParent !== null) {
+        img.style.viewTransitionName = 'product-hero';
+    }
+}, true);
+</script>
+
+<script>
+/* Smart back: return to the exact page you came from (category list,
+   search results, homepage) instead of always the homepage. Direct
+   visits (no history) fall back to the products catalog. */
+// Delegated: works even though the back buttons render after the
+// product data loads.
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-smart-back]');
+    if (!btn) return;
+    const cameFromSite = document.referrer &&
+        new URL(document.referrer).origin === window.location.origin;
+    if (cameFromSite && window.history.length > 1) {
+        e.preventDefault();
+        window.history.back();
+    }
+    // else: normal link -> products.html?category=...
+}, true);
+</script>
+
+<script>
+/* PAGE PEEL — cover on product click, peel away on arrival */
+(function () {
+    const layer = document.createElement('div');
+    layer.id = 'peelLayer';
+    document.body.appendChild(layer);
+
+    // Arriving from a peel? Start covered, then peel back to the corner.
+    if (sessionStorage.getItem('peelIn') === '1') {
+        sessionStorage.removeItem('peelIn');
+        layer.classList.add('instant', 'cover');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            layer.classList.remove('instant');
+            layer.classList.remove('cover');
+        }));
+    }
+
+    // Product clicks: sweep the corner over the page, then navigate.
+    document.addEventListener('click', (e) => {
+        if (e.defaultPrevented) return;
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const link = e.target.closest('a[href*="product.html?id="]');
+        if (!link || link.target === '_blank') return;
+        e.preventDefault();
+        sessionStorage.setItem('peelIn', '1');
+        layer.classList.add('cover');
+        setTimeout(() => { window.location.href = link.href; }, 520);
+    }, true);
+    // Returning via back/forward: never stay covered
+    window.addEventListener('pageshow', (ev) => {
+        if (ev.persisted) {
+            layer.classList.add('instant');
+            layer.classList.remove('cover');
+            requestAnimationFrame(() => layer.classList.remove('instant'));
+        }
+    });
+})();
+
+</script>
 </body>
 </html>

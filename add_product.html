@@ -5,6 +5,196 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Add Product</title>
 <link rel="stylesheet" href="style.css">
+<style>
+/* =========================================================
+   LUXE DARK-GOLD THEME — admin panel.
+   Matches the store: dark charcoal, gold hairlines, cream text.
+   Pure override layer, no functional changes.
+   ========================================================= */
+body, .admin-page { background: #0d0b08 !important; color: #e9e2d4; }
+
+/* Top bar */
+.admin-mobile-header, .top-header {
+    background: #0d0b08 !important;   /* fully opaque — content never shows through */
+    border-bottom: 1px solid rgba(212,175,106,0.18) !important;
+    box-shadow: none !important;
+    z-index: 1200;
+}
+.admin-mobile-title { color: #f2ecdf !important; }
+.admin-drawer-icon, .hamburger-btn {
+    color: #f2ecdf !important;
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(212,175,106,0.4) !important;
+    border-radius: 10px;
+}
+/* First section labels were sliding under the fixed header */
+.admin-main { padding-top: 16px !important; }
+.admin-main .section-label:first-of-type { margin-top: 4px; }
+html { scroll-padding-top: 76px; }
+
+/* Sidebar */
+.admin-sidebar { background: #0f0d09 !important; border-right: 1px solid rgba(212,175,106,0.14); }
+.admin-sidebar-head { color: #f2ecdf !important; border-bottom: 1px solid rgba(212,175,106,0.14) !important; }
+.admin-nav-link { color: #a89a7c !important; }
+.admin-nav-link:hover { background: #17140e !important; color: #d4af6a !important; }
+.admin-nav-link.active { background: #17140e !important; color: #d4af6a !important; border-left: 2px solid #d4af6a; }
+.admin-nav-back { color: #8f897d !important; border-top: 1px solid rgba(212,175,106,0.14) !important; }
+
+/* Main area + cards */
+.admin-main { background: #0d0b08 !important; }
+.section-label { color: #a89a7c !important; letter-spacing: 2px; }
+.section-card, .form-card, .snapshot-card {
+    background: #15130e !important;
+    border: 1px solid rgba(212,175,106,0.2) !important;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35) !important;
+    color: #e9e2d4;
+}
+.section-card label, .form-card label { color: #cfc8bb !important; }
+.section-card p, .form-card p { color: #8f897d; }
+
+/* Inputs */
+input[type="text"], input[type="number"], input[type="url"], input[type="password"],
+select, textarea {
+    background: #100e0a !important;
+    border: 1px solid rgba(212,175,106,0.3) !important;
+    color: #f2ecdf !important;
+}
+input::placeholder, textarea::placeholder { color: #6d675c !important; }
+input:focus, select:focus, textarea:focus {
+    border-color: #d4af6a !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(212,175,106,0.15) !important;
+}
+input[type="checkbox"] { accent-color: #d4af6a; }
+input[type="file"] { color: #a89a7c !important; }
+.image-drop { background: #100e0a !important; border: 1px dashed rgba(212,175,106,0.4) !important; color: #8f897d !important; }
+
+/* Buttons: primary stays red, secondary gold-outline */
+button {
+    transition: transform 0.12s ease;
+    background: #17140e;
+    border: 1px solid rgba(212,175,106,0.45);
+    color: #d4af6a;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+}
+input[type="file"]::file-selector-button {
+    background: #17140e;
+    border: 1px solid rgba(212,175,106,0.45);
+    color: #d4af6a;
+    border-radius: 6px;
+    padding: 6px 12px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+.icon-preview-circle, .note-row-thumb-placeholder {
+    background: #100e0a !important;
+    border: 1px solid rgba(212,175,106,0.3) !important;
+    color: #6d675c !important;
+}
+.image-drop svg, .icon-preview-circle svg { color: #6d675c !important; stroke: #6d675c !important; }
+button:active { transform: scale(0.98); }
+form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #videoSaveSettingsBtn,
+#uploadIconBtn, #addSlideBtn, #heroSlideForm button[type="submit"], #categoryIconForm button[type="submit"] {
+    padding: 12px 26px !important;
+    font-size: 14px !important;
+    border-radius: 10px !important;
+    background: #e0342e !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 8px 18px rgba(224,52,46,0.3);
+}
+.btn-pill, .load-more-btn, .fd-clear-btn {
+    background: transparent !important;
+    border: 1px solid rgba(212,175,106,0.5) !important;
+    color: #d4af6a !important;
+}
+.btn-edit { background: transparent !important; border: 1px solid rgba(212,175,106,0.5) !important; color: #d4af6a !important; }
+.btn-delete, .remove-btn, .note-row-remove, .remove-variant-btn, .modal-variant-remove, .modal-image-remove {
+    background: rgba(224,52,46,0.12) !important;
+    border: 1px solid rgba(224,52,46,0.4) !important;
+    color: #ff8a80 !important;
+}
+
+/* Edit/Delete product rows */
+.delete-row { background: #15130e !important; border: 1px solid rgba(212,175,106,0.18) !important; }
+.delete-row-name { color: #f2ecdf !important; }
+.delete-row-price { color: #d4af6a !important; }
+.delete-row-thumb { background: #100e0a !important; border: 1px solid rgba(212,175,106,0.2); }
+
+/* Right column: stats */
+.snapshot-hero { background: #000 !important; border: 1px solid rgba(212,175,106,0.3) !important; }
+.snapshot-hero-label { color: #a89a7c !important; }
+.snapshot-hero-value { color: #f2ecdf !important; }
+.snapshot-card-title { color: #a89a7c !important; }
+.snapshot-bar-label { color: #cfc8bb !important; }
+.snapshot-bar-track { background: #100e0a !important; }
+.snapshot-bar-fill { background: linear-gradient(90deg, #d4af6a, #b8903f) !important; }
+.snapshot-tip { color: #8f897d !important; }
+.snapshot-tip svg, .snapshot-tip .tip-icon { color: #d4af6a !important; }
+
+/* Selected showcase rows + search results (inline light styles) */
+#shwSelected > div, #shwResults > div { background: #100e0a !important; }
+#shwSelected span, #shwResults span { color: #e9e2d4 !important; }
+
+/* Modal */
+.modal-overlay { background: rgba(0,0,0,0.75) !important; }
+.modal-card { background: #15130e !important; border: 1px solid rgba(212,175,106,0.25) !important; color: #e9e2d4; }
+.modal-head { border-bottom: 1px solid rgba(212,175,106,0.16) !important; color: #f2ecdf !important; }
+.modal-close-btn { color: #f2ecdf !important; background: transparent !important; }
+.modal-save-bar, .save-bar { background: #15130e !important; border-top: 1px solid rgba(212,175,106,0.16) !important; }
+.modal-image-item { border: 1px solid rgba(212,175,106,0.25) !important; background: #100e0a; }
+.modal-error { color: #ff8a80 !important; }
+.modal-card label { color: #cfc8bb !important; }
+.modal-card h3, .modal-head h3 { color: #f2ecdf !important; font-family: Georgia, serif; font-weight: 400; }
+.modal-card .section-label, .modal-card .meta-group-title { color: #a89a7c !important; }
+.modal-add-variant-btn { background: #17140e !important; border: 1px solid rgba(212,175,106,0.5) !important; color: #d4af6a !important; }
+
+/* Status messages */
+.success { color: #7fce9e !important; }
+.error { color: #ff8a80 !important; }
+
+/* Drawer (mobile admin nav) */
+.drawer { background: #0f0d09 !important; }
+.drawer-head { border-bottom: 1px solid rgba(212,175,106,0.16) !important; }
+.drawer-logo { color: #f2ecdf !important; }
+.drawer-close-btn {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(212,175,106,0.4) !important;
+    color: #f2ecdf !important;
+    border-radius: 50%;
+}
+.drawer-close-btn:hover { border-color: #d4af6a !important; background: rgba(212,175,106,0.12) !important; }
+/* Icon-only buttons: no padding (the generic button padding was
+   squeezing their SVGs out of view) */
+.hamburger-btn, .drawer-close-btn, .modal-close-btn, .admin-drawer-icon {
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.hamburger-btn svg, .drawer-close-btn svg, .modal-close-btn svg {
+    stroke: #f2ecdf !important;
+    display: block;
+    flex-shrink: 0;
+}
+.drawer-link { color: #cfc8bb !important; }
+.drawer-link:hover, .drawer-link.active { background: #17140e !important; color: #d4af6a !important; }
+
+/* Desktop uses the permanent sidebar — mobile header, hamburger
+   and slide-out drawer exist ONLY below 769px */
+@media (min-width: 769px) {
+    .admin-mobile-header, #adminDrawer, #adminDrawerOverlay { display: none !important; }
+    .admin-main { padding-top: 24px !important; }
+}
+@media (max-width: 768px) {
+    .admin-sidebar { display: none !important; }
+    /* Fixed mobile header overlaps the first card — push content below it */
+    .admin-main { padding-top: 68px !important; }
+    .admin-page, .admin-layout { padding-top: 0; }
+}
+</style>
 </head>
 <body class="admin-page">
 
@@ -56,6 +246,12 @@
                 </span>
                 Hero Slider
             </div>
+<div class="drawer-link" data-target="video">
+                <span class="drawer-icon admin-drawer-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                </span>
+                Promo Video
+            </div>
         </div>
         <a href="index.html" class="admin-nav-back" style="border-top:1px solid #eee; margin-top:auto;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
@@ -84,6 +280,10 @@
             <a class="admin-nav-link" data-target="hero">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 Hero Slider
+            </a>
+<a class="admin-nav-link" data-target="video">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                Promo Video
             </a>
         </nav>
         <a href="index.html" class="admin-nav-back">
@@ -149,6 +349,55 @@
                     <div id="descCount" style="font-size:11px; color:#999; text-align:right; margin-top:4px;">0 / 1000</div>
                 </div>
 
+                <p class="section-label" id="metaLabel" style="display:none;">Category details</p>
+                <div class="section-card" id="metaSection" style="display:none;">
+
+                    <!-- WATCH -->
+                    <div class="meta-group" id="meta-watch" style="display:none;">
+                        <div class="form-row">
+                            <div><label>Movement</label><input type="text" id="w_movement" placeholder="e.g. Japanese Quartz"></div>
+                            <div><label>Case Size</label><input type="text" id="w_case_diameter" placeholder="e.g. 42mm"></div>
+                        </div>
+                        <div class="form-row">
+                            <div><label>Case Material</label><input type="text" id="w_case_material" placeholder="e.g. Stainless Steel"></div>
+                            <div><label>Dial Color</label><input type="text" id="w_dial_color" placeholder="e.g. Black"></div>
+                        </div>
+                        <div class="form-row">
+                            <div><label>Glass Type</label><input type="text" id="w_glass_type" placeholder="e.g. Mineral Crystal"></div>
+                            <div><label>Strap Material</label><input type="text" id="w_strap_material" placeholder="e.g. Leather"></div>
+                        </div>
+                        <div class="form-row">
+                            <div><label>Water Resistance</label><input type="text" id="w_water_resistance" placeholder="e.g. 3 ATM"></div>
+                            <div><label>Clasp Type</label><input type="text" id="w_clasp_type" placeholder="e.g. Buckle"></div>
+                        </div>
+                        <label>Warranty</label>
+                        <input type="text" id="w_warranty" placeholder="e.g. 1 Year">
+                    </div>
+
+                    <!-- PERFUME -->
+                    <div class="meta-group" id="meta-perfume" style="display:none;">
+                        <div class="form-row">
+                            <div><label>Fragrance</label><input type="text" id="p_fragrance" placeholder="e.g. Aventus"></div>
+                            <div><label>Family</label><input type="text" id="p_family" placeholder="e.g. Woody Aromatic"></div>
+                        </div>
+                        <div class="form-row">
+                            <div><label>Formulation</label><input type="text" id="p_formulation" placeholder="e.g. Eau de Parfum"></div>
+                            <div><label>Bottle Size</label><input type="text" id="p_bottle_size" placeholder="e.g. 100ml"></div>
+                        </div>
+                    </div>
+
+                    <!-- SHOES -->
+                    <div class="meta-group" id="meta-shoes" style="display:none;">
+                        <div class="form-row">
+                            <div><label>Colour</label><input type="text" id="s_colour" placeholder="e.g. White/Blue"></div>
+                            <div><label>Material</label><input type="text" id="s_material" placeholder="e.g. Mesh + Rubber"></div>
+                        </div>
+                        <label>Shoe Type</label>
+                        <input type="text" id="s_shoe_type" placeholder="e.g. Sneakers">
+                    </div>
+
+                </div>
+
                 <p class="section-label">Media</p>
                 <div class="section-card">
                     <label>Product Images (1–4)</label>
@@ -157,6 +406,9 @@
                         <input type="file" id="imageInput" accept=".jpg,.jpeg,.png,.webp" multiple>
                     </div>
                     <div class="preview-grid" id="previewGrid"></div>
+
+                    <label style="margin-top:14px;">Product Video (optional, mp4/webm, max 50MB)</label>
+                    <input type="file" id="videoInput" accept=".mp4,.webm,.mov">
                 </div>
 
                 <p class="section-label">Variants</p>
@@ -174,7 +426,7 @@
                     <div id="variantSection" style="display:none; margin-top:12px;">
                         <label style="margin-top:0;">Variants (e.g. 20ml, 50ml, 100ml)</label>
                         <div id="variantRows"></div>
-                        <button type="button" id="addVariantBtn" style="width:auto; margin-top:8px; padding:8px 16px; background:#f0f0f0; color:#333; font-size:13px;">+ Add variant</button>
+                        <button type="button" id="addVariantBtn" style="width:auto; margin-top:8px; padding:9px 18px; background:#17140e; color:#d4af6a; font-size:13px; border:1px solid rgba(212,175,106,0.5); border-radius:8px; cursor:pointer;">+ Add variant</button>
                     </div>
                 </div>
 
@@ -182,7 +434,7 @@
                 <div class="section-card">
                     <label style="margin-top:0;">Fragrance/ingredient notes (photo + name)</label>
                     <div id="noteRows"></div>
-                    <button type="button" id="addNoteBtn" style="width:auto; margin-top:4px; padding:8px 16px; background:#f0f0f0; color:#333; font-size:13px; border:none; border-radius:8px; cursor:pointer;">+ Add note</button>
+                    <button type="button" id="addNoteBtn" style="width:auto; margin-top:4px; padding:9px 18px; background:#17140e; color:#d4af6a; font-size:13px; border:1px solid rgba(212,175,106,0.5); border-radius:8px; cursor:pointer;">+ Add note</button>
                 </div>
 
                 <div class="save-bar">
@@ -256,6 +508,17 @@
 
         <!-- Panel: Hero Slider -->
         <div class="admin-panel" id="panel-hero" style="display:none;">
+            <p class="section-label">Homepage showcase products</p>
+            <div class="section-card">
+                <div style="font-size:12px; color:#888; margin-bottom:10px;">Pick up to 5 products for the scrolling 3D showcase at the top of the homepage. Empty = random products.</div>
+                <input type="text" id="shwSearchInput" placeholder="Search a product to add...">
+                <div id="shwResults" style="margin-top:8px;"></div>
+                <label style="margin-top:14px;">Selected (in order)</label>
+                <div id="shwSelected" style="margin-top:6px;"><p style="font-size:12px;color:#999;">Loading...</p></div>
+                <button type="button" id="shwSaveBtn" style="margin-top:14px; width:auto; padding:12px 24px;">Save Showcase</button>
+                <div id="shwMsg"></div>
+            </div>
+
             <p class="section-label" id="heroFormLabel">Add a hero slide</p>
             <div class="section-card">
                 <input type="hidden" id="heroEditId" value="">
@@ -333,6 +596,54 @@
             </div>
         </div>
 
+        <!-- Panel: Promo Video -->
+        <div class="admin-panel" id="panel-video" style="display:none;">
+            <p class="section-label">Homepage promo video</p>
+            <div class="section-card">
+                <div id="videoCurrentWrap" style="display:none; margin-bottom:16px;">
+                    <label style="margin-top:0;">Current video</label>
+                    <video id="videoCurrentPlayer" controls muted playsinline style="width:100%; max-height:300px; border-radius:10px; background:#000;"></video>
+                    <div id="videoCurrentInfo" style="font-size:12px; color:#777; margin-top:6px;"></div>
+                    <button type="button" id="videoDeleteBtn" style="margin-top:10px; background:rgba(224,52,46,0.12); border:1px solid rgba(224,52,46,0.4); color:#ff8a80; width:auto; padding:10px 20px;">Remove video</button>
+                </div>
+                <div id="videoNoneMsg" style="font-size:13px; color:#999; margin-bottom:14px;">No promo video uploaded yet.</div>
+
+                <label for="videoFileInput">Upload new video (mp4 or webm — any size, uploaded in chunks)</label>
+                <input type="file" id="videoFileInput" accept="video/mp4,video/webm,.mp4,.webm">
+                <div id="videoFileInfo" style="font-size:12px; color:#777; margin-top:4px;"></div>
+
+                <label for="videoLinkInput">Click-through link (optional — where the video sends people when tapped)</label>
+                <input type="text" id="videoLinkInput" placeholder="products.html?category=Perfumes">
+
+                <div class="form-row">
+                    <div>
+                        <label for="videoHeightMobile">Video height — mobile (px)</label>
+                        <input type="number" id="videoHeightMobile" value="420" min="100" max="1500">
+                    </div>
+                    <div>
+                        <label for="videoHeightDesktop">Video height — desktop (px)</label>
+                        <input type="number" id="videoHeightDesktop" value="560" min="100" max="1500">
+                    </div>
+                </div>
+
+                <label style="display:flex; align-items:center; gap:8px; margin-top:14px;">
+                    <input type="checkbox" id="videoActiveInput" checked style="width:auto;"> Active — show video on homepage (hero slider hides while this is on)
+                </label>
+
+                <button type="button" id="videoSaveSettingsBtn" style="margin-top:14px; background:#f0f0f0; color:#333; width:auto; padding:10px 20px;">Save Settings (no re-upload)</button>
+
+                <div id="videoProgressWrap" style="display:none; margin-top:14px;">
+                    <div style="background:#eee; border-radius:20px; height:10px; overflow:hidden;">
+                        <div id="videoProgressBar" style="background:#e0342e; height:100%; width:0%; transition:width 0.2s ease;"></div>
+                    </div>
+                    <div id="videoProgressText" style="font-size:12px; color:#777; margin-top:5px;">0%</div>
+                </div>
+
+                <button type="button" id="videoUploadBtn" style="margin-top:16px;">Upload Video</button>
+                <div id="videoMsg"></div>
+            </div>
+        </div>
+
     </main>
 
 </div>
@@ -382,6 +693,51 @@
             <label for="editLongevity">Longevity</label>
             <input type="text" id="editLongevity" placeholder="e.g. 6-8 hours">
 
+            <div id="editMetaSection" style="display:none;">
+                <label style="font-weight:700;">Category details</label>
+
+                <div class="meta-group" id="edit-meta-watch" style="display:none;">
+                    <div class="form-row">
+                        <div><label>Movement</label><input type="text" id="ew_movement"></div>
+                        <div><label>Case Size</label><input type="text" id="ew_case_diameter"></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label>Case Material</label><input type="text" id="ew_case_material"></div>
+                        <div><label>Dial Color</label><input type="text" id="ew_dial_color"></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label>Glass Type</label><input type="text" id="ew_glass_type"></div>
+                        <div><label>Strap Material</label><input type="text" id="ew_strap_material"></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label>Water Resistance</label><input type="text" id="ew_water_resistance"></div>
+                        <div><label>Clasp Type</label><input type="text" id="ew_clasp_type"></div>
+                    </div>
+                    <label>Warranty</label>
+                    <input type="text" id="ew_warranty">
+                </div>
+
+                <div class="meta-group" id="edit-meta-perfume" style="display:none;">
+                    <div class="form-row">
+                        <div><label>Fragrance</label><input type="text" id="ep_fragrance"></div>
+                        <div><label>Family</label><input type="text" id="ep_family"></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label>Formulation</label><input type="text" id="ep_formulation"></div>
+                        <div><label>Bottle Size</label><input type="text" id="ep_bottle_size"></div>
+                    </div>
+                </div>
+
+                <div class="meta-group" id="edit-meta-shoes" style="display:none;">
+                    <div class="form-row">
+                        <div><label>Colour</label><input type="text" id="es_colour"></div>
+                        <div><label>Material</label><input type="text" id="es_material"></div>
+                    </div>
+                    <label>Shoe Type</label>
+                    <input type="text" id="es_shoe_type">
+                </div>
+            </div>
+
             <label for="editDescription">Description</label>
             <textarea id="editDescription" rows="4" maxlength="1000"></textarea>
 
@@ -391,9 +747,14 @@
                 Click to add images
                 <input type="file" id="editImageInput" accept=".jpg,.jpeg,.png,.webp" multiple>
             </div>
-            <div class="preview-grid" id="editNewPreviewGrid"></div>
+                      <div class="preview-grid" id="editNewPreviewGrid"></div>
 
-            <label>Variants</label>
+            <label style="margin-top:14px;">Product Video (mp4/webm, max 50MB)</label>
+            <div id="editCurrentVideo" style="font-size:12px; color:#888; margin-bottom:6px;"></div>
+            <input type="file" id="editVideoInput" accept=".mp4,.webm,.mov">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin-top:6px;">
+                <input type="checkbox" id="editRemoveVideo" style="width:auto;"> Remove current video
+            </label>            <label>Variants</label>
             <div id="editVariantRows"></div>
             <button type="button" id="editAddVariantBtn" class="modal-add-variant-btn">+ Add variant</button>
 
@@ -519,6 +880,65 @@ const descCount = document.getElementById('descCount');
 descriptionInput.addEventListener('input', () => {
     descCount.textContent = `${descriptionInput.value.length} / 1000`;
 });
+
+// ---- Category-based metafields (Watch / Perfume / Shoes) ----
+const categoryInput = document.getElementById('category');
+const metaLabel = document.getElementById('metaLabel');
+const metaSection = document.getElementById('metaSection');
+
+function detectMetaKind(catValue) {
+    const c = (catValue || '').trim().toLowerCase();
+    if (c.includes('watch')) return 'watch';
+    if (c.includes('perfume') || c.includes('fragrance') || c.includes('attar')) return 'perfume';
+    if (c.includes('shoe') || c.includes('sneaker') || c.includes('footwear')) return 'shoes';
+    return null;
+}
+
+function updateMetaSection() {
+    const kind = detectMetaKind(categoryInput.value);
+    document.querySelectorAll('#metaSection .meta-group').forEach(g => g.style.display = 'none');
+    if (kind) {
+        metaLabel.style.display = 'block';
+        metaSection.style.display = 'block';
+        document.getElementById('meta-' + kind).style.display = 'block';
+    } else {
+        metaLabel.style.display = 'none';
+        metaSection.style.display = 'none';
+    }
+}
+categoryInput.addEventListener('input', updateMetaSection);
+
+function getMetaDetails() {
+    const kind = detectMetaKind(categoryInput.value);
+    if (kind === 'watch') return { kind, fields: {
+        movement: document.getElementById('w_movement').value.trim(),
+        case_diameter: document.getElementById('w_case_diameter').value.trim(),
+        case_material: document.getElementById('w_case_material').value.trim(),
+        dial_color: document.getElementById('w_dial_color').value.trim(),
+        glass_type: document.getElementById('w_glass_type').value.trim(),
+        strap_material: document.getElementById('w_strap_material').value.trim(),
+        water_resistance: document.getElementById('w_water_resistance').value.trim(),
+        clasp_type: document.getElementById('w_clasp_type').value.trim(),
+        warranty: document.getElementById('w_warranty').value.trim()
+    }};
+    if (kind === 'perfume') return { kind, fields: {
+        fragrance: document.getElementById('p_fragrance').value.trim(),
+        family: document.getElementById('p_family').value.trim(),
+        formulation: document.getElementById('p_formulation').value.trim(),
+        bottle_size: document.getElementById('p_bottle_size').value.trim()
+    }};
+    if (kind === 'shoes') return { kind, fields: {
+        colour: document.getElementById('s_colour').value.trim(),
+        material: document.getElementById('s_material').value.trim(),
+        shoe_type: document.getElementById('s_shoe_type').value.trim()
+    }};
+    return null;
+}
+
+function clearMetaFields() {
+    document.querySelectorAll('#metaSection input[type="text"]').forEach(i => i.value = '');
+    updateMetaSection();
+}
 
 // ---- Image upload + preview ----
 const form = productForm;
@@ -745,6 +1165,16 @@ form.addEventListener('submit', async (e) => {
     selectedFiles.forEach(file => formData.append('images[]', file));
     getVariants().forEach(v => formData.append('variants[]', v));
 
+    // Category metafields go in the same request
+      const meta = getMetaDetails();
+    if (meta) {
+        formData.append('meta_kind', meta.kind);
+        Object.entries(meta.fields).forEach(([k, v]) => formData.append(k, v));
+    }
+
+    const videoFile = document.getElementById('videoInput').files[0];
+    if (videoFile) formData.append('video', videoFile);
+
     try {
         const res = await fetch(`${API_BASE}/add_product.php`, { method: 'POST', body: formData });
         const data = await res.json();
@@ -787,6 +1217,7 @@ form.addEventListener('submit', async (e) => {
             variantSection.style.display = 'none';
             variantRows.innerHTML = '';
             noteRows.innerHTML = '';
+            clearMetaFields();
             descCount.textContent = '0 / 1000';
             loadDeleteList(1, false);
             loadCatalogSnapshot();
@@ -1321,6 +1752,54 @@ function getEditVariants() {
         .filter(v => v !== '');
 }
 
+// ---- Edit modal metafields (watch / perfume / shoes) ----
+const EDIT_META_FIELDS = {
+    watch:   ['movement','case_diameter','case_material','dial_color','glass_type','strap_material','water_resistance','clasp_type','warranty'],
+    perfume: ['fragrance','family','formulation','bottle_size'],
+    shoes:   ['colour','material','shoe_type']
+};
+const EDIT_META_PREFIX = { watch: 'ew_', perfume: 'ep_', shoes: 'es_' };
+
+function updateEditMetaSection() {
+    const kind = detectMetaKind(document.getElementById('editCategory').value);
+    document.querySelectorAll('#editMetaSection .meta-group').forEach(g => g.style.display = 'none');
+    const sec = document.getElementById('editMetaSection');
+    if (kind) {
+        sec.style.display = 'block';
+        document.getElementById('edit-meta-' + kind).style.display = 'block';
+    } else {
+        sec.style.display = 'none';
+    }
+}
+document.getElementById('editCategory').addEventListener('input', updateEditMetaSection);
+
+function fillEditMetaFields(kind, details) {
+    Object.entries(EDIT_META_FIELDS).forEach(([k, cols]) => {
+        cols.forEach(c => {
+            const el = document.getElementById(EDIT_META_PREFIX[k] + c);
+            if (el) el.value = '';
+        });
+    });
+    if (kind && details && EDIT_META_FIELDS[kind]) {
+        EDIT_META_FIELDS[kind].forEach(c => {
+            const el = document.getElementById(EDIT_META_PREFIX[kind] + c);
+            if (el) el.value = details[c] || '';
+        });
+    }
+    updateEditMetaSection();
+}
+
+function getEditMetaDetails() {
+    const kind = detectMetaKind(document.getElementById('editCategory').value);
+    if (!kind || !EDIT_META_FIELDS[kind]) return null;
+    const fields = {};
+    EDIT_META_FIELDS[kind].forEach(c => {
+        const el = document.getElementById(EDIT_META_PREFIX[kind] + c);
+        fields[c] = el ? el.value.trim() : '';
+    });
+    return { kind, fields };
+}
+
 // ---- Notes (Edit modal) ----
 const editNoteRows = document.getElementById('editNoteRows');
 const editAddNoteBtn = document.getElementById('editAddNoteBtn');
@@ -1425,6 +1904,13 @@ async function openEditModal(id) {
         document.getElementById('editLongevity').value = p.longevity || '';
         document.getElementById('editDescription').value = p.description || '';
 
+             fillEditMetaFields(p.details_kind || null, p.details || null);
+
+        document.getElementById('editVideoInput').value = '';
+        document.getElementById('editRemoveVideo').checked = false;
+        document.getElementById('editCurrentVideo').innerHTML = p.video
+            ? `Current: <a href="${escapeHtml(p.video)}" target="_blank">view video</a>`
+            : 'No video uploaded.';
         editKeptImages = (p.images || []).slice();
         renderEditExistingImages();
         renderEditNewPreviews();
@@ -1478,6 +1964,16 @@ editProductForm.addEventListener('submit', async (e) => {
     editNewFiles.forEach(file => formData.append('images[]', file));
     getEditVariants().forEach(v => formData.append('variants[]', v));
 
+      const editMeta = getEditMetaDetails(); 
+    if (editMeta) { 
+        formData.append('meta_kind', editMeta.kind); 
+        Object.entries(editMeta.fields).forEach(([k, v]) => formData.append(k, v)); 
+    } 
+
+    const editVideoFile = document.getElementById('editVideoInput').files[0];
+    if (editVideoFile) formData.append('video', editVideoFile);
+    if (document.getElementById('editRemoveVideo').checked) formData.append('remove_video', '1');
+
     try {
         const res = await fetch(`${API_BASE}/update_product.php`, { method: 'POST', body: formData });
         const data = await res.json();
@@ -1515,6 +2011,498 @@ editProductForm.addEventListener('submit', async (e) => {
 // prevents the temporal-dead-zone crash that happened when this ran
 // too early (before deleteList/editModalOverlay etc. were declared).
 if (adminPassword) unlockUI();
+
+
+(function () {
+    const SPEC_ICONS = {
+        gear:   '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+        ruler:  '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="2" y="9" width="20" height="6" rx="2"/><path d="M7 9v3"/><path d="M12 9v3"/><path d="M17 9v3"/></svg>',
+        watch:  '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="6"/><path d="M12 10v2l1.5 1.5"/><path d="M16.5 17.5 15 22H9l-1.5-4.5"/><path d="M7.5 6.5 9 2h6l1.5 4.5"/></svg>',
+        drop:   '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 2.7 6.3 9.6a7 7 0 1 0 11.4 0z"/></svg>',
+        gem:    '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20"/><path d="m9 3 3 6 3-6"/></svg>',
+        strap:  '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="8" y="7" width="8" height="10" rx="4"/><path d="M10 7V2h4v5"/><path d="M10 17v5h4v-5"/></svg>',
+        lock:   '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+        shield: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
+        palette:'<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="16" cy="10" r="1"/><path d="M12 22a3 3 0 0 0 0-6h-1a2 2 0 0 1 0-4"/></svg>',
+        spray:  '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="8" y="9" width="8" height="13" rx="2"/><path d="M10 9V6h4v3"/><path d="M12 3v1"/><path d="M17 4l-1 1"/><path d="M7 4l1 1"/></svg>',
+        leaf:   '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M11 20A7 7 0 0 1 4 13c0-6 7-10 16-10-1 9-5 16-9 17z"/><path d="M4 21c3-3 6-5 10-7"/></svg>',
+        flask:  '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M10 2v6L4.5 18a2 2 0 0 0 1.8 3h11.4a2 2 0 0 0 1.8-3L14 8V2"/><path d="M8 2h8"/><path d="M7 14h10"/></svg>',
+        bottle: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="7" y="8" width="10" height="14" rx="2"/><path d="M10 8V4h4v4"/><path d="M10 2h4"/></svg>',
+        shoe:   '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M2 16h20v3H2z"/><path d="M2 16c0-3 2-5 4-6l3 2 2-3c4 1 9 3 11 7"/></svg>',
+        layers: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>'
+    };
+
+    const SPEC_CONFIG = {
+        watch: [
+            ['movement','Movement','gear'],
+            ['case_diameter','Case Size','ruler'],
+            ['case_material','Case Material','watch'],
+            ['dial_color','Dial Color','palette'],
+            ['glass_type','Glass','gem'],
+            ['strap_material','Strap','strap'],
+            ['water_resistance','Water Resistance','drop'],
+            ['clasp_type','Clasp','lock'],
+            ['warranty','Warranty','shield']
+        ],
+        perfume: [
+            ['fragrance','Fragrance','spray'],
+            ['family','Family','leaf'],
+            ['formulation','Formulation','flask'],
+            ['bottle_size','Bottle Size','bottle']
+        ],
+        shoes: [
+            ['colour','Colour','palette'],
+            ['material','Material','layers'],
+            ['shoe_type','Shoe Type','shoe']
+        ]
+    };
+
+    function esc(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    async function loadSpecs() {
+        const wrap = document.getElementById('productSpecs');
+        const grid = document.getElementById('pspecGrid');
+        if (!wrap || !grid) return;
+
+        const id = new URLSearchParams(window.location.search).get('id');
+        if (!id) return;
+
+        try {
+            const res = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(id)}`);
+            const data = await res.json();
+            if (!data.success) return;
+
+            const p = data.product;
+            const kind = p.details_kind;
+            const details = p.details;
+            if (!kind || !details || !SPEC_CONFIG[kind]) return;
+
+            const items = SPEC_CONFIG[kind]
+                .filter(([key]) => details[key] && String(details[key]).trim() !== '')
+                .map(([key, label, icon]) => `
+                    <div class="pspec-item">
+                        ${SPEC_ICONS[icon]}
+                        <span class="pspec-label">${esc(label)}</span>
+                        <span class="pspec-value">${esc(String(details[key]))}</span>
+                    </div>
+                `).join('');
+
+            if (!items) return;
+            grid.innerHTML = items;
+            wrap.style.display = 'block';
+        } catch (err) {
+            // specs just stay hidden on failure
+        }
+    }
+
+    loadSpecs();
+})();
+
+
+/* =========================================================
+   PROMO VIDEO — chunked upload (works for any file size:
+   the video is sent in 2MB pieces so PHP upload limits
+   never apply).
+   ========================================================= */
+const VIDEO_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+
+const videoFileInput   = document.getElementById('videoFileInput');
+const videoLinkInput   = document.getElementById('videoLinkInput');
+const videoUploadBtn   = document.getElementById('videoUploadBtn');
+const videoDeleteBtn   = document.getElementById('videoDeleteBtn');
+const videoMsg         = document.getElementById('videoMsg');
+const videoFileInfo    = document.getElementById('videoFileInfo');
+const videoProgressWrap = document.getElementById('videoProgressWrap');
+const videoProgressBar  = document.getElementById('videoProgressBar');
+const videoProgressText = document.getElementById('videoProgressText');
+const videoCurrentWrap   = document.getElementById('videoCurrentWrap');
+const videoCurrentPlayer = document.getElementById('videoCurrentPlayer');
+const videoCurrentInfo   = document.getElementById('videoCurrentInfo');
+const videoNoneMsg       = document.getElementById('videoNoneMsg');
+
+function formatBytes(b) {
+    if (b >= 1024 * 1024) return (b / (1024 * 1024)).toFixed(1) + ' MB';
+    return Math.round(b / 1024) + ' KB';
+}
+
+/* ---- Homepage showcase product picker ---- */
+let shwIds = [];
+let shwNames = {};
+let shwSizes = {};
+let shwSizesM = {};
+let shwDebounce;
+
+function renderShwSelected() {
+    const box = document.getElementById('shwSelected');
+    if (!box) return;
+    if (!shwIds.length) {
+        box.innerHTML = '<p style="font-size:12px;color:#999;">None selected — homepage shows random products.</p>';
+        return;
+    }
+    box.innerHTML = shwIds.map((id, i) => `
+        <div style="display:flex; align-items:center; gap:8px; padding:7px 10px; background:#100e0a; border:1px solid rgba(212,175,106,0.18); border-radius:8px; margin-bottom:6px;">
+            <span style="font-size:12px; color:#999;">${i + 1}.</span>
+            <span style="flex:1; font-size:13px;">${escapeHtml(shwNames[id] || ('#' + id))}</span>
+            <span style="font-size:10px; color:#a89a7c; letter-spacing:0.5px;">PC</span>
+            <input type="number" data-shw-size="${id}" value="${shwSizes[id] || 100}" min="40" max="500" step="5" title="Desktop size %"
+                   style="width:58px; margin:0; padding:5px 4px; font-size:12px; text-align:center;">
+            <span style="font-size:10px; color:#a89a7c; letter-spacing:0.5px;">MOB</span>
+            <input type="number" data-shw-size-m="${id}" value="${shwSizesM[id] || 100}" min="40" max="500" step="5" title="Mobile size %"
+                   style="width:58px; margin:0; padding:5px 4px; font-size:12px; text-align:center;">
+            <span style="font-size:11px; color:#999;">%</span>
+            <button type="button" data-shw-remove="${id}" style="width:auto; margin:0; padding:4px 10px; background:rgba(224,52,46,0.12); border:1px solid rgba(224,52,46,0.4); color:#ff8a80; font-size:12px;">×</button>
+        </div>
+    `).join('');
+    box.querySelectorAll('[data-shw-size]').forEach(inp => {
+        inp.addEventListener('input', () => {
+            shwSizes[inp.dataset.shwSize] = parseInt(inp.value) || 100;
+        });
+    });
+    box.querySelectorAll('[data-shw-size-m]').forEach(inp => {
+        inp.addEventListener('input', () => {
+            shwSizesM[inp.dataset.shwSizeM] = parseInt(inp.value) || 100;
+        });
+    });
+    box.querySelectorAll('[data-shw-remove]').forEach(b => {
+        b.addEventListener('click', () => {
+            shwIds = shwIds.filter(x => String(x) !== b.dataset.shwRemove);
+            renderShwSelected();
+        });
+    });
+}
+
+const shwSearchInput = document.getElementById('shwSearchInput');
+if (shwSearchInput) {
+    shwSearchInput.addEventListener('input', () => {
+        clearTimeout(shwDebounce);
+        const term = shwSearchInput.value.trim();
+        const box = document.getElementById('shwResults');
+        if (term.length < 2) { box.innerHTML = ''; return; }
+        shwDebounce = setTimeout(async () => {
+            try {
+                const res = await fetch(`${API_BASE}/get_products.php?search=${encodeURIComponent(term)}&page=1`);
+                const data = await res.json();
+                if (!data.success) return;
+                box.innerHTML = (data.products || []).slice(0, 6).map(p => `
+                    <div style="display:flex; align-items:center; gap:8px; padding:6px 10px; border-bottom:1px solid #f0f0f0;">
+                        <img src="${p.image ? escapeHtml(p.image) : ''}" style="width:30px;height:30px;border-radius:6px;object-fit:cover;background:#eee;">
+                        <span style="flex:1; font-size:13px;">${escapeHtml(p.name)}</span>
+                        <button type="button" data-shw-add="${p.id}" data-shw-name="${escapeHtml(p.name)}" style="width:auto; margin:0; padding:4px 12px; font-size:12px;">Add</button>
+                    </div>
+                `).join('') || '<p style="font-size:12px;color:#999;padding:6px 0;">No matches.</p>';
+                box.querySelectorAll('[data-shw-add]').forEach(b => {
+                    b.addEventListener('click', () => {
+                        const id = parseInt(b.dataset.shwAdd);
+                        if (shwIds.length >= 5) { alert('Maximum 5 products.'); return; }
+                        if (shwIds.includes(id)) return;
+                        shwIds.push(id);
+                        shwNames[id] = b.dataset.shwName;
+                        renderShwSelected();
+                    });
+                });
+            } catch (e) {}
+        }, 300);
+    });
+}
+
+const shwSaveBtn = document.getElementById('shwSaveBtn');
+if (shwSaveBtn) {
+    shwSaveBtn.addEventListener('click', async () => {
+        const shwMsg = document.getElementById('shwMsg');
+        shwSaveBtn.disabled = true;
+        shwSaveBtn.textContent = 'Saving...';
+        shwMsg.textContent = '';
+        shwMsg.className = '';
+        try {
+            await postVideoAction({
+                action: 'showcase_settings',
+                showcase_ids: shwIds.join(','),
+                showcase_sizes: shwIds.map(id => shwSizes[id] || 100).join(','),
+                showcase_sizes_mobile: shwIds.map(id => shwSizesM[id] || 100).join(',')
+            });
+            shwMsg.textContent = shwIds.length ? 'Showcase saved!' : 'Cleared — the showcase is hidden on the homepage.';
+            shwMsg.className = 'success';
+            if (shwIds.length) generateShowcaseCutouts(shwIds.slice());
+        } catch (err) {
+            if (err.message === 'PASSWORD') {
+                sessionStorage.removeItem('adminPassword');
+                document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+                passwordGate.style.display = 'block';
+                adminPasswordInput.value = '';
+                return;
+            }
+            shwMsg.textContent = 'Save failed: ' + err.message;
+            shwMsg.className = 'error';
+        } finally {
+            shwSaveBtn.disabled = false;
+            shwSaveBtn.textContent = 'Save Showcase';
+        }
+    });
+}
+
+/* ---- AI background removal for showcase products ----
+   Runs ONCE here in the admin (downloads a model on first use,
+   then cached). The clean PNGs are uploaded to the server so the
+   homepage shows perfect cutouts instantly for every visitor. */
+async function generateShowcaseCutouts(ids) {
+    const shwMsg = document.getElementById('shwMsg');
+    const report = (t, cls) => { shwMsg.textContent = t; shwMsg.className = cls || ''; };
+    let removeBackground;
+    try {
+        report('Loading background remover (first time downloads a model, please wait)...');
+        const mod = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
+        removeBackground = mod.removeBackground || mod.default;
+        if (!removeBackground) throw new Error('lib not available');
+    } catch (e) {
+        report('Showcase saved, but the background remover could not load (' + e.message + '). Photos will show with a soft fade instead.', 'error');
+        return;
+    }
+
+    let done = 0, failed = 0, skipped = 0;
+    for (const id of ids) {
+        report(`Removing backgrounds... ${done + failed + skipped + 1} / ${ids.length}`);
+        try {
+            // Already have a cutout on the server? Skip it — instant.
+            try {
+                const head = await fetch(`${API_BASE}/uploads/showcase/${id}.png?v=${Date.now()}`, { method: 'HEAD' });
+                if (head.ok) { skipped++; continue; }
+            } catch (e) { /* no cutout yet */ }
+
+            const pres = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(id)}`);
+            const pdata = await pres.json();
+            const imgUrl = pdata.success && pdata.product
+                ? ((pdata.product.images && pdata.product.images[0]) || pdata.product.image)
+                : null;
+            if (!imgUrl) { failed++; continue; }
+
+            const imgRes = await fetch(`${API_BASE}/image_proxy.php?u=${encodeURIComponent(imgUrl)}`);
+            if (!imgRes.ok) throw new Error('image fetch failed (' + imgRes.status + ')');
+            let blob = await imgRes.blob();
+
+            // Downscale to max 1000px before the AI — 3-5x faster,
+            // no visible quality loss at showcase size.
+            try {
+                const bmp = await createImageBitmap(blob);
+                const maxSide = Math.max(bmp.width, bmp.height);
+                if (maxSide > 1000) {
+                    const scale = 1000 / maxSide;
+                    const c = document.createElement('canvas');
+                    c.width = Math.round(bmp.width * scale);
+                    c.height = Math.round(bmp.height * scale);
+                    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+                    blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+                }
+            } catch (e) { /* keep original size */ }
+
+            const cutBlob = await removeBackground(blob); // AI magic
+
+            const fd = new FormData();
+            fd.append('action', 'showcase_cutout');
+            fd.append('admin_password', sessionStorage.getItem('adminPassword') || '');
+            fd.append('product_id', id);
+            fd.append('cutout', cutBlob, id + '.png');
+            const upRes = await fetch(`${API_BASE}/upload_promo_video.php`, { method: 'POST', body: fd });
+            const upData = await upRes.json();
+            if (!upData.success) throw new Error(upData.error || 'upload failed');
+            done++;
+        } catch (e) {
+            console.warn('cutout failed for', id, e);
+            failed++;
+        }
+    }
+    report(
+        failed === 0
+            ? `Showcase saved — cutouts ready! (${done} new, ${skipped} already done)`
+            : `Showcase saved — ${done} new cutouts, ${skipped} already done, ${failed} failed (those show with a soft fade).`,
+        failed === 0 ? 'success' : ''
+    );
+}
+
+async function loadShowcaseSelection(ids, sizes, sizesM) {
+    shwIds = (ids || []).slice(0, 5);
+    (sizes || []).forEach((s, i) => { if (shwIds[i] != null) shwSizes[shwIds[i]] = s || 100; });
+    (sizesM || []).forEach((s, i) => { if (shwIds[i] != null) shwSizesM[shwIds[i]] = s || 100; });
+    await Promise.all(shwIds.map(async id => {
+        if (shwNames[id]) return;
+        try {
+            const res = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(id)}`);
+            const data = await res.json();
+            if (data.success && data.product) shwNames[id] = data.product.name;
+        } catch (e) {}
+    }));
+    renderShwSelected();
+}
+
+async function loadCurrentPromoVideo() {
+    if (!videoCurrentWrap) return;
+    try {
+        const res = await fetch(`${API_BASE}/get_promo_video.php?t=${Date.now()}`);
+        const data = await res.json();
+        if (data.success) {
+            loadShowcaseSelection(data.showcase_ids || [], data.showcase_sizes || [], data.showcase_sizes_mobile || []);
+        }
+        if (data.success && data.video) {
+            videoCurrentPlayer.src = data.video.url + '?v=' + data.video.version;
+            videoCurrentInfo.textContent = formatBytes(data.video.size) + (data.video.link ? ' — links to: ' + data.video.link : '');
+            videoLinkInput.value = data.video.link || '';
+            if (data.video.mobile_height)  document.getElementById('videoHeightMobile').value  = data.video.mobile_height;
+            if (data.video.desktop_height) document.getElementById('videoHeightDesktop').value = data.video.desktop_height;
+            document.getElementById('videoActiveInput').checked = data.video.active != 0;
+            videoCurrentWrap.style.display = 'block';
+            videoNoneMsg.style.display = 'none';
+        } else {
+            videoCurrentWrap.style.display = 'none';
+            videoNoneMsg.style.display = 'block';
+        }
+    } catch (e) {
+        videoNoneMsg.textContent = 'Could not load current video info.';
+    }
+}
+loadCurrentPromoVideo();
+
+if (videoFileInput) {
+    videoFileInput.addEventListener('change', () => {
+        const f = videoFileInput.files[0];
+        videoFileInfo.textContent = f ? `${f.name} — ${formatBytes(f.size)} (${Math.ceil(f.size / VIDEO_CHUNK_SIZE)} chunks)` : '';
+    });
+}
+
+async function postVideoAction(fields, file) {
+    const fd = new FormData();
+    fd.append('admin_password', adminPassword);
+    Object.keys(fields).forEach(k => fd.append(k, fields[k]));
+    if (file) fd.append('chunk', file);
+    const res = await fetch(`${API_BASE}/upload_promo_video.php`, { method: 'POST', body: fd });
+    if (res.status === 403) throw new Error('PASSWORD');
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Server error');
+    return data;
+}
+
+if (videoUploadBtn) {
+    videoUploadBtn.addEventListener('click', async () => {
+        const file = videoFileInput.files[0];
+        if (!file) {
+            videoMsg.textContent = 'Choose a video file first.';
+            videoMsg.className = 'error';
+            return;
+        }
+
+        videoUploadBtn.disabled = true;
+        videoUploadBtn.textContent = 'Uploading...';
+        videoMsg.textContent = '';
+        videoMsg.className = '';
+        videoProgressWrap.style.display = 'block';
+        videoProgressBar.style.width = '0%';
+
+        const totalChunks = Math.ceil(file.size / VIDEO_CHUNK_SIZE);
+
+        try {
+            await postVideoAction({ action: 'start' });
+
+            for (let i = 0; i < totalChunks; i++) {
+                const blob = file.slice(i * VIDEO_CHUNK_SIZE, (i + 1) * VIDEO_CHUNK_SIZE);
+
+                // Retry each chunk up to 3 times before giving up
+                let done = false, lastErr = null;
+                for (let attempt = 0; attempt < 3 && !done; attempt++) {
+                    try {
+                        await postVideoAction({ action: 'chunk', chunk_index: i }, blob);
+                        done = true;
+                    } catch (err) {
+                        if (err.message === 'PASSWORD') throw err;
+                        lastErr = err;
+                        await new Promise(r => setTimeout(r, 800));
+                    }
+                }
+                if (!done) throw lastErr;
+
+                const pct = Math.round(((i + 1) / totalChunks) * 100);
+                videoProgressBar.style.width = pct + '%';
+                videoProgressText.textContent = `${pct}% — chunk ${i + 1}/${totalChunks}`;
+            }
+
+            await postVideoAction({
+                action: 'finalize',
+                total_size: file.size,
+                link: videoLinkInput.value.trim(),
+                mobile_height: document.getElementById('videoHeightMobile').value || 420,
+                desktop_height: document.getElementById('videoHeightDesktop').value || 560,
+                active: document.getElementById('videoActiveInput').checked ? '1' : '0'
+            });
+
+            videoMsg.textContent = 'Video uploaded successfully!';
+            videoMsg.className = 'success';
+            videoFileInput.value = '';
+            videoFileInfo.textContent = '';
+            loadCurrentPromoVideo();
+        } catch (err) {
+            if (err.message === 'PASSWORD') {
+                sessionStorage.removeItem('adminPassword');
+                videoMsg.textContent = 'Incorrect admin password. Please re-enter.';
+                videoMsg.className = 'error';
+                document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+                passwordGate.style.display = 'block';
+                adminPasswordInput.value = '';
+            } else {
+                videoMsg.textContent = 'Upload failed: ' + err.message;
+                videoMsg.className = 'error';
+            }
+        } finally {
+            videoUploadBtn.disabled = false;
+            videoUploadBtn.textContent = 'Upload Video';
+            videoProgressWrap.style.display = 'none';
+        }
+    });
+}
+
+const videoSaveSettingsBtn = document.getElementById('videoSaveSettingsBtn');
+if (videoSaveSettingsBtn) {
+    videoSaveSettingsBtn.addEventListener('click', async () => {
+        videoSaveSettingsBtn.disabled = true;
+        videoSaveSettingsBtn.textContent = 'Saving...';
+        videoMsg.textContent = '';
+        videoMsg.className = '';
+        try {
+            await postVideoAction({
+                action: 'settings',
+                link: videoLinkInput.value.trim(),
+                mobile_height: document.getElementById('videoHeightMobile').value || 420,
+                desktop_height: document.getElementById('videoHeightDesktop').value || 560,
+                active: document.getElementById('videoActiveInput').checked ? '1' : '0'
+            });
+            videoMsg.textContent = 'Settings saved!';
+            videoMsg.className = 'success';
+            loadCurrentPromoVideo();
+        } catch (err) {
+            videoMsg.textContent = 'Save failed: ' + err.message;
+            videoMsg.className = 'error';
+        } finally {
+            videoSaveSettingsBtn.disabled = false;
+            videoSaveSettingsBtn.textContent = 'Save Settings (link + size only)';
+        }
+    });
+}
+
+if (videoDeleteBtn) {
+    videoDeleteBtn.addEventListener('click', async () => {
+        if (!confirm('Remove the promo video from the homepage?')) return;
+        try {
+            await postVideoAction({ action: 'delete' });
+            videoMsg.textContent = 'Video removed.';
+            videoMsg.className = 'success';
+            loadCurrentPromoVideo();
+        } catch (err) {
+            videoMsg.textContent = 'Delete failed: ' + err.message;
+            videoMsg.className = 'error';
+        }
+    });
+}
+
 </script>
 
 </body>

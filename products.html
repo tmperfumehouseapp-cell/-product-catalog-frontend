@@ -8,6 +8,154 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+/* =========================================================
+   LUXE DARK-GOLD THEME — products page override layer.
+   Matches the new homepage. style.css stays untouched.
+   ========================================================= */
+body { background: #0d0b08 !important; color: #e9e2d4; }
+
+.top-header {
+    background: rgba(13,11,8,0.92) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(212,175,106,0.16) !important;
+    box-shadow: none !important;
+}
+.hamburger-btn, .search-icon-btn {
+    background: rgba(255,255,255,0.06) !important;
+    border: 1px solid rgba(212,175,106,0.4) !important;
+    color: #f2ecdf !important;
+}
+.hamburger-btn:hover, .search-icon-btn:hover {
+    background: rgba(212,175,106,0.12) !important;
+    border-color: rgba(212,175,106,0.9) !important;
+}
+.search-input-hidden { background: #15130e !important; border-color: rgba(212,175,106,0.3) !important; color: #f2ecdf !important; }
+
+.drawer { background: #0f0d09 !important; }
+.drawer-head { border-bottom: 1px solid rgba(212,175,106,0.16) !important; }
+.drawer-logo, .drawer-close-btn { color: #f2ecdf !important; }
+.drawer-close-btn { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(212,175,106,0.4) !important; }
+.drawer-link { color: #cfc8bb !important; }
+.drawer-link:hover, .drawer-link.active { background: #17140e !important; color: #d4af6a !important; }
+
+/* Category story circles */
+.category-stories { background: #0d0b08 !important; border-bottom: 1px solid rgba(212,175,106,0.12) !important; }
+.story-circle { border-color: rgba(212,175,106,0.45) !important; background: #15130e; }
+.story-circle.active { border-color: #d4af6a !important; box-shadow: 0 0 14px rgba(212,175,106,0.3); }
+.story-label { color: #a89a7c !important; }
+.story-circle.all-circle { background: #15130e !important; color: #d4af6a !important; }
+
+/* Toolbar + filter button */
+.toolbar-row { background: #0d0b08 !important; }
+.results-count { color: #8f897d !important; }
+.filter-toggle-btn {
+    background: transparent !important;
+    border: 1px solid rgba(212,175,106,0.6) !important;
+    color: #f2ecdf !important;
+    box-shadow: none !important;
+}
+.filter-toggle-btn:hover { background: rgba(212,175,106,0.12) !important; }
+
+/* Product cards */
+.card {
+    background: #15130e !important;
+    border: 1px solid rgba(212,175,106,0.18) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.35) !important;
+}
+.card:hover { transform: translateY(-4px); border-color: rgba(212,175,106,0.6) !important; }
+.card-img-wrap { background: #100e0a !important; }
+.card-body { background: #15130e !important; }
+.card-body .brand-label { color: #8f897d !important; }
+.card-body h3 { color: #f2ecdf !important; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.card-body .price { color: #d4af6a !important; }
+.badge-pill, .card .tag, .card-body .tag, .meta .tag {
+    background: #000 !important;
+    color: #d4af6a !important;
+    border: 1px solid rgba(212,175,106,0.3) !important;
+}
+.card-wishlist-btn { background: rgba(13,11,8,0.7) !important; color: #f2ecdf !important; }
+.card-wishlist-btn.active { background: #e0342e !important; }
+
+/* Filter drawer */
+.filter-drawer { background: #0f0d09 !important; }
+.filter-drawer-head { background: #0f0d09 !important; border-bottom: 1px solid rgba(212,175,106,0.16) !important; color: #f2ecdf !important; }
+.filter-drawer-head span { color: #f2ecdf !important; }
+.filter-drawer-close { color: #f2ecdf !important; }
+.filter-drawer-body { background: #0f0d09 !important; }
+.fd-section { border-bottom: 1px solid rgba(212,175,106,0.12) !important; }
+.fd-section-head { color: #e9e2d4 !important; }
+.fd-chevron { color: #a89a7c !important; }
+.fd-option { color: #cfc8bb !important; }
+.fd-option input[type="checkbox"] { accent-color: #d4af6a; }
+.fd-count { color: #8f897d !important; }
+.fd-show-more { color: #d4af6a !important; }
+.fd-clear-btn { color: #d4af6a !important; border-color: rgba(212,175,106,0.5) !important; background: transparent !important; }
+.filter-drawer-footer { background: #0f0d09 !important; border-top: 1px solid rgba(212,175,106,0.16) !important; }
+.filter-drawer-footer button { background: #e0342e !important; color: #fff !important; }
+
+/* Load more + footer */
+.load-more-btn {
+    background: transparent !important;
+    border: 1px solid rgba(212,175,106,0.6) !important;
+    color: #f2ecdf !important;
+    letter-spacing: 1px;
+}
+.load-more-btn:hover { background: rgba(212,175,106,0.12) !important; }
+.footer-brand-banner { background: #000 !important; border-top: 1px solid rgba(212,175,106,0.18) !important; }
+.site-footer { background: #000 !important; }
+.footer-brand-copy { color: #8f897d !important; }
+.footer-brand-copyright { color: #5b564c !important; }
+
+/* HIDE ALL PRICES (site-wide request) */
+.card-body .price, .search-suggest-price, .price-row .price { display: none !important; }
+
+/* =========================================================
+   PRODUCT-OPEN TRANSITION (View Transitions API)
+   The tapped product image morphs into the product page's
+   main image. Browsers without support fall back to normal
+   instant navigation — nothing breaks.
+   ========================================================= */
+@view-transition { navigation: auto; }
+::view-transition-group(product-hero) {
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(.25,.9,.3,1);
+}
+::view-transition-old(product-hero), ::view-transition-new(product-hero) {
+    height: 100%;
+    object-fit: cover;
+}
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.3s; }
+
+/* =========================================================
+   PAGE PEEL transition (product open)
+   A gold-edged "page corner" sweeps from the bottom-right,
+   covers the screen, the next page loads, then it peels back
+   away to the corner. Runs alongside the image-fly morph.
+   ========================================================= */
+#peelLayer {
+    position: fixed;
+    right: 0; bottom: 0;
+    width: 260vmax; height: 260vmax;
+    z-index: 99999;
+    pointer-events: none;
+    background: linear-gradient(315deg,
+        #171310 0%, #171310 46%,
+        #3a3020 48%, #c9a35d 50%, #f0d9a8 51%, #c9a35d 52%,
+        #12100b 54%, #0d0b08 100%);
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    box-shadow: -14px -14px 40px rgba(0,0,0,0.65);
+    /* transform-based = GPU compositing, no layout work per frame */
+    transform: scale(0);
+    transform-origin: bottom right;
+    transition: transform 0.55s cubic-bezier(.65, 0, .35, 1);
+    will-change: transform;
+}
+#peelLayer.cover { transform: scale(1); }
+#peelLayer.instant { transition: none; }
+</style>
 </head>
 <body>
 
@@ -128,5 +276,58 @@ document.querySelectorAll('.footer-heading').forEach(function (btn) {
 
 <script src="common.js"></script>
 <script src="products.js"></script>
+
+<script>
+/* Name the tapped product image just before navigation so the
+   browser morphs it into the product page's main image. */
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href*="product.html?id="]');
+    if (!link) return;
+    const img = link.querySelector('img');
+    if (img && img.offsetParent !== null) {
+        img.style.viewTransitionName = 'product-hero';
+    }
+}, true);
+</script>
+
+<script>
+/* PAGE PEEL — cover on product click, peel away on arrival */
+(function () {
+    const layer = document.createElement('div');
+    layer.id = 'peelLayer';
+    document.body.appendChild(layer);
+
+    // Arriving from a peel? Start covered, then peel back to the corner.
+    if (sessionStorage.getItem('peelIn') === '1') {
+        sessionStorage.removeItem('peelIn');
+        layer.classList.add('instant', 'cover');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            layer.classList.remove('instant');
+            layer.classList.remove('cover');
+        }));
+    }
+
+    // Product clicks: sweep the corner over the page, then navigate.
+    document.addEventListener('click', (e) => {
+        if (e.defaultPrevented) return;
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const link = e.target.closest('a[href*="product.html?id="]');
+        if (!link || link.target === '_blank') return;
+        e.preventDefault();
+        sessionStorage.setItem('peelIn', '1');
+        layer.classList.add('cover');
+        setTimeout(() => { window.location.href = link.href; }, 520);
+    }, true);
+    // Returning via back/forward: never stay covered
+    window.addEventListener('pageshow', (ev) => {
+        if (ev.persisted) {
+            layer.classList.add('instant');
+            layer.classList.remove('cover');
+            requestAnimationFrame(() => layer.classList.remove('instant'));
+        }
+    });
+})();
+
+</script>
 </body>
 </html>

@@ -154,7 +154,6 @@ body { padding-top: 60px; }
     color: #e0342e;
     font-weight: 700;
     flex-shrink: 0;
-    display: none;
 }
 .search-suggest-viewall {
     display: block;
@@ -537,7 +536,7 @@ body { padding-top: 60px; }
     text-overflow: ellipsis;
 }
 @media (min-width: 640px) { .card-body h3 { font-size: 12px; margin-bottom: 4px; } }
-.card-body .price { font-size: 13px; font-weight: 700; color: #e0342e; margin: 0;display: none; }
+.card-body .price { font-size: 13px; font-weight: 700; color: #e0342e; margin: 0; }
 @media (min-width: 640px) { .card-body .price { font-size: 17px; } }
 .card-body .meta { font-size: 8px; color: #777; display: flex; gap: 3px; flex-wrap: wrap; margin: 0; }
 @media (min-width: 640px) { .card-body .meta { font-size: 11px; gap: 4px; } }
@@ -546,7 +545,6 @@ body { padding-top: 60px; }
     align-items: center;
     justify-content: space-between;
     gap: 4px;
-    display: none;
 }
 .tag { background: #f6efe3; color: #6b6250; padding: 1px 6px; border-radius: 20px; }
 @media (min-width: 640px) { .tag { padding: 2px 9px; } }
@@ -681,8 +679,7 @@ body { padding-top: 60px; }
     margin-bottom: 4px;
 }
 .detail-info h2 { font-size: 20px; margin-bottom: 8px; }
-.detail-price { font-size: 22px; font-weight: 700; color: #e0342e; margin-bottom: 18px; display: none;
-}
+.detail-price { font-size: 22px; font-weight: 700; color: #e0342e; margin-bottom: 18px; }
 .detail-meta { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .detail-meta div { display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid #eee; }
 .detail-meta span { font-size: 12px; color: #888; text-transform: capitalize; }
@@ -1563,9 +1560,7 @@ body.admin-page { padding-top: 0; }
     color: #e0342e;
     font-weight: 700;
     margin-top: 2px;
-    display: none;
 }
-
 
 .delete-row-actions {
     display: flex;
@@ -1798,7 +1793,6 @@ body.admin-page { padding-top: 0; }
 .modal-save-btn:hover { background: #c22b26; }
 .modal-save-btn:disabled { background: #999; cursor: not-allowed; }
 
-<<<<<<< HEAD
 /* =========================================================
    HERO SLIDER — added without changing existing site colors
    ========================================================= */
@@ -1933,12 +1927,3 @@ body.admin-page { padding-top: 0; }
 @media (min-width: 900px) {
     .hero-slider { margin-left: 0; margin-right: 0; }
 }
-=======
-/* Price hidden site-wide (catalog cards + product detail page) */
-.card-body .price,
-.detail-price {
-    display: none;
-}
-
-
->>>>>>> 15ecf9c444c3bedd93cddb752c5c9fa63e9b86e0

@@ -373,7 +373,7 @@ body { padding-top: 60px; }
 }
 
 .site-footer {
-    background: #fff;
+    background: #000;
     border-top: 2px solid #e0342e;
     padding: 28px 16px 20px;
     margin-top: 24px;
@@ -1346,7 +1346,7 @@ body { padding-top: 60px; }
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.cat-product-price { font-size: 14px; font-weight: 700; color: #e0342e;display: none; }
+.cat-product-price { font-size: 14px; font-weight: 700; color: #e0342e; }
 
 .category-stories {
     display: flex;
@@ -2094,6 +2094,464 @@ body.admin-page { padding-top: 0; }
     .hero-arrow { width: 34px; height: 34px; top: 96px; }
 }
 
+/* =========================================================
+   PROMO VIDEO SECTION
+   ========================================================= */
+.promo-video-section {
+    position: relative;
+    width: 100%;
+    background: #000;
+    line-height: 0;
+    cursor: default;
+    overflow: hidden;
+}
+.promo-video-section.is-clickable { cursor: pointer; }
+/* ---- SIZE: heights come from the admin panel via CSS vars ---- */
+.promo-video {
+    display: block;
+    width: 100%;
+    height: var(--pv-h-mobile, 420px);
+    object-fit: cover;    /* crops to fill; use 'contain' to show full frame */
+    margin: 0 auto;
+}
+@media (min-width: 900px) {
+    .promo-video { height: var(--pv-h-desktop, 560px); }
+}
+.promo-mute-btn {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: background 0.15s ease;
+}
+.promo-mute-btn:hover { background: rgba(0,0,0,0.75); }
+
+
+
+
+
+/* =========================================================
+   NOTES ORBIT SHOWCASE (scroll-driven, luxury dark + gold)
+   Product floats center-stage with its real fragrance notes
+   orbiting around it (photo chips + labeled callouts).
+   Scrolling swaps to the next product; the right pager jumps.
+   Product images are shaped here: .shx-bottle controls the
+   size / radius / crop of every product photo.
+   ========================================================= */
+.showcase-section { position: relative; background: #0d0b08; height: 100vh; }
+.showcase-stage {
+    position: sticky; top: 60px; height: calc(100vh - 60px); overflow: hidden;
+    background:
+        radial-gradient(60vw 44vh at 50% 58%, rgba(212,160,80,0.15), transparent),
+        radial-gradient(80vw 60vh at 50% 112%, rgba(140,90,30,0.12), transparent),
+        #0d0b08;
+    font-family: inherit;
+}
+.shx-head {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 7;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+}
+.shx-brand { font-size: 13px; letter-spacing: 3px; color: #f2ecdf; font-weight: 800; }
+.shx-brand span { color: #e0342e; }
+.shx-tag { font-size: 8px; letter-spacing: 2px; color: #a89a7c; }
+
+.shx { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s ease; pointer-events: none; }
+.shx.on { opacity: 1; pointer-events: auto; }
+
+.shx-info { position: absolute; left: 5vw; top: 2vh; z-index: 6; max-width: 42vw; }
+.shx-eyebrow { font-size: 9px; letter-spacing: 3px; color: #a89a7c; font-weight: 700; }
+.shx-title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(24px, 5.5vw, 46px);
+    color: #f2ecdf; line-height: 1.08; margin-top: 10px;
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.6s ease 0.15s, transform 0.6s cubic-bezier(.2,.8,.3,1) 0.15s;
+}
+.shx-price {
+    font-size: 14px; color: var(--mood, #d4af6a); font-weight: 700; margin-top: 10px;
+    opacity: 0; transform: translateY(14px);
+    transition: opacity 0.6s ease 0.28s, transform 0.6s cubic-bezier(.2,.8,.3,1) 0.28s;
+}
+.shx-cat { font-size: 9px; letter-spacing: 2px; color: #7d766a; margin-top: 5px; }
+.shx.on .shx-title, .shx.on .shx-price { opacity: 1; transform: none; }
+
+/* ---- The product cutout: size lives here. The photo floats FREE:
+        soft radial mask fades its edges into the scene + a breathing
+        halo behind it. Transparent PNG photos skip the mask and render
+        as true cutouts with a drop shadow. ---- */
+.shx-bottle-wrap {
+    position: absolute; left: 50%; top: 52%;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+    animation: shxBob 5.2s ease-in-out infinite;
+}
+@keyframes shxBob { 0%,100% { transform: translate(-50%,-50%) rotate(-3deg); } 50% { transform: translate(-50%,-52.5%) rotate(-1deg); } }
+.shx-halo {
+    position: absolute; left: 50%; top: 50%;
+    width: 220px; height: 220px; margin: -110px 0 0 -110px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--glow, rgba(212,160,80,0.30)), transparent 68%);
+    animation: shxHalo 5.2s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes shxHalo { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.09); opacity: 1; } }
+.shx-bottle {
+    position: relative;
+    /* Admin size % via --shx-size, hard-capped so it never overflows the screen */
+    width: min(calc(180px * var(--shx-size, 1)), 46vw, 700px);
+    height: min(calc(230px * var(--shx-size, 1)), 60vw, 900px);
+    display: block; cursor: pointer;
+    transform: scale(0.86); opacity: 0;
+    transition: transform 0.7s cubic-bezier(.2,.8,.3,1), opacity 0.6s ease;
+}
+.shx.on .shx-bottle { transform: scale(1); opacity: 1; }
+.shx-bottle img {
+    width: 100%; height: 100%;
+    object-fit: contain; display: block;
+    /* Fallback look while the white background is being removed
+       (and if removal isn't possible): tight fade, no hard corners */
+    -webkit-mask-image: radial-gradient(ellipse 52% 50% at 50% 50%, #000 40%, transparent 70%);
+    mask-image: radial-gradient(ellipse 52% 50% at 50% 50%, #000 40%, transparent 70%);
+}
+/* MELT done: white background removed on canvas (or transparent PNG
+   upload) — true cutout with a real drop shadow */
+.shx-bottle.is-cutout img {
+    -webkit-mask-image: none;
+    mask-image: none;
+    filter: drop-shadow(0 26px 24px rgba(0,0,0,0.75));
+}
+.shx-bottle-shadow {
+    position: absolute; left: 50%; top: 52%;
+    width: 150px; height: 16px;
+    transform: translate(-50%, 120px);
+    background: radial-gradient(closest-side, rgba(0,0,0,0.8), transparent);
+    border-radius: 50%;
+    z-index: 3;
+    animation: shxShadow 5.2s ease-in-out infinite;
+}
+@keyframes shxShadow { 0%,100% { transform: translate(-50%,120px) scaleX(1); opacity: 1; } 50% { transform: translate(-50%,120px) scaleX(0.86); opacity: 0.65; } }
+
+.shx-ring {
+    position: absolute; left: 50%; top: 52%;
+    width: 300px; height: 300px; margin: -150px 0 0 -150px;
+    z-index: 2; perspective: 600px; pointer-events: none;
+}
+.shx-ring::before { content: none; }
+@keyframes shxRing { 0%,100% { transform: rotateX(68deg) rotateZ(-9deg); } 50% { transform: rotateX(68deg) rotateZ(9deg); } }
+
+.shx-note { position: absolute; z-index: 5; }
+.shx-note-chip {
+    width: 46px; height: 46px; border-radius: 50%;
+    overflow: hidden;
+    background: radial-gradient(circle at 32% 28%, #2e2a22, #14110c);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--mood, #d4af6a);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.65), 0 0 0 1px var(--moodSoft, rgba(212,175,106,0.4));
+    opacity: 0; transform: scale(0.6);
+    transition: opacity 0.55s ease, transform 0.55s cubic-bezier(.2,.9,.3,1.2);
+}
+.shx-note-chip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.shx-note-lbl { margin-top: 7px; opacity: 0; transform: translateY(8px); transition: opacity 0.5s ease, transform 0.5s ease; }
+.shx-note-name { font-family: Georgia, serif; font-size: 12px; color: #f2ecdf; }
+.shx-note-type { font-size: 7px; letter-spacing: 2px; color: #a89a7c; margin-top: 2px; }
+.shx-note-line { height: 1px; background: linear-gradient(90deg, var(--moodSoft, rgba(212,175,106,0.7)), transparent); margin-top: 4px; width: 48px; }
+.shx.on .shx-note-chip { opacity: 1; transform: scale(1); }
+.shx.on .shx-note-lbl { opacity: 1; transform: none; }
+.shx-note.n1 { left: 12%; top: 21%; text-align: left; animation: shxN1 4.6s ease-in-out infinite; }
+.shx-note.n2 { right: 12%; top: 24%; text-align: right; animation: shxN2 5.2s ease-in-out infinite; }
+.shx-note.n2 .shx-note-chip { margin-left: auto; }
+.shx-note.n2 .shx-note-line { margin-left: auto; background: linear-gradient(270deg, rgba(212,175,106,0.7), transparent); }
+.shx-note.n3 { left: 12%; bottom: 21%; text-align: left; animation: shxN2 4.9s ease-in-out infinite; }
+.shx-note.n4 { right: 12%; bottom: 19%; text-align: right; animation: shxN1 5.5s ease-in-out infinite; }
+.shx-note.n4 .shx-note-chip { margin-left: auto; }
+.shx-note.n4 .shx-note-line { margin-left: auto; background: linear-gradient(270deg, rgba(212,175,106,0.7), transparent); }
+@keyframes shxN1 { 0%,100% { margin-top: 0; } 50% { margin-top: -9px; } }
+@keyframes shxN2 { 0%,100% { margin-top: 0; } 50% { margin-top: 8px; } }
+.shx.on .shx-note.n1 .shx-note-chip { transition-delay: 0.15s; }
+.shx.on .shx-note.n2 .shx-note-chip { transition-delay: 0.28s; }
+.shx-note.flip .shx-note-line { margin-left: auto; background: linear-gradient(270deg, var(--moodSoft, rgba(212,175,106,0.7)), transparent); }
+.shx-note.flip .shx-note-chip { margin-left: auto; }
+.shx.on .shx-note.n3 .shx-note-chip { transition-delay: 0.41s; }
+.shx.on .shx-note.n4 .shx-note-chip { transition-delay: 0.54s; }
+.shx.on .shx-note.n1 .shx-note-lbl { transition-delay: 0.3s; }
+.shx.on .shx-note.n2 .shx-note-lbl { transition-delay: 0.43s; }
+.shx-note-chip svg { width: 18px; height: 18px; }
+.shx.on .shx-note.n3 .shx-note-lbl { transition-delay: 0.56s; }
+.shx.on .shx-note.n4 .shx-note-lbl { transition-delay: 0.69s; }
+
+.shx-cta-row { position: absolute; left: 5vw; bottom: 5vh; z-index: 6; display: flex; align-items: center; gap: 16px; }
+.shx-cta {
+    border: 1px solid var(--moodSoft, rgba(212,175,106,0.65)); color: #f2ecdf;
+    font-size: 10px; letter-spacing: 2px; font-weight: 700;
+    padding: 12px 24px; border-radius: 999px; text-decoration: none;
+    transition: background 0.2s ease, transform 0.15s ease;
+    display: inline-flex; align-items: center; gap: 8px;
+}
+.shx-cta:hover { background: rgba(212,175,106,0.12); }
+.shx-cta:active { transform: scale(0.95); }
+.shx-cta.red { border-color: #e0342e; background: #e0342e; color: #fff; box-shadow: 0 10px 26px rgba(224,52,46,0.35); }
+
+.shx-pager {
+    position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+    z-index: 7; display: flex; flex-direction: column; align-items: center; gap: 7px;
+}
+.shx-pg {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid transparent; background: none; cursor: pointer; padding: 0;
+    font-size: 9px; color: #5b564c; font-weight: 700;
+    transition: color 0.3s ease, border-color 0.3s ease;
+    font-family: inherit;
+}
+.shx-pg.on { color: #f2ecdf; border-color: #d4af6a; }
+.shx-pg-line { width: 1px; height: 14px; background: #3a352b; }
+
+.shx-dust { position: absolute; border-radius: 50%; background: #d4af6a; z-index: 1; animation: shxDust 6s ease-in-out infinite; }
+@keyframes shxDust { 0%,100% { transform: translate(0,0); opacity: 0.4; } 50% { transform: translate(-9px,-15px); opacity: 0.9; } }
+
+.shx-hint {
+    position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px;
+    font-size: 9px; letter-spacing: 3px; color: rgba(242,236,223,0.5); z-index: 7;
+    animation: shxHintBob 1.9s ease-in-out infinite;
+}
+@keyframes shxHintBob { 0%,100% { transform: translate(-50%,0); opacity: 1; } 50% { transform: translate(-50%,7px); opacity: 0.5; } }
+
+@media (max-width: 640px) {
+    .shx-info { top: 1.5vh; max-width: 78vw; z-index: 6; }
+    .shx-title { font-size: clamp(20px, 6.4vw, 30px); text-shadow: 0 2px 14px rgba(13,11,8,0.9); }
+    .shx-price { margin-top: 6px; }
+    /* smaller base on phones; admin % still applies, tighter caps */
+    .shx-bottle {
+        /* Mobile uses its OWN admin size %, independent of desktop */
+        width: min(calc(120px * var(--shx-size-m, var(--shx-size, 1))), 92vw);
+        height: min(calc(154px * var(--shx-size-m, var(--shx-size, 1))), 118vw);
+    }
+    .shx-bottle-wrap { top: 55%; }
+    .shx-bottle-shadow { top: 55%; width: 110px; transform: translate(-50%, 90px); }
+    .shx-halo { width: 170px; height: 170px; margin: -85px 0 0 -85px; }
+    .shx-note.n1 { left: 4%; top: 24%; }
+    .shx-note.n2 { right: 4%; top: 27%; }
+    .shx-note.n3 { left: 4%; bottom: 21%; }
+    .shx-note.n4 { right: 4%; bottom: 19%; }
+    .shx-note-chip { width: 38px; height: 38px; }
+    .shx-note-name { font-size: 11px; }
+    .shx-ring { width: 230px; height: 230px; margin: -115px 0 0 -115px; top: 55%; }
+    .shx-pager { right: 8px; gap: 5px; }
+    .shx-pg { width: 24px; height: 24px; font-size: 8px; }
+    .shx-pg-line { height: 10px; }
+    .shx-cta-row { left: 4vw; right: 4vw; bottom: 4.5vh; gap: 10px; flex-wrap: wrap; }
+    .shx-cta { padding: 11px 18px; font-size: 9px; }
+    .shx-head { padding: 12px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .showcase-section { height: auto !important; }
+    .showcase-stage { position: static; height: 100vh; }
+    .shx { opacity: 0; }
+    .shx.on { opacity: 1; }
+    .shx-bottle-wrap, .shx-bottle-shadow, .shx-ring::before, .shx-note, .shx-dust, .shx-hint { animation: none; }
+}
+
+
+/* =========================================================
+   LUXE DARK-GOLD THEME — full page. Overrides the original
+   light styles so every section matches the showcase.
+   ========================================================= */
+body { background: #0d0b08; }
+.top-header {
+    background: rgba(13,11,8,0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(212,175,106,0.16);
+    box-shadow: none;
+}
+.hamburger-btn, .search-icon-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(212,175,106,0.4);
+    color: #f2ecdf;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, transform 0.15s ease;
+}
+.hamburger-btn:hover, .search-icon-btn:hover {
+    background: rgba(212,175,106,0.12);
+    border-color: rgba(212,175,106,0.9);
+    box-shadow: 0 0 14px rgba(212,175,106,0.25);
+}
+.hamburger-btn:active, .search-icon-btn:active { transform: scale(0.92); }
+.search-input-hidden { background: #15130e; border-color: rgba(212,175,106,0.3); color: #f2ecdf; }
+.search-suggest { background: #15130e; border: 1px solid rgba(212,175,106,0.25); box-shadow: 0 16px 30px rgba(0,0,0,0.6); }
+.search-suggest-item { border-color: rgba(212,175,106,0.12); }
+.search-suggest-name { color: #f2ecdf; }
+.search-suggest-price { color: #d4af6a; }
+.search-suggest-viewall { color: #d4af6a; background: #120f0b; }
+.search-suggest-empty { color: #8f897d; }
+.drawer { background: #0f0d09; }
+.drawer-head { border-bottom: 1px solid rgba(212,175,106,0.16); }
+.drawer-logo { color: #f2ecdf; }
+.drawer-close-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(212,175,106,0.4);
+    color: #f2ecdf;
+    transition: border-color 0.25s ease, background 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
+}
+.drawer-close-btn:hover {
+    background: rgba(212,175,106,0.12);
+    border-color: rgba(212,175,106,0.9);
+    box-shadow: 0 0 12px rgba(212,175,106,0.25);
+}
+.drawer-close-btn:active { transform: scale(0.9); }
+.drawer-link { color: #cfc8bb; }
+
+/* Responsive drawer: comfortable on every screen */
+@media (max-width: 480px) {
+    .drawer { width: 86vw; max-width: 320px; }
+    .drawer-head { padding: 16px 18px; }
+    .drawer-close-btn { width: 38px; height: 38px; }
+    .drawer-link { padding: 15px 18px; font-size: 15px; }
+}
+@media (min-width: 900px) {
+    .drawer { width: 320px; }
+}
+.drawer-link:hover, .drawer-link.active { background: #17140e; color: #d4af6a; }
+
+/* Hero slider below the showcase */
+.hero-slider { background: #0d0b08; }
+.hero-kicker { color: #d4af6a; }
+.hero-text-col h1 { color: #f2ecdf; }
+.hero-text-col h1 em, .hero-text-col .accent { color: #e0342e; }
+.hero-text-col p { color: #a89a7c; }
+.hero-btn-filled { background: #e0342e; box-shadow: 0 10px 24px rgba(224,52,46,0.35); }
+.hero-btn-outline { border-color: rgba(212,175,106,0.6); color: #f2ecdf; background: transparent; }
+.hero-dot { background: #3a352b; }
+.hero-dot.active { background: #d4af6a; }
+.hero-arrow { background: #15130e; color: #f2ecdf; border: 1px solid rgba(212,175,106,0.3); }
+
+/* Category icon circles */
+.category-icon-row { background: #0d0b08; border-top: 1px solid rgba(212,175,106,0.12); }
+.cir-circle {
+    border: 1px solid rgba(212,175,106,0.45);
+    background: #15130e;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+.cir-item:hover .cir-circle { box-shadow: 0 0 0 1px rgba(212,175,106,0.9), 0 0 20px rgba(212,175,106,0.22); transform: translateY(-3px); }
+.cir-label { color: #a89a7c; letter-spacing: 1px; }
+
+/* Category sections + product cards */
+.category-sections { background: #0d0b08; }
+.cat-section-title { color: #f2ecdf; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.cat-section-viewall { color: #d4af6a; background: transparent; border-bottom: 1px solid rgba(212,175,106,0.5); border-radius: 0; padding: 0 0 3px; box-shadow: none; letter-spacing: 2px; font-size: 10px; }
+.cat-section-viewall svg { display: none; }
+.card {
+    background: #15130e;
+    border: 1px solid rgba(212,175,106,0.18) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.35);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease !important;
+}
+.card:hover { transform: translateY(-5px); border-color: rgba(212,175,106,0.6) !important; box-shadow: 0 18px 34px rgba(0,0,0,0.55); }
+.card-img-wrap { background: #100e0a; }
+.card-body .brand-label { color: #8f897d; }
+.card-body h3 { color: #f2ecdf; font-family: Georgia, serif; font-weight: 400; }
+.card-body .price, .card-body .card-price { color: #d4af6a; }
+.card-body { color: #d4af6a; }
+.card-wishlist-btn { background: rgba(13,11,8,0.7); color: #f2ecdf; }
+
+/* Homepage category product cards (cat-product-*) */
+.cat-product-card {
+    background: #15130e;
+    border: 1px solid rgba(212,175,106,0.18);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.35);
+    transition: transform 0.25s ease, border-color 0.25s ease;
+}
+.cat-product-card:hover { transform: translateY(-4px); border-color: rgba(212,175,106,0.6); }
+.cat-product-card img { background: #100e0a; }
+.cat-product-body { background: #15130e; }
+.cat-product-brand { color: #8f897d; }
+.cat-product-name { color: #f2ecdf; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.cat-product-price { color: #d4af6a; font-weight: 700; }
+
+/* Promo video + footer */
+.promo-video-section {
+    border: 1px solid rgba(212,175,106,0.22);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 16px 20px;
+    background: #000; /* any letterboxing shows black, not brown */
+}
+@media (min-width: 900px) { .promo-video-section { max-width: 1160px; margin: 10px auto 24px; } }
+@media (max-width: 640px) {
+    /* Full-bleed video on phones — fills edge to edge, no side gaps */
+    .promo-video-section { margin: 8px 0 16px; border-left: none; border-right: none; border-radius: 0; }
+    .promo-video {
+        width: 100% !important;
+        height: var(--pv-h-mobile, 420px) !important;
+        object-fit: cover !important;
+    }
+    .promo-mute-btn { right: 12px; bottom: 12px; width: 42px; height: 42px; }
+}
+.footer-brand-banner { background: #080705; border-top: 1px solid rgba(212,175,106,0.18); }
+.footer-brand-copy { color: #8f897d; }
+.footer-brand-copyright { color: #5b564c; }
+
+/* Scroll reveal for everything below the showcase */
+.lux-reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(.2,.8,.3,1); }
+.lux-reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .lux-reveal { opacity: 1; transform: none; transition: none; } }
+
+
+/* HIDE ALL PRICES (site-wide request) */
+.shx-price, .cat-product-price, .search-suggest-price, .card-body .price { display: none !important; }
+
+/* =========================================================
+   PRODUCT-OPEN TRANSITION (View Transitions API)
+   The tapped product image morphs into the product page's
+   main image. Browsers without support fall back to normal
+   instant navigation — nothing breaks.
+   ========================================================= */
+@view-transition { navigation: auto; }
+::view-transition-group(product-hero) {
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(.25,.9,.3,1);
+}
+::view-transition-old(product-hero), ::view-transition-new(product-hero) {
+    height: 100%;
+    object-fit: cover;
+}
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.3s; }
+
+/* =========================================================
+   PAGE PEEL transition (product open)
+   A gold-edged "page corner" sweeps from the bottom-right,
+   covers the screen, the next page loads, then it peels back
+   away to the corner. Runs alongside the image-fly morph.
+   ========================================================= */
+#peelLayer {
+    position: fixed;
+    right: 0; bottom: 0;
+    width: 0; height: 0;
+    z-index: 99999;
+    pointer-events: none;
+    background: linear-gradient(315deg,
+        #171310 0%, #171310 46%,
+        #3a3020 48%, #c9a35d 50%, #f0d9a8 51%, #c9a35d 52%,
+        #12100b 54%, #0d0b08 100%);
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    box-shadow: -14px -14px 40px rgba(0,0,0,0.65);
+    transition: width 0.45s cubic-bezier(.55,0,.3,1), height 0.45s cubic-bezier(.55,0,.3,1);
+}
+#peelLayer.cover { width: 260vmax; height: 260vmax; }
+#peelLayer.instant { transition: none; }
 </style>
 </head>
 <body>
@@ -2135,6 +2593,32 @@ body.admin-page { padding-top: 0; }
 </nav>
 
 <!-- Premium hero slider -->
+<!-- =========================================================
+     NOTES ORBIT SHOWCASE — scroll walks through products;
+     each floats center-stage with its real fragrance notes
+     orbiting around it. Built at runtime from the catalog.
+     ========================================================= -->
+<section class="showcase-section" id="showcaseSection">
+    <div class="showcase-stage" id="showcaseStage">
+
+        <div class="shx on" id="shxIntro">
+            <div class="shx-info">
+                <div class="shx-eyebrow">A FRAGRANCE STORY</div>
+                <div class="shx-title" style="opacity:1;transform:none;">Notes that speak.</div>
+            </div>
+        </div>
+
+        <div class="shx-dust" style="left:14%; top:24%; width:4px; height:4px;"></div>
+        <div class="shx-dust" style="left:82%; top:30%; width:3px; height:3px; animation-delay:1.2s;"></div>
+        <div class="shx-dust" style="left:72%; top:74%; width:3px; height:3px; animation-delay:2.6s; background:#fff;"></div>
+        <div class="shx-dust" style="left:22%; top:70%; width:2px; height:2px; animation-delay:3.6s;"></div>
+
+        <div class="shx-ring"></div>
+        <div class="shx-pager" id="shxPager"></div>
+        <div class="shx-hint" id="shxHint">SCROLL TO EXPLORE</div>
+    </div>
+</section>
+
 <section class="hero-slider" id="heroSlider" aria-label="Featured fragrances">
     <div class="hero-slides" id="heroSlides">
         <div class="hero-slide is-active">
@@ -2152,6 +2636,22 @@ body.admin-page { padding-top: 0; }
     <button type="button" class="hero-arrow hero-prev" id="heroPrev" aria-label="Previous slide">&#8592;</button>
     <button type="button" class="hero-arrow hero-next" id="heroNext" aria-label="Next slide">&#8594;</button>
     <div class="hero-dots" id="heroDots"></div>
+</section>
+
+<!-- =========================================================
+     PROMO VIDEO SECTION
+     Loaded from the admin panel's Promo Video tab via
+     get_promo_video.php (video file + click-through link).
+     Hidden until the API confirms a video exists.
+     ========================================================= -->
+<section class="promo-video-section" id="promoVideoSection" style="display:none;">
+    <video class="promo-video" id="promoVideo"
+        muted loop playsinline preload="metadata">
+    </video>
+    <button type="button" class="promo-mute-btn" id="promoMuteBtn" aria-label="Unmute video">
+        <svg class="ic-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        <svg class="ic-sound" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+    </button>
 </section>
 
 <div class="category-icon-row" id="categoryIconRow"></div>
@@ -2318,14 +2818,18 @@ if (heroNext) {
  * and populate the hero with them.
  * Decorative — if it fails, the rest of the page still works.
  */
+let productSlidesRendered = false; // random product slides win over manual ones
+
 async function loadHeroSlider() {
     if (!heroSlider) return;
 
     try {
         const res = await fetch(`${API_BASE}/get_hero_slides.php`);
         const data = await res.json();
-        if (data.success && Array.isArray(data.slides)) {
+        if (data.success && Array.isArray(data.slides) && data.slides.length > 0) {
             renderHeroSlides(data.slides);
+        } else {
+            heroSlider.style.display = 'none'; // no manual slides -> no slider
         }
     } catch (e) {
         console.log('Hero slider failed:', e);
@@ -2537,6 +3041,44 @@ async function fetchCategoryProducts(category) {
     }
 }
 
+/* =========================================================
+   RANDOM HERO SLIDES
+   Picks 3 random products for the hero — from DIFFERENT
+   categories first (watch, perfume, ...), max 2 per category.
+   Re-shuffled on every page load, so every visit/device sees
+   a different mix. Falls back to manual admin slides if
+   products fail to load.
+   ========================================================= */
+let HERO_RANDOM_COUNT = 3; // overridden by the admin "Random slides count" setting
+const HERO_MAX_PER_CATEGORY = 2;
+
+/* Single shared fetch of homepage settings (mode, slide count, video)
+   used by both the hero and the promo video section. */
+const promoSettingsPromise = (async () => {
+    try {
+        const res = await fetch(`${API_BASE}/get_promo_video.php`);
+        const data = await res.json();
+        if (data.success) {
+            if (data.hero_slide_count) {
+                HERO_RANDOM_COUNT = Math.max(1, Math.min(10, parseInt(data.hero_slide_count)));
+            }
+            return data;
+        }
+    } catch (e) { /* API down — defaults apply */ }
+    return null;
+})();
+
+function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+/* Random hero slides removed — homepage is fully admin-controlled. */
+
 const VIEW_ALL_ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
 
 async function loadHomeCategories() {
@@ -2556,6 +3098,8 @@ async function loadHomeCategories() {
 
         const withProducts = entries.filter(e => e.products.length > 0);
         if (!withProducts.length) return;
+
+        if (typeof initShowcaseFromCatalog === 'function') initShowcaseFromCatalog(withProducts);
 
         if (iconRow) {
             iconRow.innerHTML = withProducts.map(e => `
@@ -2607,6 +3151,471 @@ async function loadHomeCategories() {
 }
 
 loadHomeCategories();
+
+/* =========================================================
+   PROMO VIDEO
+   - Video + click-through link come from the admin panel
+     (get_promo_video.php). Section stays hidden if none.
+   - Pauses when scrolled off-screen, resumes in view.
+   - Mute/unmute toggle button.
+   ========================================================= */
+(async function () {
+    const section = document.getElementById('promoVideoSection');
+    const video = document.getElementById('promoVideo');
+    const muteBtn = document.getElementById('promoMuteBtn');
+    if (!section || !video) return;
+
+    // The video shows whenever one is uploaded and marked Active —
+    // there is no hero/video switch anymore. It sits after the
+    // showcase and before/alongside the manual hero slides.
+    let info = null;
+    const data = await promoSettingsPromise;
+    if (data && data.video) info = data.video;
+    if (!info || info.active == 0) return;
+
+    video.src = info.url + '?v=' + info.version;
+    if (info.mobile_height)  section.style.setProperty('--pv-h-mobile',  info.mobile_height + 'px');
+    if (info.desktop_height) section.style.setProperty('--pv-h-desktop', info.desktop_height + 'px');
+    section.style.display = '';
+
+    // If the file 404s/breaks: hide video, bring the hero slider back
+    video.addEventListener('error', () => {
+        section.style.display = 'none';
+    });
+
+    // Autoplay once visible; pause off-screen (saves data/battery)
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    video.play().catch(() => {});
+                } else {
+                    video.pause();
+                }
+            });
+        }, { threshold: 0.25 });
+        io.observe(section);
+    } else {
+        video.play().catch(() => {});
+    }
+
+    // Mute / unmute
+    if (muteBtn) {
+        const icMuted = muteBtn.querySelector('.ic-muted');
+        const icSound = muteBtn.querySelector('.ic-sound');
+        muteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            video.muted = !video.muted;
+            icMuted.style.display = video.muted ? '' : 'none';
+            icSound.style.display = video.muted ? 'none' : '';
+            muteBtn.setAttribute('aria-label', video.muted ? 'Unmute video' : 'Mute video');
+        });
+    }
+
+    // Optional click-through (set in the admin panel)
+    if (info.link) {
+        section.classList.add('is-clickable');
+        section.addEventListener('click', () => { window.location.href = info.link; });
+    }
+})();
+
+</script>
+
+
+
+
+
+
+
+
+
+<script>
+/* =========================================================
+   NOTES ORBIT SHOWCASE ENGINE
+   Picks up to 5 random products, fetches each one's real
+   notes (photo + name), builds a slide per product, and lets
+   scroll walk through them. Pager on the right jumps.
+   ========================================================= */
+const shxState = { slides: [], count: 1, built: false, active: 0 };
+const SHX_NOTE_TYPES = ['TOP NOTE', 'HEART NOTE', 'BASE NOTE', 'BASE NOTE'];
+const SHX_MAX_PRODUCTS = 5;
+
+/* Per-category moods: [accent, soft accent, glow] */
+const SHX_CAT_MOODS = {
+    watch:   ['#7f9fd8', 'rgba(127,159,216,0.55)', 'rgba(110,140,200,0.26)'],
+    shoes:   ['#d8963a', 'rgba(216,150,58,0.55)',  'rgba(216,150,58,0.22)'],
+    perfume: ['#d4af6a', 'rgba(212,175,106,0.55)', 'rgba(212,160,80,0.30)']
+};
+function shxMoodFor(catName) {
+    const c = (catName || '').toLowerCase();
+    if (c.includes('watch')) return SHX_CAT_MOODS.watch;
+    if (c.includes('shoe') || c.includes('sneaker') || c.includes('belt')) return SHX_CAT_MOODS.shoes;
+    return SHX_CAT_MOODS.perfume;
+}
+
+/* Icon set for spec callouts (watches/shoes/fallback) */
+const SHX_ICONS = {
+    gear:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 5V3M12 21v-2M5 12H3m18 0h-2M6.3 6.3 4.9 4.9m14.2 14.2-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/></svg>',
+    ruler: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="9" width="20" height="6" rx="2"/><path d="M7 9v3M12 9v3M17 9v3"/></svg>',
+    drop:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.7 6.3 9.6a7 7 0 1 0 11.4 0z"/></svg>',
+    strap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="7" width="8" height="10" rx="4"/><path d="M10 7V2h4v5M10 17v5h4v-5"/></svg>',
+    palette:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="16" cy="10" r="1"/><path d="M12 22a3 3 0 0 0 0-6h-1a2 2 0 0 1 0-4"/></svg>',
+    layers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5"/></svg>',
+    shoe:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 16h20v3H2z"/><path d="M2 16c0-3 2-5 4-6l3 2 2-3c4 1 9 3 11 7"/></svg>',
+    clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>',
+    tag:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>',
+    star:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15 9 22 9.3 16.6 14 18.4 21 12 17 5.6 21 7.4 14 2 9.3 9 9"/></svg>'
+};
+
+/* Build the 4 orbit items for a product, based on its category data */
+function shxOrbitItems(p, full, notes) {
+    const kind = full && full.details_kind;
+    const d = (full && full.details) || {};
+    const items = [];
+
+    if (notes && notes.length) {
+        notes.slice(0, 4).forEach((n, i) => items.push({ img: n.image, name: n.name, type: SHX_NOTE_TYPES[i] || 'NOTE' }));
+        return items;
+    }
+    if (kind === 'watch') {
+        if (d.movement) items.push({ icon: 'gear', name: d.movement, type: 'MOVEMENT' });
+        if (d.case_diameter) items.push({ icon: 'ruler', name: d.case_diameter, type: 'CASE SIZE' });
+        if (d.water_resistance) items.push({ icon: 'drop', name: d.water_resistance, type: 'WATER RESISTANCE' });
+        if (d.strap_material) items.push({ icon: 'strap', name: d.strap_material, type: 'STRAP' });
+        if (items.length < 4 && d.glass_type) items.push({ icon: 'layers', name: d.glass_type, type: 'GLASS' });
+    } else if (kind === 'shoes') {
+        if (d.colour) items.push({ icon: 'palette', name: d.colour, type: 'COLOUR' });
+        if (d.material) items.push({ icon: 'layers', name: d.material, type: 'MATERIAL' });
+        if (d.shoe_type) items.push({ icon: 'shoe', name: d.shoe_type, type: 'TYPE' });
+    } else if (kind === 'perfume') {
+        if (d.fragrance) items.push({ icon: 'star', name: d.fragrance, type: 'FRAGRANCE' });
+        if (d.family) items.push({ icon: 'layers', name: d.family, type: 'FAMILY' });
+        if (d.formulation) items.push({ icon: 'tag', name: d.formulation, type: 'FORMULATION' });
+        if (d.bottle_size) items.push({ icon: 'ruler', name: d.bottle_size, type: 'BOTTLE SIZE' });
+    }
+    // No fallback chips: products without notes/specs show clean,
+    // just the floating product.
+    return items.slice(0, 4);
+}
+
+function shxSection() { return document.getElementById('showcaseSection'); }
+
+async function initShowcaseFromCatalog(withProducts) {
+    if (shxState.built) return;
+    shxState.built = true;
+
+    const stage = document.getElementById('showcaseStage');
+    const intro = document.getElementById('shxIntro');
+    if (!stage || !intro) return;
+
+    // Products for the showcase: ONLY the admin-picked list
+    // (Hero Slider tab -> Homepage showcase products). No random
+    // products anywhere — an empty list hides the showcase entirely.
+    let pool = [];
+    let adminIds = [];
+    let adminSizes = [];
+    let adminSizesM = [];
+    try {
+        const settings = await promoSettingsPromise;
+        if (settings && Array.isArray(settings.showcase_ids)) adminIds = settings.showcase_ids;
+        if (settings && Array.isArray(settings.showcase_sizes)) adminSizes = settings.showcase_sizes;
+        if (settings && Array.isArray(settings.showcase_sizes_mobile)) adminSizesM = settings.showcase_sizes_mobile;
+    } catch (e) {}
+
+    if (adminIds.length) {
+        const fetched = await Promise.all(adminIds.slice(0, SHX_MAX_PRODUCTS).map(async (id, idx) => {
+            try {
+                const res = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(id)}`);
+                const data = await res.json();
+                if (data.success && data.product) {
+                    const fp = data.product;
+                    return {
+                        id: fp.id, name: fp.name, price: fp.price, brand: fp.brand,
+                        gender: fp.gender, longevity: fp.longevity,
+                        image: (fp.images && fp.images[0]) || fp.image || '',
+                        __category: fp.category || '',
+                        __size: adminSizes[idx] || 100,
+                        __sizeM: adminSizesM[idx] || 100
+                    };
+                }
+            } catch (e) {}
+            return null;
+        }));
+        pool = fetched.filter(p => p && p.image);
+    }
+
+    if (!pool.length) {
+        // Nothing picked in admin — hide the showcase, page starts at the video
+        const sec = shxSection();
+        if (sec) sec.style.display = 'none';
+        return;
+    }
+
+    // Fetch every product's full details AND notes in parallel —
+    // notes power perfume slides, details power watch/shoe spec slides.
+    const notesById = {};
+    const fullById = {};
+    await Promise.all(pool.map(async p => {
+        try {
+            const res = await fetch(`${API_BASE}/get_product_notes.php?product_id=${encodeURIComponent(p.id)}`);
+            const data = await res.json();
+            notesById[p.id] = (data.success && data.notes) ? data.notes.slice(0, 4) : [];
+        } catch (e) { notesById[p.id] = []; }
+        try {
+            const res = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(p.id)}`);
+            const data = await res.json();
+            fullById[p.id] = (data.success && data.product) ? data.product : null;
+        } catch (e) { fullById[p.id] = null; }
+    }));
+
+    const frag = document.createDocumentFragment();
+
+    pool.forEach((p, i) => {
+        const notes = notesById[p.id] || [];
+        const full = fullById[p.id];
+        const mood = shxMoodFor(p.__category);
+        const orbit = shxOrbitItems(p, full, notes);
+        const isCutout = /\.png(\?|$)/i.test(p.image || '');
+
+        const slide = document.createElement('div');
+        slide.className = 'shx';
+        slide.style.setProperty('--mood', mood[0]);
+        slide.style.setProperty('--moodSoft', mood[1]);
+        slide.style.setProperty('--glow', mood[2]);
+        slide.innerHTML = `
+            <div class="shx-info">
+                <div class="shx-eyebrow">${escapeHtml((p.brand || 'THE COLLECTION').toUpperCase())}</div>
+                <div class="shx-title">${escapeHtml(p.name)}</div>
+                <div class="shx-price">${formatPrice(p.price)}</div>
+                <div class="shx-cat">${escapeHtml((p.__category || '').toUpperCase())}</div>
+            </div>
+
+            <div class="shx-bottle-wrap">
+                <div class="shx-halo"></div>
+                <a class="shx-bottle" href="product.html?id=${p.id}"
+                   style="--shx-size:${(p.__size || 100) / 100};--shx-size-m:${(p.__sizeM || 100) / 100};">
+                    <img src="${API_BASE}/uploads/showcase/${p.id}.png?v=${Date.now()}"
+                         data-fallback="${escapeHtml(p.image)}"
+                         alt="${escapeHtml(p.name)}" loading="${i === 0 ? 'eager' : 'lazy'}">
+                </a>
+            </div>
+            <div class="shx-bottle-shadow"></div>
+
+            ${orbit.map((n, ni) => `
+                <div class="shx-note n${ni + 1}${(ni === 1 || ni === 3) ? ' flip' : ''}">
+                    <div class="shx-note-chip">${n.img
+                        ? `<img src="${escapeHtml(n.img)}" alt="${escapeHtml(n.name)}" loading="lazy" onerror="this.style.display='none'">`
+                        : (SHX_ICONS[n.icon] || SHX_ICONS.tag)}</div>
+                    <div class="shx-note-lbl">
+                        <div class="shx-note-name">${escapeHtml(n.name)}</div>
+                        <div class="shx-note-type">${escapeHtml(n.type)}</div>
+                        <div class="shx-note-line"></div>
+                    </div>
+                </div>
+            `).join('')}
+
+            <div class="shx-cta-row">
+                <a class="shx-cta red" href="product.html?id=${p.id}">VIEW PRODUCT →</a>
+                <a class="shx-cta" href="products.html?category=${encodeURIComponent(p.__category || '')}">${escapeHtml((p.__category || 'SHOP ALL').toUpperCase())}</a>
+            </div>`;
+        frag.appendChild(slide);
+        shxState.slides.push(slide);
+    });
+
+    intro.remove();
+    stage.insertBefore(frag, stage.querySelector('.shx-pager'));
+    shxState.count = shxState.slides.length;
+
+    // Each product first tries its admin-generated cutout PNG
+    // (uploads/showcase/{id}.png). If none exists, fall back to the
+    // original photo with the soft-fade mask + canvas white-melt.
+    shxState.slides.forEach(s => {
+        const img = s.querySelector('.shx-bottle img');
+        if (!img) return;
+        // Only a successfully loaded file from uploads/showcase/ counts
+        // as a true cutout — never assume from the file extension.
+        img.addEventListener('load', () => {
+            if (img.currentSrc.includes('/uploads/showcase/')) {
+                img.closest('.shx-bottle').classList.add('is-cutout');
+            }
+        });
+        img.addEventListener('error', () => {
+            const fb = img.dataset.fallback;
+            if (fb && img.src !== fb) {
+                img.src = fb; // original photo, soft-fade mask stays on
+            }
+        }, { once: true });
+    });
+
+    // Section height: one comfortable scroll per product
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        shxSection().style.height = (shxState.count * 100 + 40) + 'vh';
+    }
+
+    // Pager
+    const pager = document.getElementById('shxPager');
+    if (pager) {
+        pager.innerHTML = shxState.slides.map((s, i) =>
+            (i ? '<div class="shx-pg-line"></div>' : '') +
+            `<button type="button" class="shx-pg${i === 0 ? ' on' : ''}" data-shx="${i}">${String(i + 1).padStart(2, '0')}</button>`
+        ).join('');
+        pager.querySelectorAll('.shx-pg').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sec = shxSection();
+                const i = parseInt(btn.dataset.shx);
+                const scrollable = sec.offsetHeight - window.innerHeight;
+                const target = sec.offsetTop + (shxState.count <= 1 ? 0 : (i / shxState.count) * scrollable + 10);
+                window.scrollTo({ top: target, behavior: 'smooth' });
+            });
+        });
+    }
+
+    shxUpdate();
+}
+
+/* MELT: remove near-white photo backgrounds on a canvas so the
+   product floats as a true cutout on the dark page. Needs the image
+   host to allow CORS; if blocked, the tight-fade mask stays. */
+function shxMeltWhite(imgEl) {
+    const src = imgEl.getAttribute('src');
+    if (!src || /\.png(\?|$)/i.test(src)) return; // PNGs already handled
+
+    const probe = new Image();
+    probe.crossOrigin = 'anonymous';
+    probe.onload = () => {
+        try {
+            const w = Math.min(probe.naturalWidth, 900);
+            const h = Math.round(probe.naturalHeight * (w / probe.naturalWidth));
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(probe, 0, 0, w, h);
+            const data = ctx.getImageData(0, 0, w, h); // throws if CORS-tainted
+            const px = data.data;
+            for (let i = 0; i < px.length; i += 4) {
+                const r = px[i], g = px[i + 1], b = px[i + 2];
+                const min = Math.min(r, g, b), max = Math.max(r, g, b);
+                if (min > 232 && (max - min) < 18) {
+                    px[i + 3] = 0;                       // pure white -> gone
+                } else if (min > 205 && (max - min) < 22) {
+                    px[i + 3] = Math.round(((232 - min) / 27) * 255); // feather
+                }
+            }
+            ctx.putImageData(data, 0, 0);
+            imgEl.src = canvas.toDataURL('image/png');
+            imgEl.closest('.shx-bottle').classList.add('is-cutout');
+        } catch (e) { /* CORS blocked — keep the fade mask */ }
+    };
+    probe.src = src;
+}
+
+let shxTicking = false;
+
+function shxUpdate() {
+    shxTicking = false;
+    const sec = shxSection();
+    if (!sec || !shxState.slides.length) return;
+
+    const rect = sec.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const scrollable = rect.height - vh;
+    const p = Math.min(Math.max(-rect.top / Math.max(scrollable, 1), 0), 1);
+
+    const idx = Math.min(Math.floor(p * shxState.count), shxState.count - 1);
+
+    if (idx !== shxState.active || !shxState.slides[idx].classList.contains('on')) {
+        shxState.slides.forEach((s, i) => s.classList.toggle('on', i === idx));
+        document.querySelectorAll('.shx-pg').forEach((b, i) => b.classList.toggle('on', i === idx));
+        shxState.active = idx;
+    }
+
+    const hint = document.getElementById('shxHint');
+    if (hint) hint.style.opacity = p > 0.9 ? '0' : '1';
+}
+
+window.addEventListener('scroll', () => {
+    if (!shxTicking) {
+        shxTicking = true;
+        requestAnimationFrame(shxUpdate);
+    }
+}, { passive: true });
+window.addEventListener('resize', shxUpdate);
+
+/* ---- Scroll reveal for everything below the showcase ---- */
+(function () {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const io = ('IntersectionObserver' in window) ? new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('in');
+                io.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1 }) : null;
+
+    function mark() {
+        document.querySelectorAll('.cat-section, .category-icon-row, .promo-video-section, .site-footer').forEach(el => {
+            if (el.classList.contains('lux-reveal')) return;
+            el.classList.add('lux-reveal');
+            if (io) io.observe(el); else el.classList.add('in');
+        });
+    }
+    mark();
+    new MutationObserver(mark).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
+<script>
+/* Name the tapped product image just before navigation so the
+   browser morphs it into the product page's main image. */
+document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href*="product.html?id="]');
+    if (!link) return;
+    const img = link.querySelector('img');
+    if (img && img.offsetParent !== null) {
+        img.style.viewTransitionName = 'product-hero';
+    }
+}, true);
+</script>
+
+<script>
+/* PAGE PEEL — cover on product click, peel away on arrival */
+(function () {
+    const layer = document.createElement('div');
+    layer.id = 'peelLayer';
+    document.body.appendChild(layer);
+
+    // Arriving from a peel? Start covered, then peel back to the corner.
+    if (sessionStorage.getItem('peelIn') === '1') {
+        sessionStorage.removeItem('peelIn');
+        layer.classList.add('instant', 'cover');
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            layer.classList.remove('instant');
+            layer.classList.remove('cover');
+        }));
+    }
+
+    // Product clicks: sweep the corner over the page, then navigate.
+    document.addEventListener('click', (e) => {
+        if (e.defaultPrevented) return;
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const link = e.target.closest('a[href*="product.html?id="]');
+        if (!link || link.target === '_blank') return;
+        e.preventDefault();
+        sessionStorage.setItem('peelIn', '1');
+        layer.classList.add('cover');
+        setTimeout(() => { window.location.href = link.href; }, 430);
+    }, true);
+    // Returning via back/forward: never stay covered
+    window.addEventListener('pageshow', (ev) => {
+        if (ev.persisted) {
+            layer.classList.add('instant');
+            layer.classList.remove('cover');
+            requestAnimationFrame(() => layer.classList.remove('instant'));
+        }
+    });
+})();
 
 </script>
 </body>

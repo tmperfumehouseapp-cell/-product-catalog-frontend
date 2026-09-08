@@ -341,6 +341,13 @@ loadMoreBtn.addEventListener('click', () => {
 const urlParams = new URLSearchParams(window.location.search);
 const urlCategory = urlParams.get('category');
 const urlSearch = urlParams.get('search');
+const urlBrand = urlParams.get('brand');
+
+if (urlBrand) {
+    const existing = loadFilterState() || {};
+    existing.brand = urlBrand;
+    sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
+}
 
 if (urlCategory) {
     const existing = loadFilterState() || {};
@@ -384,6 +391,24 @@ async function init() {
         }
         if (savedFilters.gender) {
             genderFilter.value = savedFilters.gender;
+        }
+    }
+
+    // A search that exactly matches a brand name (e.g. "casio") becomes
+    // a brand filter — so the filter drawer shows it checked and every
+    // count reflects it.
+    const searchTerm = (searchInput.value || '').trim().toLowerCase();
+    if (searchTerm && !brandFilter.value) {
+        const match = Array.from(brandFilter.options || [])
+            .find(o => o.value && o.value.toLowerCase() === searchTerm);
+        if (match) {
+            brandFilter.value = match.value;
+            searchInput.value = '';
+            const st = loadFilterState() || {};
+            st.brand = match.value;
+            st.search = '';
+            sessionStorage.setItem(FILTER_KEY, JSON.stringify(st));
+            if (typeof updateHeroForSearch === 'function') updateHeroForSearch();
         }
     }
 
@@ -458,6 +483,8 @@ init();
                 params.set('gender', g.value);
                 if (selectedCategory) params.set('category', selectedCategory);
                 if (brandFilter.value) params.set('brand', brandFilter.value);
+                const st = (searchInput.value || '').trim();
+                if (st) params.set('search', st);
                 params.set('page', '1');
                 const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
                 const data = await res.json();
@@ -471,8 +498,9 @@ init();
 
     async function fetchBrandList(category) {
         const gender = genderFilter.value;
+        const search = (searchInput.value || '').trim();
 
-        if (!category && !gender) {
+        if (!category && !gender && !search) {
             try {
                 const res = await fetch(`${API_BASE}/get_brands.php`);
                 const data = await res.json();
@@ -492,6 +520,7 @@ init();
                 const params = new URLSearchParams();
                 if (category) params.set('category', category);
                 if (gender) params.set('gender', gender);
+                if (search) params.set('search', search);
                 params.set('page', page);
                 const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
                 const data = await res.json();
