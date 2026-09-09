@@ -155,7 +155,21 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 }
 #peelLayer.cover { transform: scale(1); }
 #peelLayer.instant { transition: none; }
+
+/* =========================================================
+   ACCESSIBILITY: respect "reduce motion" system setting
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001s !important;
+        scroll-behavior: auto !important;
+    }
+    #peelLayer { display: none !important; }
+}
 </style>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
 
@@ -258,7 +272,7 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 
 <footer class="site-footer">
     <div class="footer-brand-banner">
-        <p class="footer-brand-copy">Authentic perfumes, sunglasses, watches, and belts, all in one place. 3rd Party brings you genuine accessories from the brands you trust, at prices that actually make sense — no compromises, just the real thing.</p>
+        <p class="footer-brand-copy">Authentic perfumes, watches, and shoes, all in one place. 3rd Party brings you genuine accessories from the brands you trust, at prices that actually make sense — no compromises, just the real thing.</p>
         <img src="assets/logo-white.png" alt="3rd Party — Masters of 9A" class="footer-brand-logo">
         <p class="footer-brand-copyright">&#169; 2026, 3rd Party</p>
     </div>
@@ -275,7 +289,7 @@ document.querySelectorAll('.footer-heading').forEach(function (btn) {
 </script>
 
 <script src="common.js"></script>
-<script src="products.js"></script>
+<script src="products.js?v=20260909e"></script>
 
 <script>
 /* Name the tapped product image just before navigation so the
@@ -313,6 +327,7 @@ document.addEventListener('click', (e) => {
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         const link = e.target.closest('a[href*="product.html?id="]');
         if (!link || link.target === '_blank') return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // instant nav
         e.preventDefault();
         sessionStorage.setItem('peelIn', '1');
         layer.classList.add('cover');

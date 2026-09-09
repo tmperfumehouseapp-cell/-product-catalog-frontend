@@ -8,7 +8,18 @@
 
 const grid = document.getElementById('productGrid');
 const categoryRow = document.getElementById('categoryRow');
-const brandFilter = document.getElementById('brandFilter');
+const brandFilterEl = document.getElementById('brandFilter');
+// A single <select> can't hold "Fossil,Casio" — assigning a CSV silently
+// became "" and cleared the whole filter. This shim stores ANY value,
+// while options/appendChild still use the hidden select underneath.
+const brandFilter = {
+    _v: '',
+    get value() { return this._v; },
+    set value(v) { this._v = v || ''; },
+    get options() { return brandFilterEl ? brandFilterEl.options : []; },
+    appendChild(o) { if (brandFilterEl) brandFilterEl.appendChild(o); },
+    addEventListener(t, fn) { if (brandFilterEl) brandFilterEl.addEventListener(t, fn); }
+};
 const genderFilter = document.getElementById('genderFilter');
 const resultsCount = document.getElementById('resultsCount');
 const loadMoreBtn = document.getElementById('loadMoreBtn');
@@ -230,12 +241,31 @@ async function loadProducts(page = 1, append = false) {
     }
 
     try {
-        const params = buildParams(page);
-        const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
-        const data = await res.json();
+        const brandsSel = brandFilter.value ? brandFilter.value.split(',').filter(Boolean) : [];
+        let data;
 
-        if (!data.success) {
-            throw new Error(data.error || 'Failed to load');
+        if (brandsSel.length > 1) {
+            // Several brands checked: one request per brand, merged.
+            const results = await Promise.all(brandsSel.map(async (b) => {
+                const params = buildParams(page);
+                params.set('brand', b);
+                const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
+                return res.json();
+            }));
+            const ok = results.filter(r => r && r.success);
+            if (!ok.length) throw new Error('Failed to load');
+            data = {
+                success: true,
+                products: ok.flatMap(r => r.products || []),
+                total: ok.reduce((s, r) => s + (r.total || 0), 0),
+                page: page,
+                hasMore: ok.some(r => r.hasMore)
+            };
+        } else {
+            const params = buildParams(page);
+            const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
+            data = await res.json();
+            if (!data.success) throw new Error(data.error || 'Failed to load');
         }
 
         currentProducts = append ? currentProducts.concat(data.products) : data.products;
@@ -344,8 +374,14 @@ const urlSearch = urlParams.get('search');
 const urlBrand = urlParams.get('brand');
 
 if (urlBrand) {
+    // Arriving via a brand link (e.g. the homepage brand wall):
+    // apply the brand, drop leftover search. The category is derived
+    // from the brand's own products in init() so the filter drawer
+    // shows only that department's brands.
     const existing = loadFilterState() || {};
     existing.brand = urlBrand;
+    existing.category = '';
+    existing.search = '';
     sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
 }
 
@@ -412,6 +448,29 @@ async function init() {
         }
     }
 
+    // Brand arrived via URL with no category: find which department(s)
+    // this brand lives in. One department -> select it, so the brand
+    // list, counts and story circles all scope to it.
+    if (urlBrand && !selectedCategory) {
+        try {
+            const res = await fetch(`${API_BASE}/get_products.php?brand=${encodeURIComponent(urlBrand)}&page=1`);
+            const data = await res.json();
+            if (data.success && Array.isArray(data.products) && data.products.length) {
+                const cats = [...new Set(data.products.map(p => p.category).filter(Boolean))];
+                if (cats.length === 1) {
+                    selectedCategory = cats[0];
+                    const st = loadFilterState() || {};
+                    st.category = cats[0];
+                    sessionStorage.setItem(FILTER_KEY, JSON.stringify(st));
+                    document.querySelectorAll('#categoryRow .story-item').forEach(item => {
+                        const circle = item.querySelector('.story-circle');
+                        if (circle) circle.classList.toggle('active', item.dataset.category === cats[0]);
+                    });
+                }
+            }
+        } catch (e) { /* keep global scope */ }
+    }
+
     if (refreshFilterDrawerForCategory) {
         await refreshFilterDrawerForCategory(selectedCategory);
     }
@@ -462,7 +521,13 @@ init();
         overlay.classList.remove('open');
     }
 
-    openBtn.addEventListener('click', openDrawerPanel);
+    openBtn.addEventListener('click', () => {
+        // Re-render option lists from the live filter values so the
+        // active brand/gender always shows checked when the drawer opens.
+        renderGender();
+        renderBrand();
+        openDrawerPanel();
+    });
     closeBtn.addEventListener('click', closeDrawerPanel);
     overlay.addEventListener('click', closeDrawerPanel);
 
@@ -477,18 +542,26 @@ init();
     async function fetchGenderCounts() {
         if (genderCounts) return genderCounts;
         genderCounts = {};
+        const brandsSel = brandFilter.value ? brandFilter.value.split(',').filter(Boolean) : [''];
         await Promise.all(GENDER_OPTIONS.map(async (g) => {
             try {
-                const params = new URLSearchParams();
-                params.set('gender', g.value);
-                if (selectedCategory) params.set('category', selectedCategory);
-                if (brandFilter.value) params.set('brand', brandFilter.value);
-                const st = (searchInput.value || '').trim();
-                if (st) params.set('search', st);
-                params.set('page', '1');
-                const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
-                const data = await res.json();
-                genderCounts[g.value] = data.success ? data.total : null;
+                // One request per selected brand (server filters a single
+                // brand at a time) — totals summed across them.
+                const totals = await Promise.all(brandsSel.map(async (b) => {
+                    const params = new URLSearchParams();
+                    params.set('gender', g.value);
+                    if (selectedCategory) params.set('category', selectedCategory);
+                    if (b) params.set('brand', b);
+                    const st = (searchInput.value || '').trim();
+                    if (st) params.set('search', st);
+                    params.set('page', '1');
+                    const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
+                    const data = await res.json();
+                    return data.success ? (data.total || 0) : null;
+                }));
+                genderCounts[g.value] = totals.some(t => t === null) && !totals.some(t => t > 0)
+                    ? null
+                    : totals.reduce((s, t) => s + (t || 0), 0);
             } catch (e) {
                 genderCounts[g.value] = null;
             }
@@ -568,14 +641,32 @@ init();
         });
 
         const counts = await fetchGenderCounts();
+
+        // Every gender at zero (and none selected) -> hide the whole
+        // GENDER section, heading included. Any availability -> show it.
+        const genderSection = genderBody.closest('.fd-section');
+        const known = GENDER_OPTIONS.map(g => counts[g.value]).filter(c => c !== null && c !== undefined);
+        const allZero = known.length === GENDER_OPTIONS.length && known.every(c => c === 0);
+        if (genderSection) {
+            genderSection.style.display = (allZero && !genderFilter.value) ? 'none' : '';
+        }
+
         genderBody.querySelectorAll('input[name="fdGenderOpt"]').forEach(input => {
-            const countEl = input.closest('.fd-option').querySelector('.fd-count');
+            const row = input.closest('.fd-option');
+            const countEl = row.querySelector('.fd-count');
             const c = counts[input.value];
+            // No products for this gender under the current filters ->
+            // hide the option entirely (unless it's the one selected).
+            if (c === 0 && genderFilter.value !== input.value) {
+                row.style.display = 'none';
+                return;
+            }
+            row.style.display = '';
             if (c !== null && c !== undefined) {
                 if (countEl) {
                     countEl.textContent = `[${c}]`;
                 } else {
-                    input.closest('.fd-option').insertAdjacentHTML('beforeend', `<span class="fd-count">[${c}]</span>`);
+                    row.insertAdjacentHTML('beforeend', `<span class="fd-count">[${c}]</span>`);
                 }
             }
         });

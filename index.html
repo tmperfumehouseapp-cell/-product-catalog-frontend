@@ -2227,9 +2227,17 @@ body.admin-page { padding-top: 0; }
 /* MELT done: white background removed on canvas (or transparent PNG
    upload) — true cutout with a real drop shadow */
 .shx-bottle.is-cutout img {
-    -webkit-mask-image: none;
-    mask-image: none;
+    /* Deep bottom feather: the base dissolves into the ground shadow,
+       so any ragged AI-cutout edge is fully hidden. */
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 84%, rgba(0,0,0,0.55) 93%, transparent 99%);
+    mask-image: linear-gradient(180deg, #000 0%, #000 84%, rgba(0,0,0,0.55) 93%, transparent 99%);
     filter: drop-shadow(0 26px 24px rgba(0,0,0,0.75));
+}
+/* Ground shadow hugs the base tighter so the product sits IN it */
+.shx-bottle.is-cutout .shx-bottle-shadow, .is-cutout ~ .shx-bottle-shadow {
+    width: 190px; height: 22px;
+    filter: blur(10px);
+    opacity: 0.9;
 }
 .shx-bottle-shadow {
     position: absolute; left: 50%; top: 52%;
@@ -2443,6 +2451,90 @@ body { background: #0d0b08; }
     transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 .cir-item:hover .cir-circle { box-shadow: 0 0 0 1px rgba(212,175,106,0.9), 0 0 20px rgba(212,175,106,0.22); transform: translateY(-3px); }
+
+/* =========================================================
+   DECK PEEL — scroll peels product cards off a stack
+   ========================================================= */
+.dpeel { position: relative; }
+.dpeel-stage {
+    position: sticky; top: 60px;
+    height: calc(100vh - 60px);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    overflow: hidden;
+}
+.dpeel-kicker { font-size: 10px; letter-spacing: 4px; color: #d4af6a; margin-bottom: 22px; }
+.dpeel-hint { position: absolute; bottom: 18px; font-size: 9px; letter-spacing: 3px; color: #5b564c; }
+.dpeel-deck { position: relative; width: min(64vw, 250px); height: min(86vw, 340px); }
+.dpeel-card {
+    position: absolute; inset: 0;
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid rgba(212,175,106,0.45);
+    background: #15130e;
+    box-shadow: 0 22px 44px rgba(0,0,0,0.6);
+    display: flex; flex-direction: column;
+    text-decoration: none;
+    will-change: transform, opacity;
+}
+.dpeel-card img { flex: 1; width: 100%; object-fit: cover; min-height: 0; background: #100e0a; }
+.dpeel-card-foot { padding: 12px 14px 13px; background: #15130e; border-top: 1px solid rgba(212,175,106,0.18); }
+.dpeel-card-cat { font-size: 8px; letter-spacing: 2.5px; color: #d4af6a; }
+.dpeel-card-name {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 15px; color: #f2ecdf; margin-top: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Reduced motion / no-JS fallback keeps it usable */
+@media (prefers-reduced-motion: reduce) {
+    .dpeel { height: auto !important; }
+    .dpeel-stage { position: static; height: auto; padding: 30px 0; }
+    .dpeel-hint { display: none; }
+}
+
+/* =========================================================
+   BRAND WALL — replaces the category circle row.
+   Auto-drifting serif brand names, alternating dim/gold.
+   Tap a name -> that brand's products.
+   ========================================================= */
+.brand-wall {
+    position: relative;
+    overflow: hidden;
+    padding: 26px 0 24px;
+    border-top: 1px solid rgba(212,175,106,0.12);
+    border-bottom: 1px solid rgba(212,175,106,0.12);
+}
+.brand-wall::before, .brand-wall::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 70px; z-index: 2; pointer-events: none;
+}
+.brand-wall::before { left: 0; background: linear-gradient(90deg, #0d0b08, transparent); }
+.brand-wall::after { right: 0; background: linear-gradient(270deg, #0d0b08, transparent); }
+.brand-track {
+    display: inline-flex;
+    white-space: nowrap;
+    align-items: baseline;
+    will-change: transform;
+    /* drift is driven by JS (requestAnimationFrame) — immune to the
+       back/forward-cache animation freeze on mobile browsers */
+}
+.brand-wall-item {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(22px, 4vw, 34px);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #3a3020;                 /* dim gold */
+    margin-right: 52px;
+    transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+.brand-wall-item.is-gold { color: #d4af6a; }
+.brand-wall-item:hover {
+    color: #f0d9a8;
+    text-shadow: 0 0 18px rgba(240,217,168,0.35);
+}
+@media (max-width: 640px) {
+    .brand-wall { padding: 18px 0 16px; }
+    .brand-wall-item { margin-right: 34px; letter-spacing: 3px; }
+}
 .cir-label { color: #a89a7c; letter-spacing: 1px; }
 
 /* Category sections + product cards */
@@ -2539,7 +2631,7 @@ body { background: #0d0b08; }
 #peelLayer {
     position: fixed;
     right: 0; bottom: 0;
-    width: 0; height: 0;
+    width: 260vmax; height: 260vmax;
     z-index: 99999;
     pointer-events: none;
     background: linear-gradient(315deg,
@@ -2548,11 +2640,29 @@ body { background: #0d0b08; }
         #12100b 54%, #0d0b08 100%);
     clip-path: polygon(100% 0, 100% 100%, 0 100%);
     box-shadow: -14px -14px 40px rgba(0,0,0,0.65);
-    transition: width 0.45s cubic-bezier(.55,0,.3,1), height 0.45s cubic-bezier(.55,0,.3,1);
+    /* transform-based = GPU compositing, no layout work per frame */
+    transform: scale(0);
+    transform-origin: bottom right;
+    transition: transform 0.55s cubic-bezier(.65, 0, .35, 1);
+    will-change: transform;
 }
-#peelLayer.cover { width: 260vmax; height: 260vmax; }
+#peelLayer.cover { transform: scale(1); }
 #peelLayer.instant { transition: none; }
+
+/* =========================================================
+   ACCESSIBILITY: respect "reduce motion" system setting
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001s !important;
+        scroll-behavior: auto !important;
+    }
+    #peelLayer { display: none !important; }
+}
 </style>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
 
@@ -2619,6 +2729,15 @@ body { background: #0d0b08; }
     </div>
 </section>
 
+<!-- DECK PEEL — scroll through the products card by card -->
+<section class="dpeel" id="deckPeel" style="display:none;" aria-label="Featured picks">
+    <div class="dpeel-stage">
+        <div class="dpeel-kicker">HAND-PICKED FOR YOU</div>
+        <div class="dpeel-deck" id="dpeelDeck"></div>
+        <div class="dpeel-hint">SCROLL TO PEEL</div>
+    </div>
+</section>
+
 <section class="hero-slider" id="heroSlider" aria-label="Featured fragrances">
     <div class="hero-slides" id="heroSlides">
         <div class="hero-slide is-active">
@@ -2659,7 +2778,7 @@ body { background: #0d0b08; }
 
 <footer class="site-footer">
     <div class="footer-brand-banner">
-        <p class="footer-brand-copy">Authentic perfumes, sunglasses, watches, and belts, all in one place. 3rd Party brings you genuine accessories from the brands you trust, at prices that actually make sense — no compromises, just the real thing.</p>
+        <p class="footer-brand-copy">Authentic perfumes, watches, and shoes, all in one place. 3rd Party brings you genuine accessories from the brands you trust, at prices that actually make sense — no compromises, just the real thing.</p>
         <img src="assets/logo-white.png" alt="3rd Party — Masters of 9A" class="footer-brand-logo">
         <p class="footer-brand-copyright">&#169; 2026, 3rd Party</p>
     </div>
@@ -3082,9 +3201,27 @@ function shuffleArray(arr) {
 const VIEW_ALL_ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
 
 async function loadHomeCategories() {
-    const iconRow = document.getElementById('categoryIconRow');
     const categoryRow = document.getElementById('categoryRow');
     if (!categoryRow || document.getElementById('productGrid')) return;
+
+    // 5-minute session cache: back-navigation & repeat visits render
+    // instantly, with a silent refresh running behind.
+    const HOME_CACHE_KEY = 'homePayloadV1';
+    let servedFromCache = false;
+    try {
+        const c = JSON.parse(sessionStorage.getItem(HOME_CACHE_KEY));
+        if (c && Date.now() - c.t < 5 * 60 * 1000 && Array.isArray(c.data) && c.data.length) {
+            // Render only after ALL page scripts are loaded (the showcase
+            // engine is defined lower in the page than this loader).
+            servedFromCache = true;
+            const paint = () => { try { renderHomeSections(c.data); } catch (e) { servedFromCache = false; } };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', paint, { once: true });
+            } else {
+                paint();
+            }
+        }
+    } catch (e) {}
 
     try {
         const res = await fetch(`${API_BASE}/get_categories.php`);
@@ -3098,19 +3235,160 @@ async function loadHomeCategories() {
 
         const withProducts = entries.filter(e => e.products.length > 0);
         if (!withProducts.length) return;
+        try { sessionStorage.setItem(HOME_CACHE_KEY, JSON.stringify({ t: Date.now(), data: withProducts })); } catch (e) {}
+        const showcaseUp = document.querySelector('.shx-slide');
+        if (servedFromCache && showcaseUp) return; // cached paint on screen
+        renderHomeSections(withProducts);
 
+    } catch (err) {
+        // Categories failing silently is fine — hero/shop still work.
+    }
+}
+
+async function buildBrandWall(mount) {
+    if (mount.dataset.wallBuilt) return;
+    mount.dataset.wallBuilt = '1';
+
+    let brands = [];
+    try {
+        const c = JSON.parse(sessionStorage.getItem('brandWallV1'));
+        if (c && Date.now() - c.t < 5 * 60 * 1000) brands = c.data;
+    } catch (e) {}
+    if (!brands.length) {
+        try {
+            const res = await fetch(`${API_BASE}/get_brands.php`);
+            const data = await res.json();
+            if (data.success && Array.isArray(data.brands)) {
+                brands = data.brands.map(b => b.brand).filter(Boolean);
+                try { sessionStorage.setItem('brandWallV1', JSON.stringify({ t: Date.now(), data: brands })); } catch (e) {}
+            }
+        } catch (e) {}
+    }
+    if (!brands.length) { mount.style.display = 'none'; return; }
+
+    const items = brands.map((b, i) => `
+        <a class="brand-wall-item${i % 2 ? '' : ' is-gold'}"
+           href="products.html?brand=${encodeURIComponent(b)}">${escapeHtml(b)}</a>
+    `).join('');
+
+    mount.className = 'brand-wall';
+    mount.innerHTML = `<div class="brand-track">${items}${items}</div>`; // doubled = seamless loop
+
+    // JS-driven drift: runs every frame, so it can never be left frozen
+    // by back-navigation, tab switches, or touch quirks.
+    const track = mount.querySelector('.brand-track');
+    const durationS = Math.max(24, brands.length * 4);
+    let paused = false;
+    let pauseTimer = null;
+    let x = 0;
+    let lastTs = 0;
+
+    mount.addEventListener('touchstart', () => {
+        paused = true;
+        clearTimeout(pauseTimer);
+    }, { passive: true });
+    const unpause = () => {
+        clearTimeout(pauseTimer);
+        pauseTimer = setTimeout(() => { paused = false; }, 800);
+    };
+    mount.addEventListener('touchend', unpause, { passive: true });
+    mount.addEventListener('touchcancel', unpause, { passive: true });
+    mount.addEventListener('mouseenter', () => { paused = true; });
+    mount.addEventListener('mouseleave', () => { paused = false; });
+
+    function drift(ts) {
+        if (!lastTs) lastTs = ts;
+        let dt = (ts - lastTs) / 1000;
+        lastTs = ts;
+        if (dt > 0.2) dt = 0; // returning from background — no jump
+        const half = track.scrollWidth / 2;
+        if (half > 0 && !paused) {
+            x -= (half / durationS) * dt;
+            if (-x >= half) x += half;
+            track.style.transform = `translateX(${x}px)`;
+        }
+        requestAnimationFrame(drift);
+    }
+    requestAnimationFrame(drift);
+    // Safety: any return to the page clears a stuck pause
+    window.addEventListener('pageshow', () => { paused = false; });
+}
+
+function buildDeckPeel(withProducts) {
+    const sec = document.getElementById('deckPeel');
+    const deck = document.getElementById('dpeelDeck');
+    if (!sec || !deck || sec.dataset.built) return;
+
+    // One card per category (up to 4) — shows the CATEGORY's own photo
+    // (admin -> Category icons). Falls back to the first product photo
+    // only if a category has no photo uploaded.
+    const picks = withProducts.slice(0, 4)
+        .map(e => ({
+            cat: e.category.category,
+            img: e.category.thumb || (e.products[0] && e.products[0].image) || ''
+        }))
+        .filter(s => s.img);
+    if (picks.length < 2) return;
+
+    sec.dataset.built = '1';
+    sec.style.display = '';
+
+    deck.innerHTML = picks.map((s, i) => `
+        <a class="dpeel-card" href="products.html?category=${encodeURIComponent(s.cat)}" style="z-index:${picks.length - i};">
+            <img src="${escapeHtml(s.img)}" alt="${escapeHtml(s.cat)}" loading="lazy">
+            <div class="dpeel-card-foot">
+                <div class="dpeel-card-cat">EXPLORE →</div>
+                <div class="dpeel-card-name">${escapeHtml(s.cat)}</div>
+            </div>
+        </a>
+    `).join('');
+
+    const cards = Array.from(deck.children);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return; // static stack, top card tappable — done
+
+    // Section height = one screen per card + release space
+    const per = 55; // vh of scroll per card
+    sec.style.height = (picks.length * per + 100) + 'vh';
+
+    let ticking = false;
+    function update() {
+        ticking = false;
+        const rect = sec.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const total = rect.height - vh;
+        const passed = Math.max(0, Math.min(total, -rect.top));
+        // Progress across the deck: 0 .. picks.length-1
+        const P = (passed / total) * (picks.length - 1);
+        cards.forEach((el, i) => {
+            const local = P - i;
+            if (local <= 0) {
+                const depth = Math.min(3, -local);
+                el.style.transform = `translateY(${depth * 14}px) scale(${1 - depth * 0.05})`;
+                el.style.opacity = String(1 - depth * 0.18);
+            } else {
+                const t = Math.min(1, local);
+                el.style.transform = `translateY(${-130 * t}%) rotate(${-9 * t}deg)`;
+                el.style.opacity = String(1 - t);
+            }
+        });
+    }
+    function onScroll() {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+}
+
+function renderHomeSections(withProducts) {
+    const iconRow = document.getElementById('categoryIconRow');
+    const categoryRow = document.getElementById('categoryRow');
+    {
         if (typeof initShowcaseFromCatalog === 'function') initShowcaseFromCatalog(withProducts);
 
-        if (iconRow) {
-            iconRow.innerHTML = withProducts.map(e => `
-                <a class="cir-item" href="products.html?category=${encodeURIComponent(e.category.category)}">
-                    <div class="cir-circle">
-                        ${e.category.thumb ? `<img src="${escapeHtml(e.category.thumb)}" alt="${escapeHtml(e.category.category)}">` : ''}
-                    </div>
-                    <div class="cir-label">${escapeHtml(e.category.category)}</div>
-                </a>
-            `).join('');
-        }
+        if (iconRow) buildBrandWall(iconRow);
+        buildDeckPeel(withProducts);
 
         if (drawerNav) {
             drawerNav.innerHTML = withProducts.map(e => `
@@ -3145,8 +3423,6 @@ async function loadHomeCategories() {
                 </div>
             `;
         }).join('');
-    } catch (err) {
-        // Categories failing silently is fine — hero/shop still work.
     }
 }
 
@@ -3396,7 +3672,7 @@ async function initShowcaseFromCatalog(withProducts) {
                    style="--shx-size:${(p.__size || 100) / 100};--shx-size-m:${(p.__sizeM || 100) / 100};">
                     <img src="${API_BASE}/uploads/showcase/${p.id}.png?v=${Date.now()}"
                          data-fallback="${escapeHtml(p.image)}"
-                         alt="${escapeHtml(p.name)}" loading="${i === 0 ? 'eager' : 'lazy'}">
+                         alt="${escapeHtml(p.name)}" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'auto'}">
                 </a>
             </div>
             <div class="shx-bottle-shadow"></div>
@@ -3602,10 +3878,11 @@ document.addEventListener('click', (e) => {
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         const link = e.target.closest('a[href*="product.html?id="]');
         if (!link || link.target === '_blank') return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // instant nav
         e.preventDefault();
         sessionStorage.setItem('peelIn', '1');
         layer.classList.add('cover');
-        setTimeout(() => { window.location.href = link.href; }, 430);
+        setTimeout(() => { window.location.href = link.href; }, 520);
     }, true);
     // Returning via back/forward: never stay covered
     window.addEventListener('pageshow', (ev) => {
