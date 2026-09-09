@@ -341,8 +341,10 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                         </div>
                     </div>
 
-                    <label for="longevity">Longevity</label>
-                    <input type="text" id="longevity" name="longevity" placeholder="e.g. 6-8 hours">
+                    <div id="longevityWrap">
+                        <label for="longevity">Longevity</label>
+                        <input type="text" id="longevity" name="longevity" placeholder="e.g. 6-8 hours">
+                    </div>
 
                     <label for="description">Description</label>
                     <textarea id="description" name="description" rows="4" maxlength="1000" placeholder="Notes, scent profile, fit, material — whatever's relevant." style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-family:inherit; resize:vertical;"></textarea>
@@ -389,11 +391,23 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                     <!-- SHOES -->
                     <div class="meta-group" id="meta-shoes" style="display:none;">
                         <div class="form-row">
-                            <div><label>Colour</label><input type="text" id="s_colour" placeholder="e.g. White/Blue"></div>
-                            <div><label>Material</label><input type="text" id="s_material" placeholder="e.g. Mesh + Rubber"></div>
+                            <div><label>Colour</label><input type="text" id="s_colour" placeholder="e.g. Triple White"></div>
+                            <div><label>Upper Material</label><input type="text" id="s_material" placeholder="e.g. Mesh / Leather"></div>
                         </div>
-                        <label>Shoe Type</label>
-                        <input type="text" id="s_shoe_type" placeholder="e.g. Sneakers">
+                        <div class="form-row">
+                            <div><label>Shoe Type</label><input type="text" id="s_shoe_type" placeholder="e.g. Sneakers / Running"></div>
+                            <div><label>Sole</label><input type="text" id="s_sole" placeholder="e.g. Rubber / EVA"></div>
+                        </div>
+                        <div class="form-row">
+                            <div><label>Closure</label><input type="text" id="s_closure" placeholder="e.g. Lace-up / Slip-on"></div>
+                            <div><label>Quality</label><input type="text" id="s_quality" placeholder="e.g. 9A"></div>
+                        </div>
+                        <div class="form-row">
+                            <div><label>Fit</label><input type="text" id="s_fit" placeholder="e.g. True to size"></div>
+                            <div><label>Occasion</label><input type="text" id="s_occasion" placeholder="e.g. Casual / Sports"></div>
+                        </div>
+                        <label>In the Box</label>
+                        <input type="text" id="s_in_box" placeholder="e.g. Brand box + extra laces">
                     </div>
 
                 </div>
@@ -641,6 +655,19 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
 
                 <button type="button" id="videoUploadBtn" style="margin-top:16px;">Upload Video</button>
                 <div id="videoMsg"></div>
+
+                <hr style="margin:26px 0 18px; border:none; border-top:1px solid rgba(212,175,106,0.25);">
+                <h3 style="margin:0 0 4px;">Photo Banner (products page)</h3>
+                <p style="font-size:12px; color:#999; margin:0 0 12px;">Shows between the category bar and the WhatsApp banner. Recommended: wide image, around 1200&times;300px. JPG/PNG/WEBP, max 5MB.</p>
+                <label for="bannerFileInput">Banner image</label>
+                <input type="file" id="bannerFileInput" accept="image/jpeg,image/png,image/webp">
+                <label for="bannerLinkInput" style="margin-top:10px;">Tap link (optional — where the banner sends people)</label>
+                <input type="text" id="bannerLinkInput" placeholder="products.html?category=Perfumes or https://wa.me/919099370999">
+                <div style="display:flex; gap:10px; margin-top:14px;">
+                    <button type="button" id="bannerSaveBtn" style="width:auto; padding:10px 20px;">Save Banner</button>
+                    <button type="button" id="bannerDeleteBtn" style="width:auto; padding:10px 20px; background:rgba(224,52,46,0.12); border:1px solid rgba(224,52,46,0.4); color:#ff8a80;">Remove Banner</button>
+                </div>
+                <div id="bannerMsg" style="font-size:12px; margin-top:8px;"></div>
             </div>
         </div>
 
@@ -690,8 +717,10 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 </div>
             </div>
 
-            <label for="editLongevity">Longevity</label>
-            <input type="text" id="editLongevity" placeholder="e.g. 6-8 hours">
+            <div id="editLongevityWrap">
+                <label for="editLongevity">Longevity</label>
+                <input type="text" id="editLongevity" placeholder="e.g. 6-8 hours">
+            </div>
 
             <div id="editMetaSection" style="display:none;">
                 <label style="font-weight:700;">Category details</label>
@@ -731,10 +760,22 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 <div class="meta-group" id="edit-meta-shoes" style="display:none;">
                     <div class="form-row">
                         <div><label>Colour</label><input type="text" id="es_colour"></div>
-                        <div><label>Material</label><input type="text" id="es_material"></div>
+                        <div><label>Upper Material</label><input type="text" id="es_material"></div>
                     </div>
-                    <label>Shoe Type</label>
-                    <input type="text" id="es_shoe_type">
+                    <div class="form-row">
+                        <div><label>Shoe Type</label><input type="text" id="es_shoe_type"></div>
+                        <div><label>Sole</label><input type="text" id="es_sole"></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label>Closure</label><input type="text" id="es_closure"></div>
+                        <div><label>Quality</label><input type="text" id="es_quality"></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label>Fit</label><input type="text" id="es_fit"></div>
+                        <div><label>Occasion</label><input type="text" id="es_occasion"></div>
+                    </div>
+                    <label>In the Box</label>
+                    <input type="text" id="es_in_box">
                 </div>
             </div>
 
@@ -896,6 +937,9 @@ function detectMetaKind(catValue) {
 
 function updateMetaSection() {
     const kind = detectMetaKind(categoryInput.value);
+    // Longevity is a perfume-only field
+    const lw = document.getElementById('longevityWrap');
+    if (lw) lw.style.display = (kind === 'perfume') ? '' : 'none';
     document.querySelectorAll('#metaSection .meta-group').forEach(g => g.style.display = 'none');
     if (kind) {
         metaLabel.style.display = 'block';
@@ -930,7 +974,13 @@ function getMetaDetails() {
     if (kind === 'shoes') return { kind, fields: {
         colour: document.getElementById('s_colour').value.trim(),
         material: document.getElementById('s_material').value.trim(),
-        shoe_type: document.getElementById('s_shoe_type').value.trim()
+        shoe_type: document.getElementById('s_shoe_type').value.trim(),
+        sole: document.getElementById('s_sole').value.trim(),
+        closure: document.getElementById('s_closure').value.trim(),
+        quality: document.getElementById('s_quality').value.trim(),
+        fit: document.getElementById('s_fit').value.trim(),
+        occasion: document.getElementById('s_occasion').value.trim(),
+        in_box: document.getElementById('s_in_box').value.trim()
     }};
     return null;
 }
@@ -1139,6 +1189,27 @@ async function saveNotesForProduct(productId, adminPassword) {
 }
 
 // ---- Add product submit ----
+// Shrink photos before upload: phone shots are 3-8MB each; at 1600px
+// JPEG 85% they drop to ~250-500KB with no visible loss. This is what
+// makes Save fast — the upload is 5-10x smaller.
+async function compressImage(file) {
+    if (!/^image\//.test(file.type) || file.size < 400 * 1024) return file;
+    try {
+        const bmp = await createImageBitmap(file);
+        const maxSide = Math.max(bmp.width, bmp.height);
+        const scale = maxSide > 1600 ? 1600 / maxSide : 1;
+        const c = document.createElement('canvas');
+        c.width = Math.round(bmp.width * scale);
+        c.height = Math.round(bmp.height * scale);
+        c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+        const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+        if (!blob || blob.size >= file.size) return file; // keep original if no win
+        return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
+    } catch (e) {
+        return file; // any failure -> upload the original
+    }
+}
+
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -1149,9 +1220,13 @@ form.addEventListener('submit', async (e) => {
     }
 
     btn.disabled = true;
-    btn.textContent = 'Saving...';
+    btn.textContent = 'Compressing photos…';
     msg.textContent = '';
     msg.className = '';
+
+    // All photos shrink in parallel before the upload starts
+    const uploadFiles = await Promise.all(selectedFiles.map(compressImage));
+    btn.textContent = 'Uploading…';
 
     const formData = new FormData();
     formData.append('admin_password', adminPassword);
@@ -1162,7 +1237,7 @@ form.addEventListener('submit', async (e) => {
     formData.append('brand', document.getElementById('brand').value);
     formData.append('longevity', document.getElementById('longevity').value.trim());
     formData.append('description', descriptionInput.value.trim());
-    selectedFiles.forEach(file => formData.append('images[]', file));
+    uploadFiles.forEach(file => formData.append('images[]', file));
     getVariants().forEach(v => formData.append('variants[]', v));
 
     // Category metafields go in the same request
@@ -1756,12 +1831,14 @@ function getEditVariants() {
 const EDIT_META_FIELDS = {
     watch:   ['movement','case_diameter','case_material','dial_color','glass_type','strap_material','water_resistance','clasp_type','warranty'],
     perfume: ['fragrance','family','formulation','bottle_size'],
-    shoes:   ['colour','material','shoe_type']
+    shoes:   ['colour','material','shoe_type','sole','closure','quality','fit','occasion','in_box']
 };
 const EDIT_META_PREFIX = { watch: 'ew_', perfume: 'ep_', shoes: 'es_' };
 
 function updateEditMetaSection() {
     const kind = detectMetaKind(document.getElementById('editCategory').value);
+    const elw = document.getElementById('editLongevityWrap');
+    if (elw) elw.style.display = (kind === 'perfume') ? '' : 'none';
     document.querySelectorAll('#editMetaSection .meta-group').forEach(g => g.style.display = 'none');
     const sec = document.getElementById('editMetaSection');
     if (kind) {
@@ -1961,7 +2038,8 @@ editProductForm.addEventListener('submit', async (e) => {
     formData.append('longevity', document.getElementById('editLongevity').value.trim());
     formData.append('description', document.getElementById('editDescription').value.trim());
     editKeptImages.forEach(url => formData.append('existing_images[]', url));
-    editNewFiles.forEach(file => formData.append('images[]', file));
+    const editUploadFiles = await Promise.all(editNewFiles.map(compressImage));
+    editUploadFiles.forEach(file => formData.append('images[]', file));
     getEditVariants().forEach(v => formData.append('variants[]', v));
 
       const editMeta = getEditMetaDetails(); 
@@ -2052,8 +2130,14 @@ if (adminPassword) unlockUI();
         ],
         shoes: [
             ['colour','Colour','palette'],
-            ['material','Material','layers'],
-            ['shoe_type','Shoe Type','shoe']
+            ['material','Upper Material','layers'],
+            ['shoe_type','Shoe Type','shoe'],
+            ['sole','Sole','strap'],
+            ['closure','Closure','lock'],
+            ['quality','Quality','shield'],
+            ['fit','Fit','gem'],
+            ['occasion','Occasion','leaf'],
+            ['in_box','In the Box','flask']
         ]
     };
 
@@ -2154,6 +2238,8 @@ function renderShwSelected() {
             <input type="number" data-shw-size-m="${id}" value="${shwSizesM[id] || 100}" min="40" max="500" step="5" title="Mobile size %"
                    style="width:58px; margin:0; padding:5px 4px; font-size:12px; text-align:center;">
             <span style="font-size:11px; color:#999;">%</span>
+            <button type="button" data-shw-redo="${id}" title="Regenerate this product's cutout with the high-quality model"
+                    style="width:auto; margin:0; padding:4px 10px; background:#17140e; border:1px solid rgba(212,175,106,0.5); color:#d4af6a; font-size:12px;">↻</button>
             <button type="button" data-shw-remove="${id}" style="width:auto; margin:0; padding:4px 10px; background:rgba(224,52,46,0.12); border:1px solid rgba(224,52,46,0.4); color:#ff8a80; font-size:12px;">×</button>
         </div>
     `).join('');
@@ -2165,6 +2251,13 @@ function renderShwSelected() {
     box.querySelectorAll('[data-shw-size-m]').forEach(inp => {
         inp.addEventListener('input', () => {
             shwSizesM[inp.dataset.shwSizeM] = parseInt(inp.value) || 100;
+        });
+    });
+    box.querySelectorAll('[data-shw-redo]').forEach(b => {
+        b.addEventListener('click', async () => {
+            b.disabled = true; b.textContent = '…';
+            await generateShowcaseCutouts([b.dataset.shwRedo], true); // force
+            b.disabled = false; b.textContent = '↻';
         });
     });
     box.querySelectorAll('[data-shw-remove]').forEach(b => {
@@ -2248,7 +2341,7 @@ if (shwSaveBtn) {
    Runs ONCE here in the admin (downloads a model on first use,
    then cached). The clean PNGs are uploaded to the server so the
    homepage shows perfect cutouts instantly for every visitor. */
-async function generateShowcaseCutouts(ids) {
+async function generateShowcaseCutouts(ids, force = false) {
     const shwMsg = document.getElementById('shwMsg');
     const report = (t, cls) => { shwMsg.textContent = t; shwMsg.className = cls || ''; };
     let removeBackground;
@@ -2268,7 +2361,9 @@ async function generateShowcaseCutouts(ids) {
         try {
             // Already have a cutout on the server? Skip it — instant.
             try {
-                const head = await fetch(`${API_BASE}/uploads/showcase/${id}.png?v=${Date.now()}`, { method: 'HEAD' });
+                const head = force
+                    ? { ok: false }
+                    : await fetch(`${API_BASE}/uploads/showcase/${id}.png?v=${Date.now()}`, { method: 'HEAD' });
                 if (head.ok) { skipped++; continue; }
             } catch (e) { /* no cutout yet */ }
 
@@ -2288,8 +2383,8 @@ async function generateShowcaseCutouts(ids) {
             try {
                 const bmp = await createImageBitmap(blob);
                 const maxSide = Math.max(bmp.width, bmp.height);
-                if (maxSide > 1000) {
-                    const scale = 1000 / maxSide;
+                if (maxSide > 1400) {
+                    const scale = 1400 / maxSide;
                     const c = document.createElement('canvas');
                     c.width = Math.round(bmp.width * scale);
                     c.height = Math.round(bmp.height * scale);
@@ -2298,7 +2393,12 @@ async function generateShowcaseCutouts(ids) {
                 }
             } catch (e) { /* keep original size */ }
 
-            const cutBlob = await removeBackground(blob); // AI magic
+            // Full-size ISNet model: much better edges on tricky bases
+            // (fur, reflections) than the default medium model.
+            const cutBlob = await removeBackground(blob, {
+                model: 'isnet',
+                output: { format: 'image/png', quality: 1 }
+            });
 
             const fd = new FormData();
             fd.append('action', 'showcase_cutout');
@@ -2484,6 +2584,62 @@ if (videoSaveSettingsBtn) {
         } finally {
             videoSaveSettingsBtn.disabled = false;
             videoSaveSettingsBtn.textContent = 'Save Settings (link + size only)';
+        }
+    });
+}
+
+/* ---------- Photo banner (products page) ---------- */
+const bannerSaveBtn = document.getElementById('bannerSaveBtn');
+const bannerDeleteBtn = document.getElementById('bannerDeleteBtn');
+if (bannerSaveBtn) {
+    const bannerMsg = document.getElementById('bannerMsg');
+    const say = (t, ok) => { bannerMsg.textContent = t; bannerMsg.style.color = ok ? '#7bd88f' : '#ff8a80'; };
+
+    // Preload the saved link so it isn't wiped by a photo-only save
+    fetch(`${API_BASE}/uploads/banner/banner.json?v=${Date.now()}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(b => { if (b && b.link) document.getElementById('bannerLinkInput').value = b.link; })
+        .catch(() => {});
+
+    bannerSaveBtn.addEventListener('click', async () => {
+        const file = document.getElementById('bannerFileInput').files[0];
+        const link = document.getElementById('bannerLinkInput').value.trim();
+        bannerSaveBtn.disabled = true;
+        say('Saving…', true);
+        try {
+            const fd = new FormData();
+            fd.append('action', 'promo_banner');
+            fd.append('admin_password', sessionStorage.getItem('adminPassword') || '');
+            fd.append('link', link);
+            if (file) fd.append('banner', file);
+            const res = await fetch(`${API_BASE}/upload_promo_video.php`, { method: 'POST', body: fd });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'Save failed');
+            say(data.image ? 'Banner saved — live on the products page.' : 'Link saved. Upload an image to show the banner.', true);
+        } catch (e) {
+            say(e.message, false);
+        } finally {
+            bannerSaveBtn.disabled = false;
+        }
+    });
+
+    bannerDeleteBtn.addEventListener('click', async () => {
+        if (!confirm('Remove the photo banner from the products page?')) return;
+        bannerDeleteBtn.disabled = true;
+        try {
+            const fd = new FormData();
+            fd.append('action', 'promo_banner_delete');
+            fd.append('admin_password', sessionStorage.getItem('adminPassword') || '');
+            const res = await fetch(`${API_BASE}/upload_promo_video.php`, { method: 'POST', body: fd });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error || 'Delete failed');
+            document.getElementById('bannerFileInput').value = '';
+            document.getElementById('bannerLinkInput').value = '';
+            say('Banner removed.', true);
+        } catch (e) {
+            say(e.message, false);
+        } finally {
+            bannerDeleteBtn.disabled = false;
         }
     });
 }

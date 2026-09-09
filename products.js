@@ -96,16 +96,26 @@ async function loadCategories() {
         const data = await res.json();
         if (!data.success) return;
 
-        const circles = data.categories.map(c => `
-            <div class="story-item" data-category="${escapeHtml(c.category)}">
-                <div class="story-circle">
-                    ${c.thumb ? `<img src="${escapeHtml(c.thumb)}" alt="${escapeHtml(c.category)}">` : ''}
-                </div>
-                <div class="story-label">${escapeHtml(c.category)}</div>
-            </div>
+        // C1 SLIDING SEGMENT — one pill bar, gold selection slides between
+        const segBtns = data.categories.map(c => `
+            <button type="button" class="seg-btn story-item" data-category="${escapeHtml(c.category)}">${escapeHtml(c.category)}</button>
         `).join('');
 
-        categoryRow.innerHTML = circles;
+        categoryRow.innerHTML = `<div class="seg-bar"><span class="seg-slider"></span>${segBtns}</div>`;
+
+        const segBar = categoryRow.querySelector('.seg-bar');
+        const segSlider = categoryRow.querySelector('.seg-slider');
+        function positionSegSlider(btn) {
+            if (!btn) { segSlider.style.opacity = '0'; return; }
+            segSlider.style.opacity = '1';
+            segSlider.style.width = btn.offsetWidth + 'px';
+            segSlider.style.transform = `translateX(${btn.offsetLeft - 4}px)`;
+            // keep the active segment in view on narrow screens
+            btn.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+        }
+        window.addEventListener('resize', () => {
+            positionSegSlider(categoryRow.querySelector('.seg-btn.active'));
+        });
 
         const drawerLinks = data.categories.map(c => `
             <a class="drawer-link" data-category="${escapeHtml(c.category)}">
@@ -127,25 +137,17 @@ async function loadCategories() {
         }
 
         function applyActiveState(category) {
-            categoryRow.querySelectorAll('.story-circle').forEach(c => {
-                c.classList.remove('active');
-                const check = c.querySelector('.story-check');
-                if (check) check.remove();
-            });
-            categoryRow.querySelectorAll('.story-label').forEach(l => l.classList.remove('active'));
+            categoryRow.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
             drawerNav.querySelectorAll('.drawer-link').forEach(l => l.classList.remove('active'));
 
-            const rowMatch = categoryRow.querySelector(`.story-item[data-category="${CSS.escape(category)}"]`);
-            if (rowMatch) {
-                const circle = rowMatch.querySelector('.story-circle');
-                circle.classList.add('active');
-                circle.insertAdjacentHTML('beforeend', '<div class="story-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>');
-                rowMatch.querySelector('.story-label').classList.add('active');
-            }
+            const rowMatch = categoryRow.querySelector(`.seg-btn[data-category="${CSS.escape(category)}"]`);
+            if (rowMatch) rowMatch.classList.add('active');
+            positionSegSlider(rowMatch);
 
             const drawerMatch = drawerNav.querySelector(`.drawer-link[data-category="${CSS.escape(category)}"]`);
             if (drawerMatch) drawerMatch.classList.add('active');
         }
+        window.__applySegActive = applyActiveState;
 
         async function selectCategory(category) {
             selectedCategory = category;
@@ -179,6 +181,8 @@ async function loadCategories() {
         if (saved && saved.category) {
             selectedCategory = saved.category;
             applyActiveState(saved.category);
+            // fonts/layout may shift after first paint — re-measure
+            requestAnimationFrame(() => applyActiveState(saved.category));
         }
     } catch (err) {
         // Categories failing silently is fine.
@@ -462,10 +466,7 @@ async function init() {
                     const st = loadFilterState() || {};
                     st.category = cats[0];
                     sessionStorage.setItem(FILTER_KEY, JSON.stringify(st));
-                    document.querySelectorAll('#categoryRow .story-item').forEach(item => {
-                        const circle = item.querySelector('.story-circle');
-                        if (circle) circle.classList.toggle('active', item.dataset.category === cats[0]);
-                    });
+                    if (window.__applySegActive) window.__applySegActive(cats[0]);
                 }
             }
         } catch (e) { /* keep global scope */ }

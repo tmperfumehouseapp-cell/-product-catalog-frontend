@@ -48,15 +48,198 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 .story-circle.all-circle { background: #15130e !important; color: #d4af6a !important; }
 
 /* Toolbar + filter button */
-.toolbar-row { background: #0d0b08 !important; }
+.toolbar-row {
+    background: #0d0b08 !important;
+    display: block !important;
+}
+.toolbar-row .results-count { margin-bottom: 8px; }
 .results-count { color: #8f897d !important; }
-.filter-toggle-btn {
+/* =========================================================
+   M5 CHAPTER MENU — side drawer, editorial chapter rows
+   ========================================================= */
+.drawer {
+    position: fixed !important;
+    top: 0 !important; bottom: 0 !important; left: 0 !important;
+    width: 78% !important;
+    max-width: 340px !important;
+    height: 100% !important;
+    background: #070605 !important;
+    border: none !important;
+    border-right: 1px solid rgba(212,175,106,0.35) !important;
+    box-shadow: 14px 0 34px rgba(0,0,0,0.6) !important;
+    display: flex !important;
+    flex-direction: column;
+    padding: 0 !important;
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(.65,0,.3,1) !important;
+    z-index: 2002 !important;
+}
+.drawer.open { transform: translateX(0); }
+.drawer-head {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px !important;
+    border-bottom: 1px solid rgba(212,175,106,0.25) !important;
     background: transparent !important;
-    border: 1px solid rgba(212,175,106,0.6) !important;
+}
+.drawer-logo { font-size: 13px !important; letter-spacing: 2px !important; font-weight: 700 !important; }
+.drawer-logo .dl-red { color: #e0342e; }
+.drawer-logo .dl-white { color: #ffffff; }
+.drawer-close-btn {
+    background: none !important;
+    border: 1px solid rgba(212,175,106,0.45) !important;
+    border-radius: 50% !important;
+    width: 32px; height: 32px;
+    color: #f2ecdf !important;
+    display: flex !important; align-items: center; justify-content: center;
+}
+.drawer-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 18px 0 !important;      /* categories start right under the header */
+    counter-reset: chap;
+    display: block;
+}
+.drawer-nav .drawer-link {
+    counter-increment: chap;
+    position: relative;
+    display: flex !important;
+    align-items: center;
+    gap: 0 !important;
+    padding: 17px 2px 17px 30px !important;
+    border-bottom: 1px solid rgba(212,175,106,0.22) !important;   /* underline after each category */
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size: 21px !important;
+    color: #f2ecdf !important;
+    background: none !important;
+    opacity: 0;
+    transform: translateY(12px);
+}
+.drawer.open .drawer-link { animation: chapIn 0.5s cubic-bezier(.3,.8,.3,1) forwards; }
+.drawer.open .drawer-link:nth-child(1) { animation-delay: 0.08s; }
+.drawer.open .drawer-link:nth-child(2) { animation-delay: 0.15s; }
+.drawer.open .drawer-link:nth-child(3) { animation-delay: 0.22s; }
+.drawer.open .drawer-link:nth-child(4) { animation-delay: 0.29s; }
+.drawer.open .drawer-link:nth-child(5) { animation-delay: 0.36s; }
+.drawer.open .drawer-link:nth-child(6) { animation-delay: 0.43s; }
+@keyframes chapIn { to { opacity: 1; transform: none; } }
+.drawer-link::before {
+    content: counter(chap, decimal-leading-zero);   /* ghost chapter number */
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-56%);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: rgba(212,175,106,0.13);
+    pointer-events: none;
+}
+.drawer-link::after {
+    content: '\2192';                              /* right-side arrow */
+    margin-left: auto;
+    font-size: 17px;
+    color: rgba(212,175,106,0.55);
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+.drawer-link:hover::after, .drawer-link.active::after { transform: translateX(5px); color: #f0d9a8; }
+.drawer-link.active { color: #f0d9a8 !important; }
+.drawer-link .drawer-icon { display: none !important; }
+.drawer-wa {
+    padding: 14px 18px calc(18px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(212,175,106,0.25);
+    display: flex;
+}
+.drawer-wa .wa-aurora { flex: 1; }
+.drawer-wa .wa-aurora-inner { justify-content: center; }
+
+/* C1 SLIDING SEGMENT — category pill bar with gliding gold selection */
+.category-stories { padding: 12px 14px 4px !important; }
+.seg-bar {
+    position: relative;
+    display: flex;
+    background: #12100b;
+    border: 1px solid rgba(212,175,106,0.35);
+    border-radius: 999px;
+    padding: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.seg-bar::-webkit-scrollbar { display: none; }
+.seg-slider {
+    position: absolute;
+    top: 4px; bottom: 4px; left: 4px;
+    border-radius: 999px;
+    background: linear-gradient(140deg, #d4af6a, #b8903f);
+    box-shadow: 0 4px 14px rgba(212,175,106,0.35);
+    transition: transform 0.4s cubic-bezier(.6,0,.3,1), width 0.4s cubic-bezier(.6,0,.3,1), opacity 0.2s;
+    opacity: 0;
+    z-index: 0;
+}
+.seg-bar { width: 100%; }
+.seg-btn {
+    position: relative;
+    z-index: 1;
+    /* equal share of the FULL row width */
+    flex: 1 1 0;
+    min-width: max-content;
+    text-align: center;
+    background: none;
+    border: none;
+    padding: 11px 10px;
+    font-size: 11.5px;
+    letter-spacing: 1.5px;
+    color: #cfc8bb;
+    white-space: nowrap;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: color 0.3s;
+    font-family: inherit;
+    text-transform: uppercase;
+}
+@media (max-width: 400px) {
+    .seg-btn { font-size: 10px; letter-spacing: 1px; padding: 10px 6px; }
+}
+.seg-btn.active { color: #1a1508; font-weight: 700; }
+.seg-btn:not(.active):hover { color: #f0d9a8; }
+
+/* F3 GLASS + PULSING ICON — matches the WhatsApp capsule's anatomy */
+.filter-toggle-btn {
+    background: rgba(23,20,14,0.85) !important;
+    border: 1px solid rgba(212,175,106,0.5) !important;
     color: #f2ecdf !important;
     box-shadow: none !important;
+    border-radius: 999px !important;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 15px 7px 8px !important;
+    letter-spacing: 1px;
+    flex-shrink: 0;
 }
-.filter-toggle-btn:hover { background: rgba(212,175,106,0.12) !important; }
+.filter-toggle-btn:hover { border-color: #d4af6a !important; background: rgba(212,175,106,0.1) !important; }
+.filter-ic-disc {
+    width: 19px; height: 19px; border-radius: 50%;
+    background: linear-gradient(140deg, #d4af6a, #b8903f);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    animation: filterIcPulse 2s infinite;
+}
+@keyframes filterIcPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(212,175,106,0.55); }
+    70% { box-shadow: 0 0 0 7px rgba(212,175,106,0); }
+}
+.filter-toggle-btn > svg { display: none; } /* legacy inline funnel (if cached markup) */
+.filter-wa-row {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+.filter-wa-row .wa-aurora { flex: 1; min-width: 0; }
+.filter-wa-row .wa-aurora-inner { justify-content: center; padding: 7px 10px; }
+.filter-wa-row .wa-aurora-text { overflow: hidden; text-overflow: ellipsis; }
 
 /* Product cards */
 .card {
@@ -168,7 +351,88 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
     }
     #peelLayer { display: none !important; }
 }
-</style>
+
+/* =========================================================
+   OFFER BANNER + FLOATING WHATSAPP (products page)
+   ========================================================= */
+/* AURORA RING — WhatsApp capsule banner: the border is flowing
+   green-and-gold light streaming endlessly around the pill. */
+/* (banner moved into the toolbar row beside Filter) */
+.wa-aurora {
+    position: relative;
+    display: inline-block;
+    padding: 2.5px;                /* ring thickness */
+    border-radius: 999px;
+    overflow: hidden;
+    text-decoration: none;
+    max-width: 100%;
+}
+.wa-aurora-spin {
+    position: absolute; inset: -150%;
+    background: conic-gradient(from 0deg,
+        #25D366, #d4af6a, #0b3d24, #f0d9a8, #128C4B, #25D366);
+    animation: waAuroraSpin 4s linear infinite;
+    filter: blur(6px);
+}
+@keyframes waAuroraSpin { to { transform: rotate(360deg); } }
+.wa-aurora-inner {
+    position: relative;
+    display: flex; align-items: center; gap: 9px;
+    background: #0d0b08;
+    border-radius: 999px;
+    padding: 10px 20px;
+    white-space: nowrap;
+}
+.wa-aurora-ic {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #25D366;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    animation: waAuroraPulse 2s infinite;
+}
+@keyframes waAuroraPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.55); }
+    70% { box-shadow: 0 0 0 8px rgba(37,211,102,0); }
+}
+.wa-aurora-ic svg { width: 12px; height: 12px; fill: #fff; }
+.wa-aurora-text {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #f2ecdf;
+}
+.wa-aurora-text b { color: #25D366; font-weight: 700; }
+.wa-aurora-text em { color: #d4af6a; font-style: normal; }
+@media (max-width: 480px) {
+    .wa-aurora-inner { padding: 9px 14px; gap: 7px; }
+    .wa-aurora-text { font-size: 9.5px; letter-spacing: 1.2px; }
+}
+
+/* ---------- DESKTOP refinement (same design, polished) ---------- */
+@media (min-width: 769px) {
+    /* No Filter button on desktop — the capsule owns the row */
+    .filter-toggle-btn { display: none !important; }
+
+    /* Wide capsule: the conic spinner turns into blur blobs on a long
+       pill, so on desktop the border becomes a river of green-gold
+       flowing evenly along the full length instead. */
+    .wa-aurora {
+        padding: 2.5px;
+        background: linear-gradient(90deg,
+            #25D366, #d4af6a, #0b3d24, #f0d9a8, #128C4B, #25D366);
+        background-size: 200% 100%;
+        animation: waAuroraFlow 4s linear infinite;
+        box-shadow: 0 0 18px rgba(37,211,102,0.15);
+    }
+    .wa-aurora-spin { display: none; }
+    .wa-aurora-inner { padding: 9px 20px; gap: 10px; }
+    .wa-aurora-ic { width: 21px; height: 21px; }
+    .wa-aurora-ic svg { width: 12px; height: 12px; }
+    .wa-aurora-text { font-size: 11.5px; letter-spacing: 2.5px; }
+}
+@keyframes waAuroraFlow { to { background-position: 200% 0; } }
+
+
+</style></style>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
@@ -198,23 +462,41 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 <div class="drawer-overlay" id="drawerOverlay"></div>
 <nav class="drawer" id="drawer">
     <div class="drawer-head">
-        <span class="drawer-logo">Product Catalog</span>
+        <span class="drawer-logo"><b class="dl-red">3RD</b>&nbsp;<b class="dl-white">PARTY</b></span>
         <button class="drawer-close-btn" id="drawerClose" aria-label="Close menu">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
     </div>
     <div class="drawer-nav" id="drawerNav"></div>
+    <div class="drawer-wa">
+        <a class="wa-aurora" href="https://wa.me/919099370999?text=Hi%2C%20I%20have%20a%20question%20about%20a%20product" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp">
+            <span class="wa-aurora-spin"></span>
+            <span class="wa-aurora-inner">
+                <span class="wa-aurora-ic"><svg viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg></span>
+                <span class="wa-aurora-text">CHAT ON <b>WHATSAPP</b></span>
+            </span>
+        </a>
+    </div>
 </nav>
 
 <div class="category-stories" id="categoryRow"></div>
 
 <div class="toolbar-row">
     <div class="results-count" id="resultsCount"></div>
-    <div class="toolbar-actions">
+    <div class="toolbar-actions filter-wa-row">
         <button type="button" class="filter-toggle-btn" id="filterToggleBtn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            <span class="filter-ic-disc">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a1508" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            </span>
             Filter
         </button>
+        <a class="wa-aurora" href="https://wa.me/919099370999?text=Hi%2C%20I%20have%20a%20question%20about%20a%20product" target="_blank" rel="noopener" aria-label="Chat with us on WhatsApp">
+            <span class="wa-aurora-spin"></span>
+            <span class="wa-aurora-inner">
+                <span class="wa-aurora-ic"><svg viewBox="0 0 448 512"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg></span>
+                <span class="wa-aurora-text">CHAT ON <b>WHATSAPP</b></span>
+            </span>
+        </a>
     </div>
 </div>
 
@@ -289,7 +571,7 @@ document.querySelectorAll('.footer-heading').forEach(function (btn) {
 </script>
 
 <script src="common.js"></script>
-<script src="products.js?v=20260909e"></script>
+<script src="products.js?v=20260909f"></script>
 
 <script>
 /* Name the tapped product image just before navigation so the
@@ -344,5 +626,6 @@ document.addEventListener('click', (e) => {
 })();
 
 </script>
+
 </body>
 </html>
