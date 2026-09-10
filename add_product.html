@@ -95,6 +95,10 @@ input[type="file"]::file-selector-button {
 }
 .image-drop svg, .icon-preview-circle svg { color: #6d675c !important; stroke: #6d675c !important; }
 button:active { transform: scale(0.98); }
+/* Add Product button centered */
+.save-bar { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.save-bar #submitBtn { width: auto !important; min-width: 220px; }
+
 form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #videoSaveSettingsBtn,
 #uploadIconBtn, #addSlideBtn, #heroSlideForm button[type="submit"], #categoryIconForm button[type="submit"] {
     padding: 12px 26px !important;
@@ -246,6 +250,18 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 </span>
                 Hero Slider
             </div>
+            <div class="drawer-link" data-target="stories">
+                <span class="drawer-icon admin-drawer-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+                </span>
+                Stories
+            </div>
+            <div class="drawer-link" data-target="banner">
+                <span class="drawer-icon admin-drawer-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="7.5" cy="10.5" r="1.5"/><polyline points="21 16 16 11 7 17"/></svg>
+                </span>
+                Shop Banner
+            </div>
 <div class="drawer-link" data-target="video">
                 <span class="drawer-icon admin-drawer-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
@@ -280,6 +296,14 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
             <a class="admin-nav-link" data-target="hero">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 Hero Slider
+            </a>
+            <a class="admin-nav-link" data-target="stories">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+                Stories
+            </a>
+            <a class="admin-nav-link" data-target="banner">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="7.5" cy="10.5" r="1.5"/><polyline points="21 16 16 11 7 17"/></svg>
+                Shop Banner
             </a>
 <a class="admin-nav-link" data-target="video">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
@@ -444,11 +468,13 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                     </div>
                 </div>
 
-                <p class="section-label">Notes</p>
-                <div class="section-card">
-                    <label style="margin-top:0;">Fragrance/ingredient notes (photo + name)</label>
-                    <div id="noteRows"></div>
-                    <button type="button" id="addNoteBtn" style="width:auto; margin-top:4px; padding:9px 18px; background:#17140e; color:#d4af6a; font-size:13px; border:1px solid rgba(212,175,106,0.5); border-radius:8px; cursor:pointer;">+ Add note</button>
+                <div id="notesWrap">
+                    <p class="section-label">Notes</p>
+                    <div class="section-card">
+                        <label style="margin-top:0;">Fragrance/ingredient notes (photo + name)</label>
+                        <div id="noteRows"></div>
+                        <button type="button" id="addNoteBtn" style="width:auto; margin-top:4px; padding:9px 18px; background:#17140e; color:#d4af6a; font-size:13px; border:1px solid rgba(212,175,106,0.5); border-radius:8px; cursor:pointer;">+ Add note</button>
+                    </div>
                 </div>
 
                 <div class="save-bar">
@@ -517,6 +543,114 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
 
                 <button type="button" id="uploadIconBtn" style="margin-top:16px;">Upload Icon</button>
                 <div id="iconMsg"></div>
+            </div>
+
+            <p class="section-label">Set brand icon</p>
+            <div class="section-card" id="brandIconSection">
+                <div style="font-size:12px; color:#888; margin-bottom:10px;">Icon shown inside that brand's circle on the shop page. Square images look best; without an icon the circle shows the brand's first letter.</div>
+                <select id="iconBrandSelect"></select>
+
+                <div class="icon-preview-row">
+                    <div class="icon-preview-circle" id="brandIconPreviewCircle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="margin-top:0;">Icon Image</label>
+                        <input type="file" id="brandIconFileInput" accept=".jpg,.jpeg,.png,.webp">
+                    </div>
+                </div>
+
+                <button type="button" id="uploadBrandIconBtn" style="margin-top:16px;">Upload Brand Icon</button>
+                <div id="brandIconMsg"></div>
+            </div>
+        </div>
+
+        <!-- Panel: Story Icons -->
+        <div class="admin-panel" id="panel-stories" style="display:none;">
+            <p class="section-label" id="stFormLabel">Add a story icon</p>
+            <div class="section-card">
+                <div style="font-size:12px; color:#888; margin-bottom:10px;">Round gold-ring circles at the very top of the shop page. Each one is just an image + title + link — tapping it opens the link. Square images look best.</div>
+                <input type="hidden" id="stEditId" value="">
+
+                <label for="stTitle">Title (under the circle)</label>
+                <input type="text" id="stTitle" placeholder="e.g. New Drop, Offers, Watches">
+
+                <label for="stImageInput">Circle Image</label>
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                    <div class="icon-preview-circle" id="stImagePreview"></div>
+                    <input type="file" id="stImageInput" accept=".jpg,.jpeg,.png,.webp">
+                </div>
+
+                <label for="stLink">Link (where a tap goes)</label>
+                <input type="text" id="stLink" placeholder="e.g. products.html?brand=Fossil or product.html?id=754">
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="stSortOrder">Order</label>
+                        <input type="number" id="stSortOrder" min="0" step="1" value="0">
+                    </div>
+                    <div style="flex:1; display:flex; align-items:flex-end; padding-bottom:6px;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;"><input type="checkbox" id="stActive" checked style="width:auto;"> Active</label>
+                    </div>
+                </div>
+
+                <button type="button" id="stSaveBtn" style="margin-top:14px; width:auto; padding:12px 24px;">Save Story Icon</button>
+                <button type="button" id="stCancelEditBtn" style="margin-top:14px; width:auto; padding:12px 24px; display:none; background:#888;">Cancel Edit</button>
+                <div id="stMsg"></div>
+            </div>
+
+            <p class="section-label">Existing story icons</p>
+            <div class="section-card">
+                <div id="stList"><p style="font-size:12px;color:#999;">Loading...</p></div>
+            </div>
+        </div>
+
+        <!-- Panel: Shop Banner carousel -->
+        <div class="admin-panel" id="panel-banner" style="display:none;">
+            <p class="section-label" id="sbFormLabel">Add a shop banner</p>
+            <div class="section-card">
+                <div style="font-size:12px; color:#888; margin-bottom:10px;">Photo carousel on the shop page, between the category bar and the Filter row. Multiple banners auto-slide every 4 seconds with dots; one banner shows as a single photo. Best size: wide images around 1200&times;480 (5:2 ratio).</div>
+                <input type="hidden" id="sbEditId" value="">
+
+                <label for="sbImageInput">Banner Image</label>
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                    <div class="icon-preview-circle" id="sbImagePreview" style="border-radius:8px; width:110px; height:44px;"></div>
+                    <input type="file" id="sbImageInput" accept=".jpg,.jpeg,.png,.webp">
+                </div>
+
+                <label for="sbLink">Link (optional — where a tap goes)</label>
+                <input type="text" id="sbLink" placeholder="e.g. product.html?id=754 or https://wa.me/919099370999">
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="sbHeightMobile">Mobile height (px, 0 = auto 5:2)</label>
+                        <input type="number" id="sbHeightMobile" min="0" step="10" value="0">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="sbHeightDesktop">Desktop height (px, 0 = auto)</label>
+                        <input type="number" id="sbHeightDesktop" min="0" step="10" value="0">
+                    </div>
+                </div>
+                <div style="font-size:11px; color:#999; margin:4px 0 10px;">Heights apply to the whole carousel (all banners), saved together with any banner.</div>
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="sbSortOrder">Order</label>
+                        <input type="number" id="sbSortOrder" min="0" step="1" value="0">
+                    </div>
+                    <div style="flex:1; display:flex; align-items:flex-end; padding-bottom:6px;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;"><input type="checkbox" id="sbActive" checked style="width:auto;"> Active</label>
+                    </div>
+                </div>
+
+                <button type="button" id="sbSaveBtn" style="margin-top:14px; width:auto; padding:12px 24px;">Save Banner</button>
+                <button type="button" id="sbCancelEditBtn" style="margin-top:14px; width:auto; padding:12px 24px; display:none; background:#888;">Cancel Edit</button>
+                <div id="sbMsg"></div>
+            </div>
+
+            <p class="section-label">Existing banners</p>
+            <div class="section-card">
+                <div id="sbList"><p style="font-size:12px;color:#999;">Loading...</p></div>
             </div>
         </div>
 
@@ -799,9 +933,11 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
             <div id="editVariantRows"></div>
             <button type="button" id="editAddVariantBtn" class="modal-add-variant-btn">+ Add variant</button>
 
-            <label>Notes</label>
-            <div id="editNoteRows"></div>
-            <button type="button" id="editAddNoteBtn" class="modal-add-variant-btn">+ Add note</button>
+            <div id="editNotesWrap">
+                <label>Notes</label>
+                <div id="editNoteRows"></div>
+                <button type="button" id="editAddNoteBtn" class="modal-add-variant-btn">+ Add note</button>
+            </div>
 
             <div class="modal-save-bar">
                 <div id="editFormMsg"></div>
@@ -864,6 +1000,14 @@ function showPanel(name) {
     if (name === 'hero') {
         loadHeroList();
     }
+
+    if (name === 'banner') {
+        loadSbList();
+    }
+
+    if (name === 'stories') {
+        loadStoryList();
+    }
 }
 
 document.querySelectorAll('.admin-nav-link').forEach(link => {
@@ -886,6 +1030,7 @@ function unlockUI() {
     showPanel('add');
     loadDeleteList(1, false);
     loadIconCategoryOptions();
+    loadIconBrandOptions();
     loadCatalogSnapshot();
     loadHeroList();
 }
@@ -937,9 +1082,11 @@ function detectMetaKind(catValue) {
 
 function updateMetaSection() {
     const kind = detectMetaKind(categoryInput.value);
-    // Longevity is a perfume-only field
+    // Longevity + Notes are perfume-only fields
     const lw = document.getElementById('longevityWrap');
     if (lw) lw.style.display = (kind === 'perfume') ? '' : 'none';
+    const nw = document.getElementById('notesWrap');
+    if (nw) nw.style.display = (kind === 'perfume') ? '' : 'none';
     document.querySelectorAll('#metaSection .meta-group').forEach(g => g.style.display = 'none');
     if (kind) {
         metaLabel.style.display = 'block';
@@ -1500,7 +1647,129 @@ uploadIconBtn.addEventListener('click', async () => {
     }
 });
 
+// ---- Brand icons ----
+const iconBrandSelect = document.getElementById('iconBrandSelect');
+const brandIconFileInput = document.getElementById('brandIconFileInput');
+const uploadBrandIconBtn = document.getElementById('uploadBrandIconBtn');
+const brandIconMsg = document.getElementById('brandIconMsg');
+const brandIconPreviewCircle = document.getElementById('brandIconPreviewCircle');
+
+let brandIconMap = {};
+
+if (brandIconFileInput) {
+    brandIconFileInput.addEventListener('change', () => {
+        const file = brandIconFileInput.files[0];
+        if (file) {
+            brandIconPreviewCircle.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="icon preview">`;
+        }
+    });
+}
+
+function showBrandIconCurrent() {
+    const img = brandIconMap[iconBrandSelect.value];
+    if (img && !brandIconFileInput.files[0]) {
+        brandIconPreviewCircle.innerHTML = `<img src="${escapeHtml(img)}" alt="current icon">`;
+    }
+}
+
+async function loadIconBrandOptions() {
+    if (!iconBrandSelect) return;
+    try {
+        const [bRes, iRes] = await Promise.all([
+            fetch(`${API_BASE}/get_brands.php`),
+            fetch(`${API_BASE}/get_brand_icons.php`)
+        ]);
+        const bData = await bRes.json();
+        const iData = await iRes.json();
+
+        if (iData.success && Array.isArray(iData.icons)) {
+            brandIconMap = {};
+            iData.icons.forEach(i => { brandIconMap[i.brand_name] = i.image; });
+        }
+
+        if (bData.success && Array.isArray(bData.brands)) {
+            iconBrandSelect.innerHTML = '';
+            bData.brands.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.brand;
+                opt.textContent = brandIconMap[b.brand] ? `${b.brand} (icon set)` : b.brand;
+                iconBrandSelect.appendChild(opt);
+            });
+            showBrandIconCurrent();
+        }
+    } catch (err) {
+        // dropdown stays empty
+    }
+}
+
+if (iconBrandSelect) {
+    iconBrandSelect.addEventListener('change', () => {
+        brandIconFileInput.value = '';
+        brandIconPreviewCircle.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+        showBrandIconCurrent();
+    });
+}
+
+if (uploadBrandIconBtn) {
+    uploadBrandIconBtn.addEventListener('click', async () => {
+        const file = brandIconFileInput.files[0];
+        if (!iconBrandSelect.value) {
+            brandIconMsg.textContent = 'No brands found — add products first.';
+            brandIconMsg.className = 'error';
+            return;
+        }
+        if (!file) {
+            brandIconMsg.textContent = 'Choose an image first.';
+            brandIconMsg.className = 'error';
+            return;
+        }
+
+        uploadBrandIconBtn.disabled = true;
+        uploadBrandIconBtn.textContent = 'Uploading...';
+        brandIconMsg.textContent = '';
+        brandIconMsg.className = '';
+
+        const formData = new FormData();
+        formData.append('admin_password', adminPassword);
+        formData.append('brand_name', iconBrandSelect.value);
+        formData.append('icon', file);
+
+        try {
+            const res = await fetch(`${API_BASE}/set_brand_icon.php`, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (res.status === 403) {
+                brandIconMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
+                brandIconMsg.className = 'error';
+                sessionStorage.removeItem('adminPassword');
+                adminPassword = '';
+                document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+                passwordGate.style.display = 'block';
+                return;
+            }
+
+            if (res.ok && data.success) {
+                brandIconMsg.textContent = 'Brand icon updated!';
+                brandIconMsg.className = 'success';
+                brandIconFileInput.value = '';
+                brandIconMap[data.brand_name] = data.image;
+                loadIconBrandOptions();
+            } else {
+                brandIconMsg.textContent = data.error || 'Upload failed.';
+                brandIconMsg.className = 'error';
+            }
+        } catch (err) {
+            brandIconMsg.textContent = 'Network error: ' + err.message;
+            brandIconMsg.className = 'error';
+        } finally {
+            uploadBrandIconBtn.disabled = false;
+            uploadBrandIconBtn.textContent = 'Upload Brand Icon';
+        }
+    });
+}
+
 // ---- Hero Slider manager ----
+
 const heroImageInput = document.getElementById('heroImageInput');
 const heroImagePreview = document.getElementById('heroImagePreview');
 const heroEditId = document.getElementById('heroEditId');
@@ -1589,6 +1858,364 @@ function fillHeroFormForEdit(slide) {
 
 if (heroCancelEditBtn) {
     heroCancelEditBtn.addEventListener('click', resetHeroForm);
+}
+
+/* ---------- STORY ICONS ADMIN ---------- */
+const stList = document.getElementById('stList');
+const stEditId = document.getElementById('stEditId');
+const stTitle = document.getElementById('stTitle');
+const stImageInput = document.getElementById('stImageInput');
+const stImagePreview = document.getElementById('stImagePreview');
+const stLink = document.getElementById('stLink');
+const stSortOrder = document.getElementById('stSortOrder');
+const stActive = document.getElementById('stActive');
+const stSaveBtn = document.getElementById('stSaveBtn');
+const stCancelEditBtn = document.getElementById('stCancelEditBtn');
+const stFormLabel = document.getElementById('stFormLabel');
+const stMsg = document.getElementById('stMsg');
+
+let stCachedIcons = [];
+
+if (stImageInput) {
+    stImageInput.addEventListener('change', () => {
+        const f = stImageInput.files[0];
+        if (f) stImagePreview.innerHTML = `<img src="${URL.createObjectURL(f)}" alt="preview">`;
+    });
+}
+
+function resetStForm() {
+    stEditId.value = '';
+    stTitle.value = '';
+    stImageInput.value = '';
+    stImagePreview.innerHTML = '';
+    stLink.value = '';
+    stSortOrder.value = '0';
+    stActive.checked = true;
+    stFormLabel.textContent = 'Add a story icon';
+    stSaveBtn.textContent = 'Save Story Icon';
+    stCancelEditBtn.style.display = 'none';
+    stMsg.textContent = '';
+    stMsg.className = '';
+}
+
+if (stCancelEditBtn) stCancelEditBtn.addEventListener('click', resetStForm);
+
+async function loadStoryList() {
+    if (!stList) return;
+    stList.innerHTML = '<p style="font-size:12px;color:#999;">Loading...</p>';
+
+    try {
+        const res = await fetch(`${API_BASE}/get_story_icons.php?all=1&t=${Date.now()}`);
+        const data = await res.json();
+
+        if (!data.success || !Array.isArray(data.icons) || !data.icons.length) {
+            stList.innerHTML = '<p style="font-size:12px;color:#999;">No story icons yet.</p>';
+            stCachedIcons = [];
+            return;
+        }
+
+        stCachedIcons = data.icons;
+
+        stList.innerHTML = data.icons.map(s => `
+            <div class="delete-row">
+                <img class="delete-row-thumb" src="${escapeHtml(s.image)}" alt="${escapeHtml(s.title)}" style="width:44px;height:44px;object-fit:cover;border-radius:50%;">
+                <div class="delete-row-info">
+                    <div class="delete-row-name">${escapeHtml(s.title)} ${Number(s.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
+                    <div class="delete-row-price">${s.link ? escapeHtml(s.link) : '(no link)'} · Order ${escapeHtml(String(s.sort_order != null ? s.sort_order : 0))}</div>
+                </div>
+                <div class="delete-row-actions">
+                    <button type="button" class="btn-pill btn-edit" data-st-edit="${s.id}">Edit</button>
+                    <button type="button" class="btn-pill btn-delete" data-st-delete="${s.id}">Delete</button>
+                </div>
+            </div>
+        `).join('');
+
+        stList.querySelectorAll('[data-st-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const s = stCachedIcons.find(x => String(x.id) === btn.dataset.stEdit);
+                if (!s) return;
+                stEditId.value = s.id;
+                stTitle.value = s.title;
+                stLink.value = s.link || '';
+                stSortOrder.value = s.sort_order != null ? s.sort_order : 0;
+                stActive.checked = !!Number(s.active);
+                stImagePreview.innerHTML = `<img src="${escapeHtml(s.image)}" alt="icon">`;
+                stFormLabel.textContent = 'Edit story icon';
+                stSaveBtn.textContent = 'Update Story Icon';
+                stCancelEditBtn.style.display = 'inline-block';
+                stFormLabel.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        stList.querySelectorAll('[data-st-delete]').forEach(btn => {
+            btn.addEventListener('click', () => deleteStoryIcon(btn.dataset.stDelete, btn));
+        });
+    } catch (err) {
+        stList.innerHTML = `<p style="font-size:12px;color:#e0342e;">Couldn't load story icons: ${escapeHtml(err.message)}</p>`;
+    }
+}
+
+async function deleteStoryIcon(id, btn) {
+    if (!confirm('Delete this story icon?')) return;
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('id', id);
+    try {
+        const res = await fetch(`${API_BASE}/delete_story_icon.php`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            loadStoryList();
+        } else {
+            alert(data.error || 'Delete failed');
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+    }
+}
+
+if (stSaveBtn) {
+    stSaveBtn.addEventListener('click', async () => {
+        const isEdit = !!stEditId.value;
+
+        if (!stTitle.value.trim()) {
+            stMsg.textContent = 'Title is required.';
+            stMsg.className = 'error';
+            return;
+        }
+        if (!isEdit && !stImageInput.files[0]) {
+            stMsg.textContent = 'Pick a circle image first.';
+            stMsg.className = 'error';
+            return;
+        }
+
+        stSaveBtn.disabled = true;
+        stMsg.textContent = 'Saving...';
+        stMsg.className = '';
+
+        const formData = new FormData();
+        formData.append('admin_password', adminPassword);
+        if (isEdit) formData.append('id', stEditId.value);
+        formData.append('title', stTitle.value.trim());
+        if (stImageInput.files[0]) formData.append('image', stImageInput.files[0]);
+        formData.append('link', stLink.value.trim());
+        formData.append('sort_order', stSortOrder.value || '0');
+        formData.append('active', stActive.checked ? '1' : '0');
+
+        const endpoint = isEdit ? 'update_story_icon.php' : 'add_story_icon.php';
+
+        try {
+            const res = await fetch(`${API_BASE}/${endpoint}`, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (res.status === 403) {
+                sessionStorage.removeItem('adminPassword');
+                stMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
+                stMsg.className = 'error';
+                document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+                passwordGate.style.display = 'block';
+                return;
+            }
+
+            if (res.ok && data.success) {
+                stMsg.textContent = isEdit ? 'Saved!' : 'Story icon added!';
+                stMsg.className = 'success';
+                resetStForm();
+                loadStoryList();
+            } else {
+                stMsg.textContent = data.error || 'Something went wrong.';
+                stMsg.className = 'error';
+            }
+        } catch (err) {
+            stMsg.textContent = 'Network error: ' + err.message;
+            stMsg.className = 'error';
+        } finally {
+            stSaveBtn.disabled = false;
+        }
+    });
+}
+
+/* ---------- SHOP BANNER CAROUSEL ADMIN ---------- */
+const sbList = document.getElementById('sbList');
+const sbEditId = document.getElementById('sbEditId');
+const sbImageInput = document.getElementById('sbImageInput');
+const sbImagePreview = document.getElementById('sbImagePreview');
+const sbLink = document.getElementById('sbLink');
+const sbSortOrder = document.getElementById('sbSortOrder');
+const sbHeightMobile = document.getElementById('sbHeightMobile');
+const sbHeightDesktop = document.getElementById('sbHeightDesktop');
+const sbActive = document.getElementById('sbActive');
+const sbSaveBtn = document.getElementById('sbSaveBtn');
+const sbCancelEditBtn = document.getElementById('sbCancelEditBtn');
+const sbFormLabel = document.getElementById('sbFormLabel');
+const sbMsg = document.getElementById('sbMsg');
+
+if (sbImageInput) {
+    sbImageInput.addEventListener('change', () => {
+        const f = sbImageInput.files[0];
+        if (f) sbImagePreview.innerHTML = `<img src="${URL.createObjectURL(f)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+    });
+}
+
+function resetSbForm() {
+    sbEditId.value = '';
+    sbImageInput.value = '';
+    sbImagePreview.innerHTML = '';
+    sbLink.value = '';
+    sbSortOrder.value = '0';
+    sbActive.checked = true;
+    sbHeightMobile.value = '0';
+    sbHeightDesktop.value = '0';
+    sbFormLabel.textContent = 'Add a shop banner';
+    sbSaveBtn.textContent = 'Save Banner';
+    sbCancelEditBtn.style.display = 'none';
+    sbMsg.textContent = '';
+    sbMsg.className = '';
+}
+
+if (sbCancelEditBtn) sbCancelEditBtn.addEventListener('click', resetSbForm);
+
+async function loadSbList() {
+    if (!sbList) return;
+    sbList.innerHTML = '<p style="font-size:12px;color:#999;">Loading...</p>';
+
+    try {
+        const res = await fetch(`${API_BASE}/get_shop_banners.php?all=1&t=${Date.now()}`);
+        const data = await res.json();
+
+        if (!data.success || !Array.isArray(data.banners) || !data.banners.length) {
+            sbList.innerHTML = '<p style="font-size:12px;color:#999;">No banners yet.</p>';
+            return;
+        }
+
+        sbList.innerHTML = data.banners.map(b => `
+            <div class="delete-row">
+                <img class="delete-row-thumb" src="${escapeHtml(b.image)}" alt="Banner" style="width:80px;height:32px;object-fit:cover;border-radius:6px;">
+                <div class="delete-row-info">
+                    <div class="delete-row-name">${b.link ? escapeHtml(b.link) : '(no link)'} ${Number(b.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
+                    <div class="delete-row-price">Order ${escapeHtml(String(b.sort_order != null ? b.sort_order : 0))}</div>
+                </div>
+                <div class="delete-row-actions">
+                    <button type="button" class="btn-pill btn-edit" data-sb-edit="${b.id}">Edit</button>
+                    <button type="button" class="btn-pill btn-delete" data-sb-delete="${b.id}">Delete</button>
+                </div>
+            </div>
+        `).join('');
+
+        sbList.querySelectorAll('[data-sb-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const b = data.banners.find(x => String(x.id) === btn.dataset.sbEdit);
+                if (!b) return;
+                sbEditId.value = b.id;
+                sbLink.value = b.link || '';
+                sbSortOrder.value = b.sort_order != null ? b.sort_order : 0;
+                sbActive.checked = !!Number(b.active);
+                sbHeightMobile.value = b.height_mobile != null ? b.height_mobile : 0;
+                sbHeightDesktop.value = b.height_desktop != null ? b.height_desktop : 0;
+                sbImagePreview.innerHTML = `<img src="${escapeHtml(b.image)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+                sbFormLabel.textContent = 'Edit shop banner';
+                sbSaveBtn.textContent = 'Update Banner';
+                sbCancelEditBtn.style.display = 'inline-block';
+                sbFormLabel.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        sbList.querySelectorAll('[data-sb-delete]').forEach(btn => {
+            btn.addEventListener('click', () => deleteShopBanner(btn.dataset.sbDelete, btn));
+        });
+    } catch (err) {
+        sbList.innerHTML = `<p style="font-size:12px;color:#e0342e;">Couldn't load banners: ${escapeHtml(err.message)}</p>`;
+    }
+}
+
+async function deleteShopBanner(id, btn) {
+    if (!confirm('Delete this banner?')) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('id', id);
+
+    try {
+        const res = await fetch(`${API_BASE}/delete_shop_banner.php`, { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            loadSbList();
+        } else {
+            alert(data.error || 'Delete failed');
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+    }
+}
+
+if (sbSaveBtn) {
+    sbSaveBtn.addEventListener('click', async () => {
+        const isEdit = !!sbEditId.value;
+
+        if (!isEdit && !sbImageInput.files[0]) {
+            sbMsg.textContent = 'Pick a banner image first.';
+            sbMsg.className = 'error';
+            return;
+        }
+
+        sbSaveBtn.disabled = true;
+        sbMsg.textContent = 'Saving...';
+        sbMsg.className = '';
+
+        const formData = new FormData();
+        formData.append('admin_password', adminPassword);
+        if (isEdit) formData.append('id', sbEditId.value);
+        if (sbImageInput.files[0]) formData.append('image', sbImageInput.files[0]);
+        formData.append('link', sbLink.value.trim());
+        formData.append('sort_order', sbSortOrder.value || '0');
+        formData.append('active', sbActive.checked ? '1' : '0');
+        formData.append('height_mobile', sbHeightMobile.value || '0');
+        formData.append('height_desktop', sbHeightDesktop.value || '0');
+
+        const endpoint = isEdit ? 'update_shop_banner.php' : 'add_shop_banner.php';
+
+        try {
+            const res = await fetch(`${API_BASE}/${endpoint}`, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (res.status === 403) {
+                sessionStorage.removeItem('adminPassword');
+                sbMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
+                sbMsg.className = 'error';
+                document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+                passwordGate.style.display = 'block';
+                return;
+            }
+
+            if (res.ok && data.success) {
+                sbMsg.textContent = isEdit ? 'Saved!' : 'Banner added!';
+                sbMsg.className = 'success';
+                resetSbForm();
+                loadSbList();
+            } else {
+                sbMsg.textContent = data.error || 'Something went wrong.';
+                sbMsg.className = 'error';
+            }
+        } catch (err) {
+            sbMsg.textContent = 'Network error: ' + err.message;
+            sbMsg.className = 'error';
+        } finally {
+            sbSaveBtn.disabled = false;
+        }
+    });
 }
 
 async function loadHeroList() {
@@ -1761,9 +2388,8 @@ function closeEditModal() {
     editModalOverlay.classList.remove('open');
 }
 editModalClose.addEventListener('click', closeEditModal);
-editModalOverlay.addEventListener('click', (e) => {
-    if (e.target === editModalOverlay) closeEditModal();
-});
+/* Clicking outside the card no longer closes the modal — a stray tap
+   was wiping in-progress edits. Close only via the X button. */
 
 function renderEditExistingImages() {
     editExistingImages.innerHTML = editKeptImages.map((url, i) => `
@@ -1839,6 +2465,8 @@ function updateEditMetaSection() {
     const kind = detectMetaKind(document.getElementById('editCategory').value);
     const elw = document.getElementById('editLongevityWrap');
     if (elw) elw.style.display = (kind === 'perfume') ? '' : 'none';
+    const enw = document.getElementById('editNotesWrap');
+    if (enw) enw.style.display = (kind === 'perfume') ? '' : 'none';
     document.querySelectorAll('#editMetaSection .meta-group').forEach(g => g.style.display = 'none');
     const sec = document.getElementById('editMetaSection');
     if (kind) {

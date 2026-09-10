@@ -57,6 +57,25 @@ function saveFilterState() {
         brand: brandFilter.value,
         gender: genderFilter.value
     }));
+    updateUrlFromFilters();
+}
+
+/* Keep the address bar in sync with the active filters so any
+   filtered view can be copied straight from the URL bar and pasted
+   into a story icon / banner link, e.g.
+   products.html?category=Perfume&brand=Azzaro */
+function updateUrlFromFilters() {
+    const params = new URLSearchParams();
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (brandFilter.value) params.set('brand', brandFilter.value);
+    if (genderFilter.value) params.set('gender', genderFilter.value);
+    if (searchInput.value.trim()) params.set('search', searchInput.value.trim());
+
+    const qs = params.toString();
+    const url = window.location.pathname + (qs ? '?' + qs : '');
+    try {
+        history.replaceState(null, '', url);
+    } catch (e) { /* file:// or sandbox — ignore */ }
 }
 
 function loadFilterState() {
@@ -96,25 +115,111 @@ async function loadCategories() {
         const data = await res.json();
         if (!data.success) return;
 
-        // C1 SLIDING SEGMENT — one pill bar, gold selection slides between
-        const segBtns = data.categories.map(c => `
-            <button type="button" class="seg-btn story-item" data-category="${escapeHtml(c.category)}">${escapeHtml(c.category)}</button>
-        `).join('');
+        // BRAND story circles — scoped to the selected category:
+        // no category -> all brands; Perfume -> only perfume brands; etc.
+        // The filter drawer rebuilds them via window.__rebuildBrandCircles
+        // every time the category / gender / search scope changes.
+        // Circles show the admin-uploaded brand icon when one exists,
+        // otherwise the brand's first letter.
+        const brandLetter = (name) => escapeHtml(String(name).trim().charAt(0).toUpperCase());
 
-        categoryRow.innerHTML = `<div class="seg-bar"><span class="seg-slider"></span>${segBtns}</div>`;
+        /* Brand circles are retired — stories live at the top now and
+           brands are filtered from the Filter drawer. The rebuild/sync
+           hooks below stay as safe no-ops for the drawer code. */
+        categoryRow.style.display = 'none';
 
-        const segBar = categoryRow.querySelector('.seg-bar');
-        const segSlider = categoryRow.querySelector('.seg-slider');
+        function currentBrands() {
+            return brandFilter.value ? brandFilter.value.split(',').filter(Boolean) : [];
+        }
+
+        window.__syncBrandCircles = function (selected) {
+            const sel = Array.isArray(selected) ? selected : currentBrands();
+            categoryRow.querySelectorAll('.story-item').forEach(item => {
+                const isAll = !item.dataset.brand;
+                const on = isAll ? sel.length === 0 : sel.includes(item.dataset.brand);
+                const circle = item.querySelector('.story-circle');
+                circle.classList.toggle('active', on);
+                const check = circle.querySelector('.story-check');
+                if (on && !isAll && !check) {
+                    circle.insertAdjacentHTML('beforeend', '<div class="story-check"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>');
+                } else if ((!on || isAll) && check) {
+                    check.remove();
+                }
+                item.querySelector('.story-label').classList.toggle('active', on);
+            });
+        };
+
+        window.__rebuildBrandCircles = function (list) {
+            return; /* brand circles removed — brands live in the Filter drawer */
+            const brands = Array.isArray(list) ? list : [];
+
+            categoryRow.innerHTML = `
+                <div class="story-item" data-brand="">
+                    <div class="story-circle all-circle"><span class="brand-letter brand-letter-all">ALL</span></div>
+                    <div class="story-label">All Brands</div>
+                </div>
+            ` + brands.map(b => `
+                <div class="story-item" data-brand="${escapeHtml(b.brand)}">
+                    <div class="story-circle">${
+                        brandIconMap[b.brand]
+                            ? `<img src="${escapeHtml(brandIconMap[b.brand])}" alt="${escapeHtml(b.brand)}" loading="lazy">`
+                            : `<span class="brand-letter">${brandLetter(b.brand)}</span>`
+                    }</div>
+                    <div class="story-label">${escapeHtml(b.brand)}</div>
+                </div>
+            `).join('');
+
+            categoryRow.querySelectorAll('.story-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const brand = item.dataset.brand;
+                    let sel = currentBrands();
+                    if (!brand) {
+                        sel = [];
+                    } else if (sel.includes(brand)) {
+                        sel = sel.filter(b => b !== brand);
+                    } else {
+                        sel.push(brand);
+                    }
+                    if (window.__applyBrandSelection) {
+                        window.__applyBrandSelection(sel.join(','));
+                    } else {
+                        brandFilter.value = sel.join(',');
+                    }
+                    window.__syncBrandCircles(sel);
+                    saveFilterState();
+                    resetAndReload();
+                });
+            });
+
+            window.__syncBrandCircles();
+        };
+
+
+
+        // Segment pill bar UNDER the circles — both control the same filter
+        let segRow = document.getElementById('segRow');
+        if (!segRow) {
+            segRow = document.createElement('div');
+            segRow.id = 'segRow';
+            // Order: shop banner -> categories (this bar) -> brand circles
+            categoryRow.insertAdjacentElement('beforebegin', segRow);
+        }
+        segRow.innerHTML = `<div class="seg-bar"><span class="seg-slider"></span>${
+            data.categories.map(c => `
+                <button type="button" class="seg-btn" data-category="${escapeHtml(c.category)}">${escapeHtml(c.category)}</button>
+            `).join('')
+        }</div>`;
+        const segSlider = segRow.querySelector('.seg-slider');
         function positionSegSlider(btn) {
+            if (!segSlider) return;
             if (!btn) { segSlider.style.opacity = '0'; return; }
             segSlider.style.opacity = '1';
             segSlider.style.width = btn.offsetWidth + 'px';
             segSlider.style.transform = `translateX(${btn.offsetLeft - 4}px)`;
-            // keep the active segment in view on narrow screens
             btn.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
         }
         window.addEventListener('resize', () => {
-            positionSegSlider(categoryRow.querySelector('.seg-btn.active'));
+            positionSegSlider(segRow.querySelector('.seg-btn.active'));
         });
 
         const drawerLinks = data.categories.map(c => `
@@ -137,15 +242,16 @@ async function loadCategories() {
         }
 
         function applyActiveState(category) {
-            categoryRow.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
             drawerNav.querySelectorAll('.drawer-link').forEach(l => l.classList.remove('active'));
-
-            const rowMatch = categoryRow.querySelector(`.seg-btn[data-category="${CSS.escape(category)}"]`);
-            if (rowMatch) rowMatch.classList.add('active');
-            positionSegSlider(rowMatch);
 
             const drawerMatch = drawerNav.querySelector(`.drawer-link[data-category="${CSS.escape(category)}"]`);
             if (drawerMatch) drawerMatch.classList.add('active');
+
+            // keep the segment bar in sync with the circles
+            segRow.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+            const segMatch = segRow.querySelector(`.seg-btn[data-category="${CSS.escape(category)}"]`);
+            if (segMatch) segMatch.classList.add('active');
+            positionSegSlider(segMatch);
         }
         window.__applySegActive = applyActiveState;
 
@@ -166,8 +272,10 @@ async function loadCategories() {
             resetAndReload();
         }
 
-        categoryRow.querySelectorAll('.story-item').forEach(item => {
-            item.addEventListener('click', () => selectCategory(item.dataset.category));
+
+
+        segRow.querySelectorAll('.seg-btn').forEach(btn => {
+            btn.addEventListener('click', () => selectCategory(btn.dataset.category));
         });
 
         drawerNav.querySelectorAll('.drawer-link').forEach(link => {
@@ -181,8 +289,6 @@ async function loadCategories() {
         if (saved && saved.category) {
             selectedCategory = saved.category;
             applyActiveState(saved.category);
-            // fonts/layout may shift after first paint — re-measure
-            requestAnimationFrame(() => applyActiveState(saved.category));
         }
     } catch (err) {
         // Categories failing silently is fine.
@@ -408,6 +514,13 @@ if (urlSearch) {
     sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
 }
 
+const urlGender = urlParams.get('gender');
+if (urlGender) {
+    const existing = loadFilterState() || {};
+    existing.gender = urlGender;
+    sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
+}
+
 /* =========================================================
    RESTORE SAVED FILTERS
    ========================================================= */
@@ -421,7 +534,163 @@ if (savedFilters) {
 /* =========================================================
    INITIALIZATION
    ========================================================= */
+/* =========================================================
+   STORY ICONS (admin-managed circles at the top of the page:
+   image + title + link — tapping one opens its link)
+   ========================================================= */
+async function loadStoryIcons() {
+    const row = document.getElementById('storiesRow');
+    if (!row) return;
+
+    let icons = [];
+    try {
+        const res = await fetch(`${API_BASE}/get_story_icons.php`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.icons)) icons = data.icons;
+    } catch (e) {
+        console.log('Story icons failed:', e);
+        return;
+    }
+    if (!icons.length) return;
+
+    row.innerHTML = icons.map(s => `
+        <a class="story-c" href="${escapeHtml(s.link || '#')}">
+            <div class="story-c-ring">
+                <div class="story-c-inner"></div>
+                <img class="story-c-img" src="${escapeHtml(s.image)}" alt="${escapeHtml(s.title)}" loading="lazy">
+            </div>
+            <div class="story-c-label">${escapeHtml(s.title)}</div>
+        </a>
+    `).join('');
+
+    row.style.display = 'flex';
+}
+
+/* =========================================================
+   SHOP BANNER CAROUSEL (slot between categories and toolbar)
+   ========================================================= */
+async function loadShopBanner() {
+    const wrap = document.getElementById('shopBanner');
+    const track = document.getElementById('shopBannerTrack');
+    const dotsEl = document.getElementById('shopBannerDots');
+    if (!wrap || !track) return;
+
+    let banners = [];
+    try {
+        const res = await fetch(`${API_BASE}/get_shop_banners.php`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.banners)) banners = data.banners;
+    } catch (e) {
+        console.log('Shop banner failed:', e);
+        return;
+    }
+    if (!banners.length) return;
+
+    /* Manual heights from admin (stored on every row, same values) */
+    const hMobile = parseInt(banners[0].height_mobile, 10) || 0;
+    const hDesktop = parseInt(banners[0].height_desktop, 10) || 0;
+    if (hMobile > 0) {
+        wrap.style.setProperty('--sb-h-m', hMobile + 'px');
+        wrap.classList.add('sb-fixed-m');
+    }
+    if (hDesktop > 0) {
+        wrap.style.setProperty('--sb-h-d', hDesktop + 'px');
+        wrap.classList.add('sb-fixed-d');
+    }
+
+    track.innerHTML = banners.map(b => {
+        const img = `<img src="${escapeHtml(b.image)}" alt="Banner" loading="lazy">`;
+        return b.link
+            ? `<a class="shop-banner-slide" href="${escapeHtml(b.link)}">${img}</a>`
+            : `<div class="shop-banner-slide">${img}</div>`;
+    }).join('');
+
+    wrap.style.display = 'block';
+
+    if (banners.length < 2) {
+        if (dotsEl) dotsEl.style.display = 'none';
+        return;
+    }
+
+    let idx = 0;
+    let timer = null;
+
+    dotsEl.innerHTML = banners.map((_, i) =>
+        `<button type="button" class="shop-banner-dot ${i === 0 ? 'active' : ''}" data-sb-dot="${i}" aria-label="Go to banner ${i + 1}"></button>`
+    ).join('');
+
+    function show(i) {
+        idx = (i + banners.length) % banners.length;
+        track.style.transform = `translateX(-${idx * 100}%)`;
+        dotsEl.querySelectorAll('.shop-banner-dot').forEach((d, di) => {
+            d.classList.toggle('active', di === idx);
+        });
+    }
+
+    function start() {
+        clearInterval(timer);
+        timer = setInterval(() => show(idx + 1), 4000);
+    }
+
+    dotsEl.querySelectorAll('.shop-banner-dot').forEach(d => {
+        d.addEventListener('click', () => {
+            show(Number(d.dataset.sbDot));
+            start();
+        });
+    });
+
+    let touchX = null;
+    wrap.addEventListener('touchstart', (e) => {
+        touchX = e.touches[0].clientX;
+        clearInterval(timer);
+    }, { passive: true });
+    wrap.addEventListener('touchend', (e) => {
+        if (touchX !== null) {
+            const dx = e.changedTouches[0].clientX - touchX;
+            if (Math.abs(dx) > 40) show(idx + (dx < 0 ? 1 : -1));
+        }
+        touchX = null;
+        start();
+    }, { passive: true });
+
+    start();
+}
+
+/* =========================================================
+   DESKTOP LAYOUT: move the toolbar row (product count + WhatsApp
+   capsule) into the grid column, so the FILTER sidebar starts
+   directly under the categories bar and WhatsApp sits beside it:
+       categories (full width)
+       filter | whatsapp
+       filter | products
+   Mobile keeps the original full-width toolbar row.
+   ========================================================= */
+(function relocateToolbarForDesktop() {
+    const toolbar = document.querySelector('.toolbar-row');
+    const container = document.querySelector('.page-layout .container');
+    if (!toolbar || !container) return;
+
+    const homeMarker = document.createComment('toolbar-home');
+    toolbar.parentNode.insertBefore(homeMarker, toolbar);
+
+    const mq = window.matchMedia('(min-width: 900px)');
+
+    function place() {
+        if (mq.matches) {
+            container.insertBefore(toolbar, container.firstChild);
+        } else if (homeMarker.parentNode) {
+            homeMarker.parentNode.insertBefore(toolbar, homeMarker.nextSibling);
+        }
+    }
+
+    place();
+    if (mq.addEventListener) mq.addEventListener('change', place);
+    else mq.addListener(place);
+})();
+
 async function init() {
+    loadStoryIcons();
+    loadShopBanner();
     await loadCategories();
     await loadBrands();
 
@@ -433,6 +702,7 @@ async function init() {
             genderFilter.value = savedFilters.gender;
         }
     }
+    if (window.__syncBrandCircles) window.__syncBrandCircles();
 
     // A search that exactly matches a brand name (e.g. "casio") becomes
     // a brand filter — so the filter drawer shows it checked and every
@@ -621,6 +891,7 @@ init();
         const valid = new Set(brandList.map(b => b.brand));
         const kept = selectedBrands().filter(b => valid.has(b));
         brandFilter.value = kept.join(',');
+        if (window.__syncBrandCircles) window.__syncBrandCircles(kept);
     }
 
     function optionRow(name, value, label, count, checked, extraClass) {
@@ -695,6 +966,7 @@ init();
             brandFilter.value = values.join(',');
             genderCounts = null;
             renderGender();
+            if (window.__syncBrandCircles) window.__syncBrandCircles(values);
             resetAndReload();
         });
 
@@ -738,16 +1010,25 @@ init();
         brandFilter.value = '';
         renderGender();
         renderBrand();
+        if (window.__syncBrandCircles) window.__syncBrandCircles([]);
         resetAndReload();
     });
 
     async function refreshForCategory(category) {
         genderCounts = null;
         await fetchBrandList(category);
+        if (window.__rebuildBrandCircles) window.__rebuildBrandCircles(brandList);
         pruneInvalidBrandSelection();
         renderGender();
         renderBrand();
     }
+
+    window.__applyBrandSelection = function (csv) {
+        brandFilter.value = csv || '';
+        genderCounts = null;
+        renderGender();
+        renderBrand();
+    };
 
     refreshFilterDrawerForCategory = refreshForCategory;
 })();

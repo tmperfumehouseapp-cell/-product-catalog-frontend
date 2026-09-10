@@ -91,25 +91,26 @@ html, body { overflow-x: hidden; }
 .pn-fade.left { left: 0; background: linear-gradient(to right, #fff, rgba(255,255,255,0)); }
 .pn-fade.right { right: 0; background: linear-gradient(to left, #fff, rgba(255,255,255,0)); }
 
-/* DESKTOP (≥768px): same 8 x 10 portrait stage for the main image */
-@media (min-width: 768px) {
-    #mainMedia {
-        width: 100%;
-        aspect-ratio: 4 / 5;
-        overflow: hidden;
-        background: #100e0a;
-    }
-    #mainMedia img.gallery-main {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: contain;
-        display: block;
-    }
-    #mainMedia video.gallery-main {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: contain;
-    }
+/* Main image: strict 8 x 10 (4:5) frame, image FILLS it completely —
+   no blank space ever; slight edge crop on photos that aren't 4:5. */
+#mainMedia {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #100e0a;
+}
+#mainMedia img.gallery-main {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+#mainMedia video.gallery-main {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain; /* video keeps letterbox so nothing important is lost */
 }
 
 /* =========================================================
@@ -118,16 +119,19 @@ html, body { overflow-x: hidden; }
    the page height; desktop keeps style.css sizing untouched.
    ========================================================= */
 @media (max-width: 767px) {
+    /* same strict 8 x 10 frame on mobile */
     #mainMedia {
         width: 100%;
-        aspect-ratio: 4 / 5;   /* 8 x 10 portrait stage */
+        aspect-ratio: 4 / 5;
         overflow: hidden;
-        background: #100e0a;   /* dark stage matches the theme */
+        border-radius: 12px;
+        background: #100e0a;
     }
     #mainMedia img.gallery-main {
         width: 100% !important;
         height: 100% !important;
-        object-fit: contain;   /* WHOLE image visible — nothing cut */
+        object-fit: cover;
+        object-position: center;
         display: block;
     }
     #mainMedia video.gallery-main {
@@ -332,9 +336,41 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 /* CTA buttons */
 .back-btn-full { background: #e0342e !important; color: #fff !important; }
 .back-btn-full:hover { background: #ef4038 !important; }
-.bundle-upsell { background: #100e0a !important; border: 1px solid rgba(212,175,106,0.25) !important; }
-.bundle-upsell-line { color: #e9e2d4 !important; }
-.bundle-upsell-btn { background: transparent !important; border: 1px solid rgba(212,175,106,0.6) !important; color: #d4af6a !important; }
+/* WhatsApp ask banner — GREEN BG + WHITE SHINE SWEEP (V2) */
+.bundle-upsell {
+    background: linear-gradient(135deg, #167a48, #0d5c35) !important;
+    border: none !important;
+    overflow: hidden;
+}
+.bundle-upsell::before {
+    content: "";
+    position: absolute;
+    top: -40%;
+    bottom: -40%;
+    left: 0;
+    width: 30%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+    pointer-events: none;
+    animation: waShine 4s linear infinite;
+    will-change: transform;
+}
+@keyframes waShine {
+    0%, 55% { transform: translateX(-140%) skewX(-18deg); }
+    90%, 100% { transform: translateX(380%) skewX(-18deg); }
+}
+.bundle-upsell-line { color: #eafaf0 !important; border-bottom-color: rgba(255,255,255,0.25) !important; }
+.bundle-upsell-btn {
+    position: relative;
+    background: #ffffff !important;
+    border: none !important;
+    color: #0d5c35 !important;
+    border-radius: 999px !important;
+    transition: background .25s ease, color .25s ease;
+}
+.bundle-upsell-btn:hover { background: #eafaf0 !important; color: #0a4a2b !important; }
+@media (prefers-reduced-motion: reduce) {
+    .bundle-upsell::before { animation: none; }
+}
 
 /* Description accordion — one clean dark card */
 .description-accordion {
@@ -360,6 +396,9 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
     margin: 0 !important;
     padding: 14px 16px 16px !important;
 }
+/* description stays permanently open */
+.description-body { display: block !important; max-height: none !important; }
+.description-toggle .description-chevron { display: none !important; }
 .description-card-text { color: #b7ae9d !important; background: transparent !important; line-height: 1.8; }
 
 /* Specifications: no outer container box — cards float on the page */
@@ -952,14 +991,14 @@ async function loadProduct() {
             </div>
         ` : '';
 
-        const descriptionHtml = p.description && p.description.trim() ? `
+        // Description: always visible (no toggle), limited to 60 words
+        const descWords = (p.description || '').trim().split(/\s+/).filter(Boolean);
+        const descShort = descWords.slice(0, 60).join(' ') + (descWords.length > 60 ? '…' : '');
+        const descriptionHtml = descShort ? `
             <div class="description-accordion">
-                <button type="button" class="description-toggle" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open');">
-                    Description
-                    <svg class="description-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </button>
-                <div class="description-body">
-                    <p class="description-card-text">${escapeHtml(p.description)}</p>
+                <div class="description-toggle open" style="cursor:default;">Description</div>
+                <div class="description-body open">
+                    <p class="description-card-text">${escapeHtml(descShort)}</p>
                 </div>
             </div>
         ` : '';
@@ -1163,7 +1202,16 @@ function loadSpecs(p) {
     const details = p.details;
     if (!kind || !details || !SPEC_CONFIG[kind]) return;
 
-    const items = SPEC_CONFIG[kind]
+    // Brand leads the grid, then the category-specific fields
+    const brandItem = p.brand ? `
+            <div class="pspec-item">
+                ${SPEC_ICONS['gem']}
+                <span class="pspec-label">Brand</span>
+                <span class="pspec-value">${escapeHtml(String(p.brand)).toUpperCase()}</span>
+            </div>
+        ` : '';
+
+    const items = brandItem + SPEC_CONFIG[kind]
         .filter(([key]) => details[key] && String(details[key]).trim() !== '')
         .map(([key, label, icon]) => `
             <div class="pspec-item">

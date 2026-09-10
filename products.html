@@ -46,6 +46,66 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 .story-circle.active { border-color: #d4af6a !important; box-shadow: 0 0 14px rgba(212,175,106,0.3); }
 .story-label { color: #a89a7c !important; }
 .story-circle.all-circle { background: #15130e !important; color: #d4af6a !important; }
+/* Brand letter inside the story circles */
+.brand-letter {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 24px;
+    color: #d4af6a;
+}
+.brand-letter-all { font-size: 12px; letter-spacing: 1.5px; }
+.story-circle.active .brand-letter { color: #f0d9a8; }
+
+/* ============ STORIES (admin-managed, top of page) ============ */
+.stories-row {
+    display: flex;
+    gap: 14px;
+    padding: 12px 14px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.stories-row::-webkit-scrollbar { display: none; }
+.story-c { flex-shrink: 0; text-align: center; cursor: pointer; width: 68px; text-decoration: none; display: block; }
+.story-c-ring {
+    position: relative;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+}
+.story-c-ring::before {
+    content: "";
+    position: absolute;
+    inset: -30%;
+    background: conic-gradient(#d4af6a, #f0d9a8, #e0342e, #d4af6a);
+    animation: storyRing 3s linear infinite;
+}
+.story-c-inner { position: absolute; inset: 2.5px; border-radius: 50%; background: #0d0b08; }
+.story-c-img {
+    position: absolute;
+    inset: 5.5px;
+    width: calc(100% - 11px);
+    height: calc(100% - 11px);
+    border-radius: 50%;
+    object-fit: cover;
+}
+.story-c-label {
+    font-size: 10px;
+    color: #f2ecdf;
+    margin-top: 4px;
+    max-width: 68px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+@keyframes storyRing { to { transform: rotate(360deg); } }
+
+
 
 /* Toolbar + filter button */
 .toolbar-row {
@@ -153,11 +213,75 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 .drawer-wa .wa-aurora { flex: 1; }
 .drawer-wa .wa-aurora-inner { justify-content: center; }
 
-/* C1 SLIDING SEGMENT — category pill bar with gliding gold selection */
-.category-stories { padding: 12px 14px 4px !important; }
+/* SHOP BANNER CAROUSEL — admin photos between categories and toolbar */
+.shop-banner {
+    position: relative;
+    margin: 12px 14px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(212,175,106,0.35);
+    box-shadow: 0 12px 26px rgba(0,0,0,0.4);
+}
+.shop-banner-track {
+    display: flex;
+    transition: transform 0.55s cubic-bezier(.25,.8,.3,1);
+}
+.shop-banner-slide {
+    flex: 0 0 100%;
+    display: block;
+    line-height: 0;
+}
+.shop-banner-slide img {
+    width: 100%;
+    aspect-ratio: 5 / 2;
+    object-fit: cover;
+    display: block;
+}
+/* Manual heights from admin (0 = auto 5:2). JS sets the vars + classes. */
+.shop-banner.sb-fixed-m .shop-banner-slide img {
+    aspect-ratio: auto;
+    height: var(--sb-h-m);
+}
+@media (min-width: 900px) {
+    .shop-banner.sb-fixed-d .shop-banner-slide img {
+        aspect-ratio: auto;
+        height: var(--sb-h-d);
+    }
+    .shop-banner.sb-fixed-m:not(.sb-fixed-d) .shop-banner-slide img {
+        aspect-ratio: 5 / 2;
+        height: auto;
+    }
+}
+.shop-banner-dots {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 2;
+}
+.shop-banner-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.3s ease, width 0.3s ease;
+}
+.shop-banner-dot.active { background: #f0d9a8; width: 16px; border-radius: 3px; }
+@media (min-width: 900px) {
+    .shop-banner { max-width: 1160px; margin: 14px auto 0; }
+}
+
+/* SLIDING SEGMENT — pill bar under the category circles */
+#segRow { padding: 2px 14px 4px; }
 .seg-bar {
     position: relative;
     display: flex;
+    width: 100%;
     background: #12100b;
     border: 1px solid rgba(212,175,106,0.35);
     border-radius: 999px;
@@ -176,18 +300,16 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
     opacity: 0;
     z-index: 0;
 }
-.seg-bar { width: 100%; }
 .seg-btn {
     position: relative;
     z-index: 1;
-    /* equal share of the FULL row width */
     flex: 1 1 0;
     min-width: max-content;
     text-align: center;
     background: none;
     border: none;
-    padding: 11px 10px;
-    font-size: 11.5px;
+    padding: 10px 10px;
+    font-size: 11px;
     letter-spacing: 1.5px;
     color: #cfc8bb;
     white-space: nowrap;
@@ -197,11 +319,11 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
     font-family: inherit;
     text-transform: uppercase;
 }
-@media (max-width: 400px) {
-    .seg-btn { font-size: 10px; letter-spacing: 1px; padding: 10px 6px; }
-}
 .seg-btn.active { color: #1a1508; font-weight: 700; }
 .seg-btn:not(.active):hover { color: #f0d9a8; }
+@media (max-width: 400px) {
+    .seg-btn { font-size: 10px; letter-spacing: 1px; padding: 9px 6px; }
+}
 
 /* F3 GLASS + PULSING ICON — matches the WhatsApp capsule's anatomy */
 .filter-toggle-btn {
@@ -358,49 +480,61 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 /* AURORA RING — WhatsApp capsule banner: the border is flowing
    green-and-gold light streaming endlessly around the pill. */
 /* (banner moved into the toolbar row beside Filter) */
+/* GREEN + SHINE SWEEP — solid WhatsApp-green pill with a white
+   shine slicing across (same language as the product-page banner) */
 .wa-aurora {
     position: relative;
     display: inline-block;
-    padding: 2.5px;                /* ring thickness */
     border-radius: 999px;
     overflow: hidden;
     text-decoration: none;
     max-width: 100%;
 }
 .wa-aurora-spin {
-    position: absolute; inset: -150%;
-    background: conic-gradient(from 0deg,
-        #25D366, #d4af6a, #0b3d24, #f0d9a8, #128C4B, #25D366);
-    animation: waAuroraSpin 4s linear infinite;
-    filter: blur(6px);
+    position: absolute;
+    top: -40%;
+    bottom: -40%;
+    left: 0;
+    width: 38%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: waAuroraShine 3.5s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform;
 }
-@keyframes waAuroraSpin { to { transform: rotate(360deg); } }
+@keyframes waAuroraShine {
+    0%, 55% { transform: translateX(-160%) skewX(-18deg); }
+    90%, 100% { transform: translateX(420%) skewX(-18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .wa-aurora-spin { animation: none; opacity: 0; }
+}
 .wa-aurora-inner {
     position: relative;
     display: flex; align-items: center; gap: 9px;
-    background: #0d0b08;
+    background: linear-gradient(135deg, #22c15e, #128c46);
     border-radius: 999px;
     padding: 10px 20px;
     white-space: nowrap;
 }
 .wa-aurora-ic {
     width: 20px; height: 20px; border-radius: 50%;
-    background: #25D366;
+    background: rgba(255,255,255,0.18);
     display: inline-flex; align-items: center; justify-content: center;
     flex-shrink: 0;
     animation: waAuroraPulse 2s infinite;
 }
 @keyframes waAuroraPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.55); }
-    70% { box-shadow: 0 0 0 8px rgba(37,211,102,0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.45); }
+    70% { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
 }
 .wa-aurora-ic svg { width: 12px; height: 12px; fill: #fff; }
 .wa-aurora-text {
     font-size: 11px;
     letter-spacing: 2px;
-    color: #f2ecdf;
+    color: #ffffff;
 }
-.wa-aurora-text b { color: #25D366; font-weight: 700; }
+.wa-aurora-text b { color: #ffffff; font-weight: 700; }
 .wa-aurora-text em { color: #d4af6a; font-style: normal; }
 @media (max-width: 480px) {
     .wa-aurora-inner { padding: 9px 14px; gap: 7px; }
@@ -408,31 +542,39 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 }
 
 /* ---------- DESKTOP refinement (same design, polished) ---------- */
+@media (min-width: 900px) {
+    /* Bigger desktop filter sidebar: wider and taller, starts right
+       under the header so the brand list needs far less scrolling */
+    .filter-drawer {
+        width: 280px !important;
+        top: 60px !important;
+        max-height: calc(100vh - 72px) !important;
+    }
+    .fd-section-body { max-height: none !important; }
+
+    /* Toolbar row lives inside the grid column on desktop (moved by
+       products.js): count + WhatsApp capsule sit beside the filter */
+    .page-layout .toolbar-row { padding: 0 0 14px !important; }
+    .page-layout .toolbar-row .wa-aurora { display: block; }
+}
+
 @media (min-width: 769px) {
     /* No Filter button on desktop — the capsule owns the row */
     .filter-toggle-btn { display: none !important; }
 
-    /* Wide capsule: the conic spinner turns into blur blobs on a long
-       pill, so on desktop the border becomes a river of green-gold
-       flowing evenly along the full length instead. */
+    /* Desktop: same green fill + white shine, just a soft green halo */
     .wa-aurora {
-        padding: 2.5px;
-        background: linear-gradient(90deg,
-            #25D366, #d4af6a, #0b3d24, #f0d9a8, #128C4B, #25D366);
-        background-size: 200% 100%;
-        animation: waAuroraFlow 4s linear infinite;
-        box-shadow: 0 0 18px rgba(37,211,102,0.15);
+        box-shadow: 0 0 18px rgba(37,211,102,0.2);
     }
-    .wa-aurora-spin { display: none; }
     .wa-aurora-inner { padding: 9px 20px; gap: 10px; }
     .wa-aurora-ic { width: 21px; height: 21px; }
     .wa-aurora-ic svg { width: 12px; height: 12px; }
     .wa-aurora-text { font-size: 11.5px; letter-spacing: 2.5px; }
 }
-@keyframes waAuroraFlow { to { background-position: 200% 0; } }
+ }
 
 
-</style></style>
+</style>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
@@ -478,6 +620,15 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
         </a>
     </div>
 </nav>
+
+<!-- STORIES — managed from the admin panel -->
+<div class="stories-row" id="storiesRow" style="display:none;"></div>
+
+<!-- SHOP BANNER CAROUSEL — photos + links managed from the admin panel -->
+<div class="shop-banner" id="shopBanner" style="display:none;">
+    <div class="shop-banner-track" id="shopBannerTrack"></div>
+    <div class="shop-banner-dots" id="shopBannerDots"></div>
+</div>
 
 <div class="category-stories" id="categoryRow"></div>
 
@@ -571,7 +722,7 @@ document.querySelectorAll('.footer-heading').forEach(function (btn) {
 </script>
 
 <script src="common.js"></script>
-<script src="products.js?v=20260909f"></script>
+<script src="products.js?v=20260909h"></script>
 
 <script>
 /* Name the tapped product image just before navigation so the
@@ -627,5 +778,30 @@ document.addEventListener('click', (e) => {
 
 </script>
 
+<script>
+// Photo banner (admin-managed): uploads/banner/banner.json -> {image, link, ts}
+(function () {
+    var API = 'https://fourpirates.tmfragrance.com/visitor/product-api';
+    var a = document.getElementById('photoBanner');
+    var img = document.getElementById('photoBannerImg');
+    if (!a || !img) return;
+    fetch(API + '/uploads/banner/banner.json?v=' + Date.now())
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (b) {
+            if (!b || !b.image) return;
+            img.src = API + '/uploads/banner/' + b.image + '?v=' + (b.ts || Date.now());
+            img.onload = function () { a.style.display = ''; };
+            if (b.link) {
+                a.href = b.link;
+                if (/^https?:/i.test(b.link) && b.link.indexOf(location.host) === -1) {
+                    a.target = '_blank'; a.rel = 'noopener';
+                }
+            } else {
+                a.removeAttribute('href');
+            }
+        })
+        .catch(function () { /* no banner uploaded — stays hidden */ });
+})();
+</script>
 </body>
 </html>
