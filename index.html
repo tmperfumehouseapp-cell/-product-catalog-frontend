@@ -2661,6 +2661,106 @@ body { background: #0d0b08; }
     }
     #peelLayer { display: none !important; }
 }
+
+/* ============ HOME CARD DECK (fanned 8x10 cards) ============ */
+.home-deck { padding: 26px 0 8px; overflow: hidden; background: #0d0b08; }
+.home-deck-stage {
+    position: relative;
+    height: 540px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+@media (max-width: 640px) { .home-deck-stage { height: 420px; } }
+.hd-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--hd-w, 300px);
+    aspect-ratio: 800 / 1300;   /* 800 x 1300 */
+    border-radius: 18px;
+    padding: 22px 20px;
+    box-sizing: border-box;
+    box-shadow: 0 16px 34px rgba(0,0,0,0.5);
+    transition: transform 0.55s cubic-bezier(.25,.8,.3,1), opacity 0.55s ease, box-shadow 0.55s ease;
+    overflow: hidden;
+    cursor: pointer;
+    will-change: transform;
+}
+@media (max-width: 640px) { .hd-card { width: var(--hd-w-m, 225px); padding: 18px 16px; } }
+.home-deck.hd-fix-h .hd-card { aspect-ratio: auto; height: var(--hd-h); }
+@media (max-width: 640px) {
+    .home-deck.hd-fix-h .hd-card { height: auto; aspect-ratio: 800 / 1300; }
+    .home-deck.hd-fix-h-m .hd-card { aspect-ratio: auto !important; height: var(--hd-h-m) !important; }
+}
+.hd-card.hd-center {
+    box-shadow: 0 22px 48px rgba(0,0,0,0.65), 0 0 0 1.5px rgba(212,175,106,0.5);
+    animation: hdSway 5s ease-in-out infinite;
+    cursor: default;
+}
+@keyframes hdSway {
+    0%, 100% { transform: translate(-50%,-50%) rotate(0deg); }
+    50% { transform: translate(-50%,-50%) rotate(0.7deg); }
+}
+@media (prefers-reduced-motion: reduce) { .hd-card.hd-center { animation: none; } }
+.hd-card.hd-center::before {
+    content: "";
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 14px;
+    background: linear-gradient(180deg, #d4af6a, #b8933f);
+}
+.hd-card.hd-center .hd-card-pad { padding-left: 12px; }
+
+/* card color skins (rotate by admin choice) */
+.hd-skin-cream { background: #f5efe2; color: #2a241a; }
+.hd-skin-cream .hd-body { color: #5c5546; }
+.hd-skin-green { background: #123b27; color: #f2f8f4; }
+.hd-skin-green .hd-body { color: #bcd6c6; }
+.hd-skin-green .hd-num { color: #a9d8bd; }
+.hd-skin-clay { background: #e3b9a4; color: #3a241a; }
+.hd-skin-clay .hd-body { color: #6e4a38; }
+
+.hd-num { font-family: Georgia, 'Times New Roman', serif; font-size: 24px; margin-bottom: 8px; }
+.hd-head { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; line-height: 1.25; margin-bottom: 10px; }
+.hd-body { font-size: 12px; line-height: 1.6; white-space: pre-line; }
+.hd-highlight { font-size: 12px; line-height: 1.5; color: #c2452d; margin-top: 10px; font-weight: 600; }
+.hd-skin-green .hd-highlight { color: #f0d9a8; }
+@media (max-width: 640px) {
+    .hd-num { font-size: 20px; }
+    .hd-head { font-size: 16px; }
+    .hd-body { font-size: 11px; }
+}
+
+.hd-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(212,175,106,0.5);
+    background: #151109;
+    color: #d4af6a;
+    cursor: pointer;
+    z-index: 20;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+.hd-arrow:hover { background: #d4af6a; color: #1a1508; }
+.hd-arrow-l { left: 8px; }
+.hd-arrow-r { right: 8px; background: #d4af6a; color: #1a1508; }
+.hd-arrow-r:hover { background: #f0d9a8; }
+
+.hd-footer { text-align: center; padding: 12px 14px 16px; }
+.hd-dots { display: inline-flex; gap: 5px; align-items: center; }
+.hd-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: rgba(212,175,106,0.3);
+    border: none; padding: 0; cursor: pointer;
+    transition: all 0.3s ease;
+}
+.hd-dot.active { width: 14px; border-radius: 3px; background: #d4af6a; }
+.hd-caption { font-size: 11px; color: #8f897d; margin-top: 7px; font-family: Georgia, serif; font-style: italic; }
 </style>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
@@ -2853,6 +2953,18 @@ body { background: #0d0b08; }
      each floats center-stage with its real fragrance notes
      orbiting around it. Built at runtime from the catalog.
      ========================================================= -->
+<!-- HOME CARD DECK — fanned 8x10 cards, managed from the admin panel -->
+<section class="home-deck" id="homeDeck" style="display:none;" aria-label="Why 3rd Party">
+    <div class="home-deck-stage" id="homeDeckStage">
+        <button type="button" class="hd-arrow hd-arrow-l" id="hdPrev" aria-label="Previous card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button type="button" class="hd-arrow hd-arrow-r" id="hdNext" aria-label="Next card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+    <div class="hd-footer">
+        <div class="hd-dots" id="hdDots"></div>
+        <div class="hd-caption" id="hdCaption"></div>
+    </div>
+</section>
+
 <section class="showcase-section" id="showcaseSection">
     <div class="showcase-stage" id="showcaseStage">
 
@@ -4039,6 +4151,159 @@ document.addEventListener('click', (e) => {
     });
 })();
 
+</script>
+<script>
+/* =========================================================
+   HOME CARD DECK — fanned 8x10 cards, fed by get_home_cards.php
+   ========================================================= */
+(function () {
+    const deck = document.getElementById('homeDeck');
+    const stage = document.getElementById('homeDeckStage');
+    const dotsEl = document.getElementById('hdDots');
+    const capEl = document.getElementById('hdCaption');
+    if (!deck || !stage) return;
+
+    let cards = [];
+    let cur = 0;
+    let timer = null;
+
+    const POS = [
+        { dx: 0, rot: 0, scale: 1, op: 1, z: 10 },
+        { dx: 120, rot: 7, scale: 0.93, op: 0.6, z: 6 },
+        { dx: 215, rot: 13, scale: 0.86, op: 0.32, z: 3 },
+        { dx: -120, rot: -7, scale: 0.93, op: 0.6, z: 6 },
+        { dx: -215, rot: -13, scale: 0.86, op: 0.32, z: 3 }
+    ];
+    const MOB = [
+        { dx: 0, rot: 0, scale: 1, op: 1, z: 10 },
+        { dx: 92, rot: 7, scale: 0.9, op: 0.55, z: 6 },
+        { dx: 160, rot: 13, scale: 0.82, op: 0.28, z: 3 },
+        { dx: -92, rot: -7, scale: 0.9, op: 0.55, z: 6 },
+        { dx: -160, rot: -13, scale: 0.82, op: 0.28, z: 3 }
+    ];
+
+    function esc(s) {
+        const d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+    }
+
+    function offsetOf(i) {
+        const n = cards.length;
+        let d = (i - cur) % n;
+        if (d > n / 2) d -= n;
+        if (d < -n / 2) d += n;
+        return d; /* -2..2 relevant */
+    }
+
+    function layout() {
+        const posSet = window.innerWidth < 641 ? MOB : POS;
+        stage.querySelectorAll('.hd-card').forEach((el) => {
+            const i = Number(el.dataset.hdIndex);
+            const off = offsetOf(i);
+            let p;
+            if (off === 0) p = posSet[0];
+            else if (off === 1) p = posSet[1];
+            else if (off >= 2) p = posSet[2];
+            else if (off === -1) p = posSet[3];
+            else p = posSet[4];
+
+            el.classList.toggle('hd-center', off === 0);
+            if (off === 0) {
+                el.style.transform = '';
+                el.style.opacity = 1;
+            } else {
+                el.style.transform = `translate(-50%,-50%) translateX(${p.dx}px) rotate(${p.rot}deg) scale(${p.scale})`;
+                el.style.opacity = Math.abs(off) > 2 ? 0 : p.op;
+            }
+            el.style.zIndex = p.z;
+            el.style.pointerEvents = Math.abs(off) > 2 ? 'none' : '';
+        });
+
+        dotsEl.querySelectorAll('.hd-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+        const c = cards[cur];
+        capEl.textContent = (String(cur + 1).padStart(2, '0')) + ' / ' + (String(cards.length).padStart(2, '0')) + (c.caption ? ' — ' + c.caption : '');
+    }
+
+    function go(i) {
+        cur = (i + cards.length) % cards.length;
+        layout();
+        restart();
+    }
+
+    function restart() {
+        clearInterval(timer);
+        if (cards.length > 1) timer = setInterval(() => { cur = (cur + 1) % cards.length; layout(); }, 5000);
+    }
+
+    function build() {
+        stage.querySelectorAll('.hd-card').forEach(el => el.remove());
+        cards.forEach((c, i) => {
+            const el = document.createElement('div');
+            el.className = 'hd-card hd-skin-' + (['cream','green','clay'].includes(c.skin) ? c.skin : 'cream');
+            el.dataset.hdIndex = i;
+            el.innerHTML = `<div class="hd-card-pad">
+                <div class="hd-num">${i + 1}.</div>
+                <div class="hd-head">${esc(c.heading)}</div>
+                <div class="hd-body">${esc(c.body)}</div>
+                ${c.highlight ? `<div class="hd-highlight">${esc(c.highlight)}</div>` : ''}
+            </div>`;
+            el.addEventListener('click', () => { if (!el.classList.contains('hd-center')) go(i); });
+            stage.appendChild(el);
+        });
+
+        dotsEl.innerHTML = cards.map((_, i) => `<button type="button" class="hd-dot" aria-label="Card ${i + 1}"></button>`).join('');
+        dotsEl.querySelectorAll('.hd-dot').forEach((d, i) => d.addEventListener('click', () => go(i)));
+    }
+
+    document.getElementById('hdPrev').addEventListener('click', () => go(cur - 1));
+    document.getElementById('hdNext').addEventListener('click', () => go(cur + 1));
+
+    let tx = null;
+    stage.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; clearInterval(timer); }, { passive: true });
+    stage.addEventListener('touchend', (e) => {
+        if (tx !== null) {
+            const dx = e.changedTouches[0].clientX - tx;
+            if (Math.abs(dx) > 40) go(cur + (dx < 0 ? 1 : -1)); else restart();
+        }
+        tx = null;
+    }, { passive: true });
+
+    window.addEventListener('resize', layout);
+
+    fetch('https://fourpirates.tmfragrance.com/visitor/product-api/get_home_cards.php')
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success || !Array.isArray(data.cards) || !data.cards.length) return;
+            cards = data.cards;
+
+            /* Manual deck sizes from admin (stored on every row, same values) */
+            const c0 = cards[0];
+            const wD = parseInt(c0.card_w_desktop, 10) || 0;
+            const hD = parseInt(c0.card_h_desktop, 10) || 0;
+            const wM = parseInt(c0.card_w_mobile, 10) || 0;
+            const hM = parseInt(c0.card_h_mobile, 10) || 0;
+            if (wD > 0) deck.style.setProperty('--hd-w', wD + 'px');
+            if (hD > 0) { deck.style.setProperty('--hd-h', hD + 'px'); deck.classList.add('hd-fix-h'); }
+            if (wM > 0) deck.style.setProperty('--hd-w-m', wM + 'px');
+            if (hM > 0) { deck.style.setProperty('--hd-h-m', hM + 'px'); deck.classList.add('hd-fix-h-m'); }
+
+            function sizeStage() {
+                const mob = window.innerWidth < 641;
+                const w = mob ? (wM || 225) : (wD || 300);
+                const h = (mob ? hM : hD) || Math.round(w * 1300 / 800);
+                stage.style.height = (h + 60) + 'px';
+            }
+            sizeStage();
+            window.addEventListener('resize', sizeStage);
+
+            build();
+            deck.style.display = 'block';
+            layout();
+            restart();
+        })
+        .catch(() => { /* deck stays hidden */ });
+})();
 </script>
 </body>
 </html>

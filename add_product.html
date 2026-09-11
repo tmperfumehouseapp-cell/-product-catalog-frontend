@@ -250,6 +250,12 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 </span>
                 Hero Slider
             </div>
+            <div class="drawer-link" data-target="homecards">
+                <span class="drawer-icon admin-drawer-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="3" width="10" height="14" rx="2"/><path d="M4 7v12a2 2 0 0 0 2 2h10"/></svg>
+                </span>
+                Home Cards
+            </div>
             <div class="drawer-link" data-target="stories">
                 <span class="drawer-icon admin-drawer-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
@@ -296,6 +302,10 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
             <a class="admin-nav-link" data-target="hero">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 Hero Slider
+            </a>
+            <a class="admin-nav-link" data-target="homecards">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="3" width="10" height="14" rx="2"/><path d="M4 7v12a2 2 0 0 0 2 2h10"/></svg>
+                Home Cards
             </a>
             <a class="admin-nav-link" data-target="stories">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
@@ -562,6 +572,75 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
 
                 <button type="button" id="uploadBrandIconBtn" style="margin-top:16px;">Upload Brand Icon</button>
                 <div id="brandIconMsg"></div>
+            </div>
+        </div>
+
+        <!-- Panel: Home Cards (fanned deck on index.html) -->
+        <div class="admin-panel" id="panel-homecards" style="display:none;">
+            <p class="section-label" id="hcFormLabel">Add a home card</p>
+            <div class="section-card">
+                <div style="font-size:12px; color:#888; margin-bottom:10px;">Fanned 8&times;10 card deck at the very top of the homepage. Card numbers (1., 2., 3.) come automatically from the order. Auto-slides every 5 seconds; visitors can swipe, use arrows, or tap side cards.</div>
+                <input type="hidden" id="hcEditId" value="">
+
+                <label for="hcHeading">Heading</label>
+                <input type="text" id="hcHeading" placeholder="e.g. 100% Authentic — Guaranteed">
+
+                <label for="hcBody">Body Text</label>
+                <textarea id="hcBody" rows="4" placeholder="Main card text. Press Enter for a new paragraph."></textarea>
+
+                <label for="hcHighlight">Highlight Line (optional, shown in accent color)</label>
+                <input type="text" id="hcHighlight" placeholder="e.g. Trust is the only thing we sell twice.">
+
+                <label for="hcCaption">Footer Caption (optional, under the dots)</label>
+                <input type="text" id="hcCaption" placeholder="Shown when this card is in the center">
+
+                <label for="hcSkin">Card Color</label>
+                <select id="hcSkin">
+                    <option value="cream">Cream</option>
+                    <option value="green">Deep Green</option>
+                    <option value="clay">Clay</option>
+                </select>
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="hcWDesktop">Desktop width (px, 0 = auto)</label>
+                        <input type="number" id="hcWDesktop" min="0" step="10" value="0">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="hcHDesktop">Desktop height (px, 0 = auto)</label>
+                        <input type="number" id="hcHDesktop" min="0" step="10" value="0">
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="hcWMobile">Mobile width (px, 0 = auto)</label>
+                        <input type="number" id="hcWMobile" min="0" step="10" value="0">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="hcHMobile">Mobile height (px, 0 = auto)</label>
+                        <input type="number" id="hcHMobile" min="0" step="10" value="0">
+                    </div>
+                </div>
+                <div style="font-size:11px; color:#999; margin:4px 0 10px;">Sizes apply to the whole deck (all cards), saved together with any card. 0 keeps the default 800&times;1300 shape.</div>
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="hcSortOrder">Order</label>
+                        <input type="number" id="hcSortOrder" min="0" step="1" value="0">
+                    </div>
+                    <div style="flex:1; display:flex; align-items:flex-end; padding-bottom:6px;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;"><input type="checkbox" id="hcActive" checked style="width:auto;"> Active</label>
+                    </div>
+                </div>
+
+                <button type="button" id="hcSaveBtn" style="margin-top:14px; width:auto; padding:12px 24px;">Save Card</button>
+                <button type="button" id="hcCancelEditBtn" style="margin-top:14px; width:auto; padding:12px 24px; display:none; background:#888;">Cancel Edit</button>
+                <div id="hcMsg"></div>
+            </div>
+
+            <p class="section-label">Existing cards</p>
+            <div class="section-card">
+                <div id="hcList"><p style="font-size:12px;color:#999;">Loading...</p></div>
             </div>
         </div>
 
@@ -1007,6 +1086,10 @@ function showPanel(name) {
 
     if (name === 'stories') {
         loadStoryList();
+    }
+
+    if (name === 'homecards') {
+        loadHcList();
     }
 }
 
@@ -1860,6 +1943,197 @@ if (heroCancelEditBtn) {
     heroCancelEditBtn.addEventListener('click', resetHeroForm);
 }
 
+/* ---------- HOME CARDS ADMIN ---------- */
+const hcList = document.getElementById('hcList');
+const hcEditId = document.getElementById('hcEditId');
+const hcHeading = document.getElementById('hcHeading');
+const hcBody = document.getElementById('hcBody');
+const hcHighlight = document.getElementById('hcHighlight');
+const hcCaption = document.getElementById('hcCaption');
+const hcSkin = document.getElementById('hcSkin');
+const hcSortOrder = document.getElementById('hcSortOrder');
+const hcWDesktop = document.getElementById('hcWDesktop');
+const hcHDesktop = document.getElementById('hcHDesktop');
+const hcWMobile = document.getElementById('hcWMobile');
+const hcHMobile = document.getElementById('hcHMobile');
+const hcActive = document.getElementById('hcActive');
+const hcSaveBtn = document.getElementById('hcSaveBtn');
+const hcCancelEditBtn = document.getElementById('hcCancelEditBtn');
+const hcFormLabel = document.getElementById('hcFormLabel');
+const hcMsg = document.getElementById('hcMsg');
+
+let hcCached = [];
+
+function resetHcForm() {
+    hcEditId.value = '';
+    hcHeading.value = '';
+    hcBody.value = '';
+    hcHighlight.value = '';
+    hcCaption.value = '';
+    hcSkin.value = 'cream';
+    hcSortOrder.value = '0';
+    hcActive.checked = true;
+    hcWDesktop.value = '0';
+    hcHDesktop.value = '0';
+    hcWMobile.value = '0';
+    hcHMobile.value = '0';
+    hcFormLabel.textContent = 'Add a home card';
+    hcSaveBtn.textContent = 'Save Card';
+    hcCancelEditBtn.style.display = 'none';
+    hcMsg.textContent = '';
+    hcMsg.className = '';
+}
+
+if (hcCancelEditBtn) hcCancelEditBtn.addEventListener('click', resetHcForm);
+
+async function loadHcList() {
+    if (!hcList) return;
+    hcList.innerHTML = '<p style="font-size:12px;color:#999;">Loading...</p>';
+
+    try {
+        const res = await fetch(`${API_BASE}/get_home_cards.php?all=1&t=${Date.now()}`);
+        const data = await res.json();
+
+        if (!data.success || !Array.isArray(data.cards) || !data.cards.length) {
+            hcList.innerHTML = '<p style="font-size:12px;color:#999;">No cards yet.</p>';
+            hcCached = [];
+            return;
+        }
+
+        hcCached = data.cards;
+        const skinColor = { cream: '#f5efe2', green: '#123b27', clay: '#e3b9a4' };
+
+        hcList.innerHTML = data.cards.map((c, i) => `
+            <div class="delete-row">
+                <div class="delete-row-thumb" style="width:36px;height:45px;border-radius:6px;background:${skinColor[c.skin] || '#f5efe2'};display:flex;align-items:center;justify-content:center;color:${c.skin === 'green' ? '#f2f8f4' : '#2a241a'};font-family:Georgia,serif;font-size:13px;">${i + 1}.</div>
+                <div class="delete-row-info">
+                    <div class="delete-row-name">${escapeHtml(c.heading)} ${Number(c.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
+                    <div class="delete-row-price">${escapeHtml(c.skin)} · Order ${escapeHtml(String(c.sort_order != null ? c.sort_order : 0))}</div>
+                </div>
+                <div class="delete-row-actions">
+                    <button type="button" class="btn-pill btn-edit" data-hc-edit="${c.id}">Edit</button>
+                    <button type="button" class="btn-pill btn-delete" data-hc-delete="${c.id}">Delete</button>
+                </div>
+            </div>
+        `).join('');
+
+        hcList.querySelectorAll('[data-hc-edit]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const c = hcCached.find(x => String(x.id) === btn.dataset.hcEdit);
+                if (!c) return;
+                hcEditId.value = c.id;
+                hcHeading.value = c.heading;
+                hcBody.value = c.body || '';
+                hcHighlight.value = c.highlight || '';
+                hcCaption.value = c.caption || '';
+                hcSkin.value = c.skin || 'cream';
+                hcSortOrder.value = c.sort_order != null ? c.sort_order : 0;
+                hcActive.checked = !!Number(c.active);
+                hcWDesktop.value = c.card_w_desktop != null ? c.card_w_desktop : 0;
+                hcHDesktop.value = c.card_h_desktop != null ? c.card_h_desktop : 0;
+                hcWMobile.value = c.card_w_mobile != null ? c.card_w_mobile : 0;
+                hcHMobile.value = c.card_h_mobile != null ? c.card_h_mobile : 0;
+                hcFormLabel.textContent = 'Edit home card';
+                hcSaveBtn.textContent = 'Update Card';
+                hcCancelEditBtn.style.display = 'inline-block';
+                hcFormLabel.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        hcList.querySelectorAll('[data-hc-delete]').forEach(btn => {
+            btn.addEventListener('click', () => deleteHomeCard(btn.dataset.hcDelete, btn));
+        });
+    } catch (err) {
+        hcList.innerHTML = `<p style="font-size:12px;color:#e0342e;">Couldn't load cards: ${escapeHtml(err.message)}</p>`;
+    }
+}
+
+async function deleteHomeCard(id, btn) {
+    if (!confirm('Delete this card?')) return;
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('id', id);
+    try {
+        const res = await fetch(`${API_BASE}/delete_home_card.php`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            loadHcList();
+        } else {
+            alert(data.error || 'Delete failed');
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+    }
+}
+
+if (hcSaveBtn) {
+    hcSaveBtn.addEventListener('click', async () => {
+        const isEdit = !!hcEditId.value;
+
+        if (!hcHeading.value.trim()) {
+            hcMsg.textContent = 'Heading is required.';
+            hcMsg.className = 'error';
+            return;
+        }
+
+        hcSaveBtn.disabled = true;
+        hcMsg.textContent = 'Saving...';
+        hcMsg.className = '';
+
+        const formData = new FormData();
+        formData.append('admin_password', adminPassword);
+        if (isEdit) formData.append('id', hcEditId.value);
+        formData.append('heading', hcHeading.value.trim());
+        formData.append('body', hcBody.value.trim());
+        formData.append('highlight', hcHighlight.value.trim());
+        formData.append('caption', hcCaption.value.trim());
+        formData.append('skin', hcSkin.value);
+        formData.append('sort_order', hcSortOrder.value || '0');
+        formData.append('active', hcActive.checked ? '1' : '0');
+        formData.append('card_w_desktop', hcWDesktop.value || '0');
+        formData.append('card_h_desktop', hcHDesktop.value || '0');
+        formData.append('card_w_mobile', hcWMobile.value || '0');
+        formData.append('card_h_mobile', hcHMobile.value || '0');
+
+        const endpoint = isEdit ? 'update_home_card.php' : 'add_home_card.php';
+
+        try {
+            const res = await fetch(`${API_BASE}/${endpoint}`, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (res.status === 403) {
+                sessionStorage.removeItem('adminPassword');
+                hcMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
+                hcMsg.className = 'error';
+                document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+                passwordGate.style.display = 'block';
+                return;
+            }
+
+            if (res.ok && data.success) {
+                hcMsg.textContent = isEdit ? 'Saved!' : 'Card added!';
+                hcMsg.className = 'success';
+                resetHcForm();
+                loadHcList();
+            } else {
+                hcMsg.textContent = data.error || 'Something went wrong.';
+                hcMsg.className = 'error';
+            }
+        } catch (err) {
+            hcMsg.textContent = 'Network error: ' + err.message;
+            hcMsg.className = 'error';
+        } finally {
+            hcSaveBtn.disabled = false;
+        }
+    });
+}
+
 /* ---------- STORY ICONS ADMIN ---------- */
 const stList = document.getElementById('stList');
 const stEditId = document.getElementById('stEditId');
@@ -2394,7 +2668,7 @@ editModalClose.addEventListener('click', closeEditModal);
 function renderEditExistingImages() {
     editExistingImages.innerHTML = editKeptImages.map((url, i) => `
         <div class="modal-image-item">
-            <img src="${escapeHtml(url)}" alt="">
+            <img src="${escapeHtml(url)}" alt="" style="cursor:zoom-in;" onclick="openImageLightbox('${escapeHtml(url)}')" title="View full image">
             <button type="button" class="modal-image-remove" onclick="removeEditExistingImage(${i})">×</button>
         </div>
     `).join('');
@@ -3289,5 +3563,29 @@ if (videoDeleteBtn) {
 
 </script>
 
+<!-- IMAGE LIGHTBOX (view product photos full size in-page) -->
+<div id="imgLightbox" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:5000; align-items:center; justify-content:center; cursor:zoom-out;">
+    <img id="imgLightboxImg" src="" alt="" style="max-width:92vw; max-height:92vh; border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+    <button type="button" id="imgLightboxClose" aria-label="Close" style="position:absolute; top:14px; right:18px; width:38px; height:38px; border-radius:50%; border:none; background:rgba(255,255,255,0.12); color:#fff; font-size:22px; line-height:1; cursor:pointer;">&times;</button>
+</div>
+<script>
+function openImageLightbox(url) {
+    const lb = document.getElementById('imgLightbox');
+    document.getElementById('imgLightboxImg').src = url;
+    lb.style.display = 'flex';
+}
+(function () {
+    const lb = document.getElementById('imgLightbox');
+    function closeLb() {
+        lb.style.display = 'none';
+        document.getElementById('imgLightboxImg').src = '';
+    }
+    lb.addEventListener('click', closeLb);
+    document.getElementById('imgLightboxClose').addEventListener('click', closeLb);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && lb.style.display === 'flex') closeLb();
+    });
+})();
+</script>
 </body>
 </html>
