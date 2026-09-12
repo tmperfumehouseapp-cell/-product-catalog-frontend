@@ -70,6 +70,7 @@ function updateUrlFromFilters() {
     if (brandFilter.value) params.set('brand', brandFilter.value);
     if (genderFilter.value) params.set('gender', genderFilter.value);
     if (searchInput.value.trim()) params.set('search', searchInput.value.trim());
+    if (storyFilterId) params.set('story', storyFilterId);
 
     const qs = params.toString();
     const url = window.location.pathname + (qs ? '?' + qs : '');
@@ -114,6 +115,10 @@ async function loadCategories() {
         const res = await fetch(`${API_BASE}/get_categories.php`);
         const data = await res.json();
         if (!data.success) return;
+
+        // Category icon images — used by the "All <Category>" story circle
+        window.__catThumbs = {};
+        data.categories.forEach(c => { if (c.thumb) window.__catThumbs[c.category] = c.thumb; });
 
         // BRAND story circles — scoped to the selected category:
         // no category -> all brands; Perfume -> only perfume brands; etc.
@@ -197,11 +202,12 @@ async function loadCategories() {
 
 
         // Segment pill bar UNDER the circles — both control the same filter
+        /* segRow lives statically inside #controlBox (categories on top,
+           stories below, one card) — created in products.html */
         let segRow = document.getElementById('segRow');
         if (!segRow) {
             segRow = document.createElement('div');
             segRow.id = 'segRow';
-            // Order: shop banner -> categories (this bar) -> brand circles
             categoryRow.insertAdjacentElement('beforebegin', segRow);
         }
         segRow.innerHTML = `<div class="seg-bar"><span class="seg-slider"></span>${
@@ -257,6 +263,7 @@ async function loadCategories() {
 
         async function selectCategory(category) {
             selectedCategory = category;
+            if (window.__onCategoryChangedStories) window.__onCategoryChangedStories();
             searchInput.value = '';
             updateHeroForSearch();
             searchBox.classList.remove('expanded');
@@ -273,6 +280,8 @@ async function loadCategories() {
         }
 
 
+
+        window.__selectCategory = selectCategory;
 
         segRow.querySelectorAll('.seg-btn').forEach(btn => {
             btn.addEventListener('click', () => selectCategory(btn.dataset.category));
@@ -351,6 +360,30 @@ async function loadProducts(page = 1, append = false) {
     }
 
     try {
+        /* Active story: fetch every page of the current scope once and
+           keep only the story's products (stories are small sets). */
+        if (storyFilterIds && storyFilterIds.length) {
+            const wanted = new Set(storyFilterIds.map(String));
+            let all = [];
+            let p = 1;
+            let more = true;
+            while (more && p <= 15) {
+                const params = buildParams(p);
+                const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
+                const d = await res.json();
+                if (!d.success) throw new Error(d.error || 'Failed to load');
+                all = all.concat(d.products || []);
+                more = !!d.hasMore;
+                p++;
+            }
+            currentProducts = all.filter(pr => wanted.has(String(pr.id)));
+            currentPage = 1;
+            renderProducts(currentProducts);
+            resultsCount.textContent = `${currentProducts.length} product${currentProducts.length === 1 ? '' : 's'} in this story`;
+            loadMoreBtn.style.display = 'none';
+            return;
+        }
+
         const brandsSel = brandFilter.value ? brandFilter.value.split(',').filter(Boolean) : [];
         let data;
 
@@ -535,35 +568,161 @@ if (savedFilters) {
    INITIALIZATION
    ========================================================= */
 /* =========================================================
-   STORY ICONS (admin-managed circles at the top of the page:
-   image + title + link — tapping one opens its link)
+   STORY ICONS — category-scoped circles at the top:
+   - First circle is always "All <Category>" (photo = the
+     category icon set in admin), selected by default.
+   - Icons show only under their own category (blank = all).
+   - An icon with selected product ids filters the grid to
+     exactly those products; an icon with a link opens it.
    ========================================================= */
-async function loadStoryIcons() {
-    const row = document.getElementById('storiesRow');
-    if (!row) return;
+let storyIconsData = [];
+let storyFilterIds = null;   /* array of product ids when a story is active */
+let storyFilterId = null;    /* the active story icon id */
 
-    let icons = [];
+async function loadStoryIcons() {
     try {
         const res = await fetch(`${API_BASE}/get_story_icons.php`);
         const data = await res.json();
-        if (data.success && Array.isArray(data.icons)) icons = data.icons;
+        if (data.success && Array.isArray(data.icons)) storyIconsData = data.icons;
     } catch (e) {
         console.log('Story icons failed:', e);
+    }
+    renderStoryIconsRow();
+}
+
+function clearStoryFilter(reload) {
+    const had = !!storyFilterId || brandFilter.value || genderFilter.value || searchInput.value.trim();
+    storyFilterIds = null;
+    storyFilterId = null;
+    /* "All <Category>" = clean slate for that category */
+    brandFilter.value = '';
+    genderFilter.value = '';
+    searchInput.value = '';
+    if (window.__applyBrandSelection) window.__applyBrandSelection('');
+    renderStoryIconsRow();
+    saveFilterState();
+    if (reload && had) resetAndReload();
+    else updateUrlFromFilters();
+}
+
+function applyStoryFilter(icon) {
+    storyFilterId = String(icon.id);
+    storyFilterIds = String(icon.product_ids || '').split(',').map(s => s.trim()).filter(Boolean);
+    renderStoryIconsRow();
+    updateUrlFromFilters();
+    resetAndReload();
+}
+
+/* A link-type story that points at products.html applies its filters
+   IN PLACE (no page reload) — same feel as product stories. */
+function applyStoryLink(icon) {
+    const qs = String(icon.link || '').split('?')[1] || '';
+    const p = new URLSearchParams(qs);
+
+    storyFilterId = String(icon.id);
+    storyFilterIds = null;
+
+    brandFilter.value = p.get('brand') || '';
+    genderFilter.value = p.get('gender') || '';
+    searchInput.value = p.get('search') || '';
+    if (window.__applyBrandSelection) window.__applyBrandSelection(brandFilter.value);
+
+    const cat = p.get('category');
+    if (cat && cat !== selectedCategory && window.__selectCategory) {
+        window.__selectCategory(cat);
         return;
     }
-    if (!icons.length) return;
 
-    row.innerHTML = icons.map(s => `
-        <a class="story-c" href="${escapeHtml(s.link || '#')}">
+    renderStoryIconsRow();
+    saveFilterState();
+    resetAndReload();
+}
+
+/* Called whenever the selected category changes */
+window.__onCategoryChangedStories = function () {
+    if (storyFilterId) {
+        const icon = storyIconsData.find(s => String(s.id) === String(storyFilterId));
+        if (!icon || (icon.category && icon.category !== selectedCategory)) {
+            storyFilterIds = null;
+            storyFilterId = null;
+        }
+    }
+    renderStoryIconsRow();
+};
+
+function renderStoryIconsRow() {
+    const row = document.getElementById('storiesRow');
+    if (!row) return;
+
+    const icons = storyIconsData.filter(s => !s.category || s.category === selectedCategory);
+
+    if (!icons.length && !selectedCategory) {
+        row.style.display = 'none';
+        const cbdHide = document.getElementById('controlBoxDivider');
+        if (cbdHide) cbdHide.style.display = 'none';
+        return;
+    }
+
+    const catThumb = (window.__catThumbs && window.__catThumbs[selectedCategory]) || '';
+    const allLabel = selectedCategory ? 'All ' + selectedCategory : 'All Products';
+    const allActive = !storyFilterId;
+
+    let html = `
+        <div class="story-c story-c-all ${allActive ? '' : 'dim'}" data-story-all="1">
+            <div class="story-c-ring">
+                <div class="story-c-inner"></div>
+                ${catThumb
+                    ? `<img class="story-c-img" src="${escapeHtml(catThumb)}" alt="${escapeHtml(allLabel)}">`
+                    : `<span class="story-c-img story-c-alltxt">ALL</span>`}
+            </div>
+            <div class="story-c-label">${escapeHtml(allLabel)}</div>
+        </div>
+    `;
+
+    html += icons.map(s => {
+        const hasProducts = String(s.product_ids || '').trim() !== '';
+        const active = String(storyFilterId) === String(s.id);
+        const inner = `
             <div class="story-c-ring">
                 <div class="story-c-inner"></div>
                 <img class="story-c-img" src="${escapeHtml(s.image)}" alt="${escapeHtml(s.title)}" loading="lazy">
             </div>
             <div class="story-c-label">${escapeHtml(s.title)}</div>
-        </a>
-    `).join('');
+        `;
+        if (hasProducts) {
+            return `<div class="story-c ${active ? '' : 'dim'}" data-story-id="${s.id}">${inner}</div>`;
+        }
+        if (String(s.link || '').indexOf('products.html') !== -1) {
+            return `<div class="story-c ${active ? '' : 'dim'}" data-story-link="${s.id}">${inner}</div>`;
+        }
+        return `<a class="story-c dim" href="${escapeHtml(s.link || '#')}">${inner}</a>`;
+    }).join('');
 
+    row.innerHTML = html;
     row.style.display = 'flex';
+    const cbd = document.getElementById('controlBoxDivider');
+    if (cbd) cbd.style.display = 'block';
+
+    const allEl = row.querySelector('[data-story-all]');
+    if (allEl) allEl.addEventListener('click', () => clearStoryFilter(true));
+
+    row.querySelectorAll('[data-story-id]').forEach(el => {
+        el.addEventListener('click', () => {
+            const icon = storyIconsData.find(s => String(s.id) === el.dataset.storyId);
+            if (!icon) return;
+            if (String(storyFilterId) === String(icon.id)) clearStoryFilter(true);
+            else applyStoryFilter(icon);
+        });
+    });
+
+    row.querySelectorAll('[data-story-link]').forEach(el => {
+        el.addEventListener('click', () => {
+            const icon = storyIconsData.find(s => String(s.id) === el.dataset.storyLink);
+            if (!icon) return;
+            if (String(storyFilterId) === String(icon.id)) clearStoryFilter(true);
+            else applyStoryLink(icon);
+        });
+    });
 }
 
 /* =========================================================
@@ -689,8 +848,8 @@ async function loadShopBanner() {
 })();
 
 async function init() {
-    loadStoryIcons();
     loadShopBanner();
+    await loadStoryIcons();
     await loadCategories();
     await loadBrands();
 
@@ -745,6 +904,20 @@ async function init() {
     if (refreshFilterDrawerForCategory) {
         await refreshFilterDrawerForCategory(selectedCategory);
     }
+
+    /* Arriving via a story link (?story=ID) — apply that story's filter */
+    const urlStory = urlParams.get('story');
+    if (urlStory) {
+        const icon = storyIconsData.find(s => String(s.id) === String(urlStory));
+        if (icon && String(icon.product_ids || '').trim() !== '') {
+            storyFilterId = String(icon.id);
+            storyFilterIds = String(icon.product_ids).split(',').map(s => s.trim()).filter(Boolean);
+        } else if (icon) {
+            storyFilterId = String(icon.id);
+            storyFilterIds = null;
+        }
+    }
+    renderStoryIconsRow();
 
     loadProducts(1, false);
 

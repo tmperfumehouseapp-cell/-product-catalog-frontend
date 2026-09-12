@@ -660,8 +660,20 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                     <input type="file" id="stImageInput" accept=".jpg,.jpeg,.png,.webp">
                 </div>
 
-                <label for="stLink">Link (where a tap goes)</label>
+                <label for="stCategory">Category (icon shows only under this tab)</label>
+                <select id="stCategory"><option value="">All categories</option></select>
+
+                <label for="stLink">Link (used only when no products are selected below)</label>
                 <input type="text" id="stLink" placeholder="e.g. products.html?brand=Fossil or product.html?id=754">
+
+                <label>Story Products (optional — tap the icon to show ONLY these)</label>
+                <div style="font-size:11px; color:#999; margin:2px 0 8px;">Search products and tick the ones this story should show. Leave empty to use the Link above instead.</div>
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <input type="text" id="stProdSearch" placeholder="Search by name (searches within the chosen category)" style="flex:1;">
+                    <button type="button" id="stProdSearchBtn" style="width:auto; padding:10px 18px; margin:0;">Search</button>
+                </div>
+                <div id="stProdResults" style="max-height:220px; overflow-y:auto; border:1px solid #333; border-radius:8px; padding:6px 10px; margin-bottom:8px; display:none;"></div>
+                <div id="stProdChips" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px;"></div>
 
                 <div style="display:flex; gap:12px;">
                     <div style="flex:1;">
@@ -1086,6 +1098,7 @@ function showPanel(name) {
 
     if (name === 'stories') {
         loadStoryList();
+        loadStCategoryOptions();
     }
 
     if (name === 'homecards') {
@@ -2149,6 +2162,85 @@ const stFormLabel = document.getElementById('stFormLabel');
 const stMsg = document.getElementById('stMsg');
 
 let stCachedIcons = [];
+const stCategory = document.getElementById('stCategory');
+const stProdSearch = document.getElementById('stProdSearch');
+const stProdSearchBtn = document.getElementById('stProdSearchBtn');
+const stProdResults = document.getElementById('stProdResults');
+const stProdChips = document.getElementById('stProdChips');
+
+/* selected story products: id -> name */
+let stSelProducts = {};
+
+async function loadStCategoryOptions() {
+    if (!stCategory) return;
+    try {
+        const res = await fetch(`${API_BASE}/get_categories.php`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.categories)) {
+            const keep = stCategory.value;
+            stCategory.innerHTML = '<option value="">All categories</option>' +
+                data.categories.map(c => `<option value="${escapeHtml(c.category)}">${escapeHtml(c.category)}</option>`).join('');
+            stCategory.value = keep;
+        }
+    } catch (e) { /* keep as-is */ }
+}
+
+function renderStProdChips() {
+    const ids = Object.keys(stSelProducts);
+    stProdChips.innerHTML = ids.map(id => `
+        <span style="display:inline-flex; align-items:center; gap:6px; background:#1c1c1c; border:1px solid #3a3a3a; border-radius:999px; padding:4px 10px; font-size:11px; color:#eee;">
+            ${escapeHtml(stSelProducts[id])}
+            <button type="button" data-st-chip="${id}" style="width:auto; padding:0 4px; margin:0; background:none; border:none; color:#e0342e; font-size:13px; cursor:pointer;">&times;</button>
+        </span>
+    `).join('') + (ids.length ? `<span style="font-size:11px; color:#999; align-self:center;">${ids.length} selected</span>` : '');
+
+    stProdChips.querySelectorAll('[data-st-chip]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            delete stSelProducts[btn.dataset.stChip];
+            renderStProdChips();
+            stProdResults.querySelectorAll(`input[data-st-prod="${btn.dataset.stChip}"]`).forEach(cb => { cb.checked = false; });
+        });
+    });
+}
+
+async function stSearchProducts() {
+    stProdResults.style.display = 'block';
+    stProdResults.innerHTML = '<p style="font-size:12px;color:#999;">Searching...</p>';
+    try {
+        const params = new URLSearchParams();
+        params.set('page', '1');
+        if (stCategory.value) params.set('category', stCategory.value);
+        if (stProdSearch.value.trim()) params.set('search', stProdSearch.value.trim());
+        const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
+        const data = await res.json();
+        if (!data.success || !Array.isArray(data.products) || !data.products.length) {
+            stProdResults.innerHTML = '<p style="font-size:12px;color:#999;">No products found.</p>';
+            return;
+        }
+        stProdResults.innerHTML = data.products.map(p => `
+            <label style="display:flex; align-items:center; gap:8px; padding:5px 0; font-size:12px; color:#ddd; cursor:pointer;">
+                <input type="checkbox" data-st-prod="${p.id}" data-st-name="${escapeHtml(p.name)}" ${stSelProducts[p.id] ? 'checked' : ''} style="width:auto;">
+                <img src="${p.image ? escapeHtml(p.image) : ''}" alt="" style="width:26px; height:26px; object-fit:cover; border-radius:5px; background:#222;">
+                ${escapeHtml(p.name)} <span style="color:#777;">#${p.id}</span>
+            </label>
+        `).join('') + (data.hasMore ? '<p style="font-size:11px;color:#999;">Showing first 40 — refine the search to find more.</p>' : '');
+
+        stProdResults.querySelectorAll('[data-st-prod]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (cb.checked) stSelProducts[cb.dataset.stProd] = cb.dataset.stName;
+                else delete stSelProducts[cb.dataset.stProd];
+                renderStProdChips();
+            });
+        });
+    } catch (err) {
+        stProdResults.innerHTML = `<p style="font-size:12px;color:#e0342e;">Search failed: ${escapeHtml(err.message)}</p>`;
+    }
+}
+
+if (stProdSearchBtn) stProdSearchBtn.addEventListener('click', stSearchProducts);
+if (stProdSearch) stProdSearch.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); stSearchProducts(); } });
+if (stCategory) stCategory.addEventListener('change', () => { stProdResults.style.display = 'none'; });
+
 
 if (stImageInput) {
     stImageInput.addEventListener('change', () => {
@@ -2165,6 +2257,11 @@ function resetStForm() {
     stLink.value = '';
     stSortOrder.value = '0';
     stActive.checked = true;
+    stCategory.value = '';
+    stSelProducts = {};
+    renderStProdChips();
+    stProdResults.style.display = 'none';
+    stProdSearch.value = '';
     stFormLabel.textContent = 'Add a story icon';
     stSaveBtn.textContent = 'Save Story Icon';
     stCancelEditBtn.style.display = 'none';
@@ -2195,7 +2292,7 @@ async function loadStoryList() {
                 <img class="delete-row-thumb" src="${escapeHtml(s.image)}" alt="${escapeHtml(s.title)}" style="width:44px;height:44px;object-fit:cover;border-radius:50%;">
                 <div class="delete-row-info">
                     <div class="delete-row-name">${escapeHtml(s.title)} ${Number(s.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
-                    <div class="delete-row-price">${s.link ? escapeHtml(s.link) : '(no link)'} · Order ${escapeHtml(String(s.sort_order != null ? s.sort_order : 0))}</div>
+                    <div class="delete-row-price">${escapeHtml(s.category || 'All categories')} · ${String(s.product_ids || '').trim() ? String(s.product_ids).split(',').filter(Boolean).length + ' products' : (s.link ? escapeHtml(s.link) : '(no link)')} · Order ${escapeHtml(String(s.sort_order != null ? s.sort_order : 0))}</div>
                 </div>
                 <div class="delete-row-actions">
                     <button type="button" class="btn-pill btn-edit" data-st-edit="${s.id}">Edit</button>
@@ -2213,6 +2310,10 @@ async function loadStoryList() {
                 stLink.value = s.link || '';
                 stSortOrder.value = s.sort_order != null ? s.sort_order : 0;
                 stActive.checked = !!Number(s.active);
+                stCategory.value = s.category || '';
+                stSelProducts = {};
+                String(s.product_ids || '').split(',').map(x => x.trim()).filter(Boolean).forEach(id => { stSelProducts[id] = '#' + id; });
+                renderStProdChips();
                 stImagePreview.innerHTML = `<img src="${escapeHtml(s.image)}" alt="icon">`;
                 stFormLabel.textContent = 'Edit story icon';
                 stSaveBtn.textContent = 'Update Story Icon';
@@ -2278,6 +2379,8 @@ if (stSaveBtn) {
         formData.append('title', stTitle.value.trim());
         if (stImageInput.files[0]) formData.append('image', stImageInput.files[0]);
         formData.append('link', stLink.value.trim());
+        formData.append('category', stCategory.value);
+        formData.append('product_ids', Object.keys(stSelProducts).join(','));
         formData.append('sort_order', stSortOrder.value || '0');
         formData.append('active', stActive.checked ? '1' : '0');
 
