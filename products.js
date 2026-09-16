@@ -6,6 +6,43 @@
    drawerNav, updateHeroForSearch from that shared scope).
    ========================================================= */
 
+/* =========================================================
+   SAME-NAME MERGE (client safety net)
+   "Azzaro" + "azzaro" + "AZZARO " show as ONE filter option.
+   Only case/space differences are merged here, because the API
+   (case-insensitive MySQL) returns all of them for one value.
+   Real typos (herrara/herrera) are fixed in Admin -> Scan for duplicates.
+   ========================================================= */
+function sameNameKey(name) {
+    return String(name == null ? '' : name).trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+/* list: [{ [field]: 'Azzaro', count: 7, ...}] -> merged, most-used spelling kept */
+function mergeSameNames(list, field) {
+    if (!Array.isArray(list)) return [];
+    const map = new Map();
+    list.forEach(item => {
+        const name = item[field];
+        const key = sameNameKey(name);
+        if (!key) return;
+        const count = Number(item.count) || 0;
+        const cur = map.get(key);
+        if (!cur) {
+            map.set(key, { ...item, [field]: String(name).trim(), count, _best: count });
+        } else {
+            cur.count += count;
+            if (count > cur._best) {
+                const keepThumb = cur.thumb;
+                Object.assign(cur, item, { [field]: String(name).trim(), count: cur.count, _best: count });
+                if (!cur.thumb && keepThumb) cur.thumb = keepThumb;
+            } else if (!cur.thumb && item.thumb) {
+                cur.thumb = item.thumb;
+            }
+        }
+    });
+    return [...map.values()].map(({ _best, ...rest }) => rest);
+}
+
 const grid = document.getElementById('productGrid');
 const categoryRow = document.getElementById('categoryRow');
 const brandFilterEl = document.getElementById('brandFilter');
@@ -115,6 +152,7 @@ async function loadCategories() {
         const res = await fetch(`${API_BASE}/get_categories.php`);
         const data = await res.json();
         if (!data.success) return;
+        data.categories = mergeSameNames(data.categories, 'category');
 
         // Category icon images — used by the "All <Category>" story circle
         window.__catThumbs = {};
@@ -222,7 +260,16 @@ async function loadCategories() {
             segSlider.style.opacity = '1';
             segSlider.style.width = btn.offsetWidth + 'px';
             segSlider.style.transform = `translateX(${btn.offsetLeft - 4}px)`;
-            btn.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+            /* Center the active tab INSIDE the bar only — never scroll the
+               page. (scrollIntoView here was yanking the whole page up on
+               every mobile URL-bar resize while scrolling.) */
+            const segBarEl = btn.closest('.seg-bar');
+            if (segBarEl && segBarEl.scrollWidth > segBarEl.clientWidth) {
+                segBarEl.scrollTo({
+                    left: btn.offsetLeft - (segBarEl.clientWidth - btn.offsetWidth) / 2,
+                    behavior: 'smooth'
+                });
+            }
         }
         window.addEventListener('resize', () => {
             positionSegSlider(segRow.querySelector('.seg-btn.active'));
@@ -313,7 +360,7 @@ async function loadBrands() {
         const data = await res.json();
         if (!data.success) return;
 
-        data.brands.forEach(b => {
+        mergeSameNames(data.brands, 'brand').forEach(b => {
             const opt = document.createElement('option');
             opt.value = b.brand;
             opt.textContent = `${b.brand} (${b.count})`;
@@ -656,6 +703,8 @@ function renderStoryIconsRow() {
 
     const icons = storyIconsData.filter(s => !s.category || s.category === selectedCategory);
 
+    if (window.__refreshShopBanner) window.__refreshShopBanner();
+
     if (!icons.length && !selectedCategory) {
         row.style.display = 'none';
         const cbdHide = document.getElementById('controlBoxDivider');
@@ -700,6 +749,7 @@ function renderStoryIconsRow() {
 
     row.innerHTML = html;
     row.style.display = 'flex';
+    if (window.__refreshShopBanner) window.__refreshShopBanner();
     const cbd = document.getElementById('controlBoxDivider');
     if (cbd) cbd.style.display = 'block';
 
@@ -727,27 +777,45 @@ function renderStoryIconsRow() {
 
 /* =========================================================
    SHOP BANNER CAROUSEL (slot between categories and toolbar)
+   Separate banners per story / per category / general:
+     1) a story is tapped and it has banners   -> those
+     2) a category is selected and it has banners -> those
+     3) otherwise                               -> general banners
+   Targets come from shop_banner_targets.php (set in Admin -> Shop Banner).
    ========================================================= */
+let shopBannerAll = [];
+let shopBannerTargets = {};
+let shopBannerKey = null;      /* what's currently shown, avoids re-render flicker */
+let shopBannerTimer = null;
+let shopBannerIdx = 0;
+let shopBannerCount = 0;
+let shopBannerLoaded = false;
+
 async function loadShopBanner() {
     const wrap = document.getElementById('shopBanner');
     const track = document.getElementById('shopBannerTrack');
-    const dotsEl = document.getElementById('shopBannerDots');
     if (!wrap || !track) return;
 
-    let banners = [];
     try {
-        const res = await fetch(`${API_BASE}/get_shop_banners.php`);
-        const data = await res.json();
-        if (data.success && Array.isArray(data.banners)) banners = data.banners;
+        const [bRes, tRes] = await Promise.all([
+            fetch(`${API_BASE}/get_shop_banners.php`).then(r => r.json()),
+            fetch(`${API_BASE}/shop_banner_targets.php`).then(r => r.json()).catch(() => null)
+        ]);
+        shopBannerAll = bRes && bRes.success && Array.isArray(bRes.banners) ? bRes.banners : [];
+        shopBannerTargets = {};
+        if (tRes && tRes.success && Array.isArray(tRes.targets)) {
+            tRes.targets.forEach(t => { shopBannerTargets[String(t.banner_id)] = t; });
+        }
     } catch (e) {
         console.log('Shop banner failed:', e);
         return;
     }
-    if (!banners.length) return;
+    shopBannerLoaded = true;
+    if (!shopBannerAll.length) return;
 
     /* Manual heights from admin (stored on every row, same values) */
-    const hMobile = parseInt(banners[0].height_mobile, 10) || 0;
-    const hDesktop = parseInt(banners[0].height_desktop, 10) || 0;
+    const hMobile = parseInt(shopBannerAll[0].height_mobile, 10) || 0;
+    const hDesktop = parseInt(shopBannerAll[0].height_desktop, 10) || 0;
     if (hMobile > 0) {
         wrap.style.setProperty('--sb-h-m', hMobile + 'px');
         wrap.classList.add('sb-fixed-m');
@@ -757,63 +825,108 @@ async function loadShopBanner() {
         wrap.classList.add('sb-fixed-d');
     }
 
-    track.innerHTML = banners.map(b => {
+    /* Swipe — bound once */
+    let touchX = null;
+    wrap.addEventListener('touchstart', (e) => {
+        touchX = e.touches[0].clientX;
+        clearInterval(shopBannerTimer);
+    }, { passive: true });
+    wrap.addEventListener('touchend', (e) => {
+        if (touchX !== null && shopBannerCount > 1) {
+            const dx = e.changedTouches[0].clientX - touchX;
+            if (Math.abs(dx) > 40) shopBannerShow(shopBannerIdx + (dx < 0 ? 1 : -1));
+        }
+        touchX = null;
+        shopBannerStart();
+    }, { passive: true });
+
+    shopBannerKey = null;
+    renderShopBanner();
+}
+
+function shopBannerPick() {
+    const same = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+    const typeOf = b => (shopBannerTargets[String(b.id)] || {}).target_type || 'all';
+    const t = b => shopBannerTargets[String(b.id)] || {};
+
+    if (storyFilterId) {
+        const list = shopBannerAll.filter(b => typeOf(b) === 'story' && String(t(b).story_id) === String(storyFilterId));
+        if (list.length) return { key: 'story:' + storyFilterId, list };
+    }
+    if (selectedCategory) {
+        const list = shopBannerAll.filter(b => typeOf(b) === 'category' && same(t(b).category, selectedCategory));
+        if (list.length) return { key: 'cat:' + String(selectedCategory).toLowerCase(), list };
+    }
+    return { key: 'all', list: shopBannerAll.filter(b => typeOf(b) === 'all') };
+}
+
+function shopBannerShow(i) {
+    const track = document.getElementById('shopBannerTrack');
+    const dotsEl = document.getElementById('shopBannerDots');
+    if (!track || !shopBannerCount) return;
+    shopBannerIdx = (i + shopBannerCount) % shopBannerCount;
+    track.style.transform = `translateX(-${shopBannerIdx * 100}%)`;
+    if (dotsEl) dotsEl.querySelectorAll('.shop-banner-dot').forEach((d, di) => d.classList.toggle('active', di === shopBannerIdx));
+}
+
+function shopBannerStart() {
+    clearInterval(shopBannerTimer);
+    if (shopBannerCount > 1) shopBannerTimer = setInterval(() => shopBannerShow(shopBannerIdx + 1), 4000);
+}
+
+function renderShopBanner() {
+    const wrap = document.getElementById('shopBanner');
+    const track = document.getElementById('shopBannerTrack');
+    const dotsEl = document.getElementById('shopBannerDots');
+    if (!wrap || !track || !shopBannerLoaded) return;
+
+    const { key, list } = shopBannerPick();
+    if (key === shopBannerKey) return;
+    shopBannerKey = key;
+
+    clearInterval(shopBannerTimer);
+    shopBannerCount = list.length;
+    shopBannerIdx = 0;
+
+    if (!list.length) {
+        wrap.style.display = 'none';
+        track.innerHTML = '';
+        if (dotsEl) dotsEl.innerHTML = '';
+        return;
+    }
+
+    track.style.transition = 'none';
+    track.style.transform = 'translateX(0)';
+    track.innerHTML = list.map(b => {
         const img = `<img src="${escapeHtml(b.image)}" alt="Banner" loading="lazy">`;
         return b.link
             ? `<a class="shop-banner-slide" href="${escapeHtml(b.link)}">${img}</a>`
             : `<div class="shop-banner-slide">${img}</div>`;
     }).join('');
+    void track.offsetWidth;          /* apply the reset before re-enabling the slide animation */
+    track.style.transition = '';
 
     wrap.style.display = 'block';
 
-    if (banners.length < 2) {
-        if (dotsEl) dotsEl.style.display = 'none';
+    if (!dotsEl) return;
+    if (list.length < 2) {
+        dotsEl.style.display = 'none';
+        dotsEl.innerHTML = '';
         return;
     }
-
-    let idx = 0;
-    let timer = null;
-
-    dotsEl.innerHTML = banners.map((_, i) =>
+    dotsEl.style.display = '';
+    dotsEl.innerHTML = list.map((_, i) =>
         `<button type="button" class="shop-banner-dot ${i === 0 ? 'active' : ''}" data-sb-dot="${i}" aria-label="Go to banner ${i + 1}"></button>`
     ).join('');
-
-    function show(i) {
-        idx = (i + banners.length) % banners.length;
-        track.style.transform = `translateX(-${idx * 100}%)`;
-        dotsEl.querySelectorAll('.shop-banner-dot').forEach((d, di) => {
-            d.classList.toggle('active', di === idx);
-        });
-    }
-
-    function start() {
-        clearInterval(timer);
-        timer = setInterval(() => show(idx + 1), 4000);
-    }
-
     dotsEl.querySelectorAll('.shop-banner-dot').forEach(d => {
         d.addEventListener('click', () => {
-            show(Number(d.dataset.sbDot));
-            start();
+            shopBannerShow(Number(d.dataset.sbDot));
+            shopBannerStart();
         });
     });
-
-    let touchX = null;
-    wrap.addEventListener('touchstart', (e) => {
-        touchX = e.touches[0].clientX;
-        clearInterval(timer);
-    }, { passive: true });
-    wrap.addEventListener('touchend', (e) => {
-        if (touchX !== null) {
-            const dx = e.changedTouches[0].clientX - touchX;
-            if (Math.abs(dx) > 40) show(idx + (dx < 0 ? 1 : -1));
-        }
-        touchX = null;
-        start();
-    }, { passive: true });
-
-    start();
+    shopBannerStart();
 }
+window.__refreshShopBanner = renderShopBanner;
 
 /* =========================================================
    DESKTOP LAYOUT: move the toolbar row (product count + WhatsApp
@@ -1021,7 +1134,7 @@ init();
             try {
                 const res = await fetch(`${API_BASE}/get_brands.php`);
                 const data = await res.json();
-                brandList = data.success ? data.brands : [];
+                brandList = data.success ? mergeSameNames(data.brands, 'brand').sort((a, b) => a.brand.localeCompare(b.brand, undefined, { sensitivity: 'base' })) : [];
             } catch (e) {
                 brandList = [];
             }
@@ -1052,17 +1165,18 @@ init();
                 if (!p.brand) return;
                 counts[p.brand] = (counts[p.brand] || 0) + 1;
             });
-            brandList = Object.keys(counts)
-                .sort((a, b) => a.localeCompare(b))
-                .map(brand => ({ brand, count: counts[brand] }));
+            brandList = mergeSameNames(
+                Object.keys(counts).map(brand => ({ brand, count: counts[brand] })),
+                'brand'
+            ).sort((a, b) => a.brand.localeCompare(b.brand, undefined, { sensitivity: 'base' }));
         } catch (e) {
             brandList = [];
         }
     }
 
     function pruneInvalidBrandSelection() {
-        const valid = new Set(brandList.map(b => b.brand));
-        const kept = selectedBrands().filter(b => valid.has(b));
+        const valid = new Map(brandList.map(b => [sameNameKey(b.brand), b.brand]));
+        const kept = [...new Set(selectedBrands().map(b => valid.get(sameNameKey(b))).filter(Boolean))];
         brandFilter.value = kept.join(',');
         if (window.__syncBrandCircles) window.__syncBrandCircles(kept);
     }

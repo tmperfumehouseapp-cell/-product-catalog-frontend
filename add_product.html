@@ -149,6 +149,37 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
 .modal-close-btn { color: #f2ecdf !important; background: transparent !important; }
 .modal-save-bar, .save-bar { background: #15130e !important; border-top: 1px solid rgba(212,175,106,0.16) !important; }
 .modal-image-item { border: 1px solid rgba(212,175,106,0.25) !important; background: #100e0a; }
+/* Clear, tappable remove buttons on image thumbnails (add + edit) */
+.preview-item .remove-btn,
+.modal-image-remove {
+    position: absolute !important;
+    top: 5px !important;
+    right: 5px !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    background: #e0342e !important;
+    border: 2px solid #fff !important;
+    color: #fff !important;
+    font-size: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    z-index: 5 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4) !important;
+    padding: 0 !important;
+    transition: transform .15s ease, background .15s ease;
+}
+.preview-item .remove-btn:hover,
+.modal-image-remove:hover { background: #c62828 !important; transform: scale(1.1); }
+.preview-item .remove-btn::before,
+.modal-image-remove::before {
+    content: "";
+    width: 11px;
+    height: 11px;
+    background: no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E");
+}
 .modal-error { color: #ff8a80 !important; }
 .modal-card label { color: #cfc8bb !important; }
 .modal-card h3, .modal-head h3 { color: #f2ecdf !important; font-family: Georgia, serif; font-weight: 400; }
@@ -238,6 +269,12 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 </span>
                 Edit / Delete product
             </div>
+            <div class="drawer-link" data-target="categories">
+                <span class="drawer-icon admin-drawer-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                </span>
+                Categories
+            </div>
             <div class="drawer-link" data-target="icons">
                 <span class="drawer-icon admin-drawer-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
@@ -294,6 +331,10 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
             <a class="admin-nav-link" data-target="delete">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                 Edit / Delete product
+            </a>
+            <a class="admin-nav-link" data-target="categories">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                Categories
             </a>
             <a class="admin-nav-link" data-target="icons">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>
@@ -367,11 +408,13 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                     <div class="form-row">
                         <div>
                             <label for="category">Category</label>
-                            <input type="text" id="category" name="category" placeholder="e.g. Perfume, Shirt, Watch" required>
+                            <select id="category" name="category" required><option value="">— Select category —</option></select>
+                            <div style="font-size:11px; color:#8f897d; margin-top:4px;">Not in the list? Add it in <a href="#" data-goto-panel="categories" style="color:#d4af6a;">Categories</a>.</div>
                         </div>
                         <div>
                             <label for="brand">Brand</label>
-                            <input type="text" id="brand" name="brand" required>
+                            <input type="text" id="brand" name="brand" list="dlBrands" autocomplete="off" required>
+                            <div class="name-hint" data-hint-for="brand"></div>
                         </div>
                     </div>
 
@@ -384,6 +427,9 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                     <textarea id="description" name="description" rows="4" maxlength="1000" placeholder="Notes, scent profile, fit, material — whatever's relevant." style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-family:inherit; resize:vertical;"></textarea>
                     <div id="descCount" style="font-size:11px; color:#999; text-align:right; margin-top:4px;">0 / 1000</div>
                 </div>
+
+                <p class="section-label" id="cmetaLabel" style="display:none;">Category details</p>
+                <div class="section-card" id="cmetaSection" style="display:none;"><div id="cmetaFields"></div></div>
 
                 <p class="section-label" id="metaLabel" style="display:none;">Category details</p>
                 <div class="section-card" id="metaSection" style="display:none;">
@@ -444,6 +490,19 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                         <input type="text" id="s_in_box" placeholder="e.g. Brand box + extra laces">
                     </div>
 
+                    <div class="meta-group" id="meta-sunglasses" style="display:none;">
+                        <!-- Sunglasses fields reuse the existing DB columns (no PHP change needed):
+                             Size -> size | Millimeter -> model | Lens Colour -> frame_colour | Frame -> frame_shape -->
+                        <div class="form-row">
+                            <div><label>Size</label><input type="text" id="sg_size" placeholder="e.g. Medium / Large"></div>
+                            <div><label>Millimeter</label><input type="text" id="sg_model" placeholder="e.g. 58-14-140 mm"></div>
+                        </div>
+                        <div class="form-row">
+                            <div><label>Lens Colour</label><input type="text" id="sg_frame_colour" placeholder="e.g. Black / Brown Gradient / Blue Mirror"></div>
+                            <div><label>Frame</label><input type="text" id="sg_frame_shape" placeholder="e.g. Gold Metal / Black Acetate / Rimless"></div>
+                        </div>
+                    </div>
+
                 </div>
 
                 <p class="section-label">Media</p>
@@ -455,8 +514,32 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                     </div>
                     <div class="preview-grid" id="previewGrid"></div>
 
-                    <label style="margin-top:14px;">Product Video (optional, mp4/webm, max 50MB)</label>
-                    <input type="file" id="videoInput" accept=".mp4,.webm,.mov">
+                    <style>
+    .vid-picker { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:6px 0 8px; }
+    .vid-picker .vid-add-btn { width:auto !important; margin:0 !important; padding:10px 16px !important; background:transparent !important; border:1px dashed rgba(212,175,106,0.55) !important; color:#d4af6a !important; border-radius:10px !important; font-weight:600; cursor:pointer; }
+    .vid-picker .vid-add-btn:hover { background:rgba(212,175,106,0.08) !important; }
+    .vid-picker .vid-hint { font-size:11px; color:#8f897d; }
+    .vid-list { display:flex; flex-direction:column; gap:6px; }
+    .vid-row { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid rgba(212,175,106,0.2); border-radius:10px; background:#100e0a; }
+    .vid-row.is-removed { opacity:.45; text-decoration:line-through; }
+    .vid-row video { width:64px; height:40px; object-fit:cover; border-radius:6px; background:#000; flex-shrink:0; }
+    .vid-row .vid-info { flex:1; min-width:0; font-size:12px; color:#f2ecdf; }
+    .vid-row .vid-info small { display:block; color:#8f897d; font-size:11px; }
+    .vid-row .vid-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .vid-tag { font-size:9px; font-weight:800; letter-spacing:.06em; padding:2px 6px; border-radius:6px; background:#d4af6a; color:#1a1508; margin-right:4px; }
+    .vid-tag.new { background:#2e7d4f; color:#fff; }
+    .vid-row .vid-x { width:28px !important; height:28px; margin:0 !important; padding:0 !important; border-radius:50% !important; border:0 !important; background:#e0342e !important; color:#fff !important; font-size:16px; line-height:28px; cursor:pointer; flex-shrink:0; }
+    .vid-row .vid-undo { width:auto !important; margin:0 !important; padding:5px 10px !important; font-size:11px; border-radius:999px !important; background:transparent !important; border:1px solid #6d675c !important; color:#b8ad96 !important; cursor:pointer; }
+    .vid-progress { height:4px; border-radius:2px; background:#2a2419; overflow:hidden; margin-top:4px; }
+    .vid-progress > i { display:block; height:100%; width:0; background:#d4af6a; transition:width .2s; }
+</style>
+                    <label style="margin-top:14px;">Product Videos (optional, mp4/webm/mov)</label>
+                    <div class="vid-picker">
+                        <button type="button" class="vid-add-btn" id="addVideoBtn">+ Add videos</button>
+                        <span class="vid-hint">Select several at once. Video 1 = main video. Max 50MB each.</span>
+                        <input type="file" id="videoInput" accept=".mp4,.webm,.mov" multiple style="display:none;">
+                    </div>
+                    <div class="vid-list" id="addVideoList"></div>
                 </div>
 
                 <p class="section-label">Variants</p>
@@ -525,11 +608,115 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
 
         <!-- Panel: Delete product -->
         <div class="admin-panel" id="panel-delete" style="display:none;">
+            <datalist id="dlCategories"></datalist>
+            <datalist id="dlBrands"></datalist>
+            <style>
+                .name-hint { font-size:11px; min-height:0; margin:-4px 0 6px; color:#8f897d; }
+                .name-hint.match { color:#6fbf8a; }
+                .name-hint.new { color:#d4af6a; }
+                .bulk-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px; padding:10px 12px; border:1px solid rgba(212,175,106,0.25); border-radius:10px; background:#100e0a; position:sticky; top:0; z-index:5; }
+                .bulk-bar label { display:flex !important; align-items:center; gap:8px; margin:0 !important; font-size:13px; cursor:pointer; text-transform:none !important; }
+                .bulk-bar input[type=checkbox], .delete-row .bulk-check { width:18px !important; height:18px; margin:0 !important; accent-color:#d4af6a; cursor:pointer; flex-shrink:0; }
+                .bulk-count { font-size:12px; color:#d4af6a; font-weight:700; }
+                .bulk-bar .bulk-del { margin:0 0 0 auto !important; width:auto !important; padding:9px 16px !important; background:#e0342e !important; color:#fff !important; border:0 !important; border-radius:999px !important; font-weight:700; cursor:pointer; }
+                .bulk-bar .bulk-del:disabled { opacity:.4; cursor:not-allowed; }
+                .delete-row.is-selected { border-color:#d4af6a !important; background:#1d1810 !important; }
+                .dup-group { border:1px solid rgba(212,175,106,0.2); border-radius:10px; padding:10px 12px; margin-top:10px; background:#100e0a; }
+                .dup-group .dup-variants { font-size:12px; color:#b8ad96; margin:6px 0 8px; line-height:1.7; }
+                .dup-group .dup-variants b { color:#f2ecdf; background:#221d14; padding:1px 7px; border-radius:6px; font-weight:600; white-space:pre; }
+                .dup-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+                .dup-row select, .dup-row input { flex:1; min-width:140px; margin:0 !important; }
+                .dup-row button { width:auto !important; margin:0 !important; padding:9px 16px !important; }
+            </style>
+
+            <p class="section-label">Fix duplicate categories &amp; brands</p>
+            <div class="section-card">
+                <div style="font-size:12px; color:#888; margin-bottom:8px;">Finds names that are the same but typed differently (Casio / casio / CASIO / Casios) and merges them into one. New products are matched automatically from now on.</div>
+                <button type="button" id="dupScanBtn" style="width:auto; padding:10px 20px; margin:0;">Scan for duplicates</button>
+                <div id="dupResults"></div>
+
+                <div style="border-top:1px solid rgba(212,175,106,0.15); margin:16px 0 0; padding-top:14px;">
+                    <div style="font-size:12px; font-weight:700; color:#d4af6a; margin-bottom:6px;">Rename a category or brand</div>
+                    <div style="font-size:11px; color:#888; margin-bottom:8px;">Changes the name on every product (all spellings), plus category icons, stories and banners. e.g. Sunglass &rarr; Sunglasses</div>
+                    <div class="dup-row">
+                        <select id="renField" style="flex:0 0 120px; min-width:110px;">
+                            <option value="category">Category</option>
+                            <option value="brand">Brand</option>
+                        </select>
+                        <select id="renFrom"><option value="">— Current name —</option></select>
+                        <input type="text" id="renTo" placeholder="New name">
+                        <button type="button" id="renBtn">Rename</button>
+                    </div>
+                    <div id="renMsg" style="font-size:12px; margin-top:6px;"></div>
+                </div>
+            </div>
+
             <p class="section-label">Delete a product</p>
             <div class="section-card" id="deleteSection">
                 <input type="text" id="deleteSearchInput" placeholder="Search product name...">
+                <div class="bulk-bar">
+                    <label><input type="checkbox" id="bulkSelectAll"> Select all loaded</label>
+                    <span class="bulk-count" id="bulkCount">0 selected</span>
+                    <button type="button" class="bulk-del" id="bulkDeleteBtn" disabled>Delete selected</button>
+                </div>
+                <div id="bulkMsg" style="font-size:12px; margin-top:6px;"></div>
                 <div id="deleteList" style="margin-top:12px;"></div>
                 <button type="button" id="deleteLoadMoreBtn" class="load-more-btn" style="display:none; margin-top:12px; width:100%;">Load More</button>
+            </div>
+        </div>
+
+        <!-- Panel: Categories (list + custom meta fields) -->
+        <div class="admin-panel" id="panel-categories" style="display:none;">
+            <style>
+                .cf-row { display:grid; grid-template-columns: 1fr 1fr auto; gap:8px; align-items:center; margin-bottom:8px; }
+                .cf-row input { margin:0 !important; }
+                .cf-row .cf-btns { display:flex; gap:4px; }
+                .cf-row .cf-btns button { width:32px !important; height:36px; margin:0 !important; padding:0 !important; border-radius:8px !important; font-size:14px; background:#1a160f !important; border:1px solid rgba(212,175,106,0.3) !important; color:#d4af6a !important; cursor:pointer; }
+                .cf-row .cf-btns .cf-del { color:#ff8a80 !important; border-color:rgba(224,52,46,0.4) !important; }
+                .cf-key { grid-column: 1 / -1; font-size:10px; color:#6d675c; margin:-4px 0 4px; }
+                @media (max-width:640px) { .cf-row { grid-template-columns: 1fr; } }
+                .cat-chip { display:inline-block; font-size:10px; padding:2px 7px; border-radius:6px; background:#221d14; color:#b8ad96; margin:2px 3px 0 0; }
+            </style>
+
+            <p class="section-label" id="catFormLabel">Add a category</p>
+            <div class="section-card">
+                <div style="font-size:12px; color:#888; margin-bottom:10px;">Categories here fill the Category dropdown in Add / Edit product. Add your own detail fields (e.g. Size, Lens Colour) — they show in the product form and on the product page.</div>
+                <input type="hidden" id="catEditId" value="">
+                <input type="hidden" id="catOldName" value="">
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:2;">
+                        <label for="catName">Category name</label>
+                        <input type="text" id="catName" placeholder="e.g. Sunglasses">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="catSort">Order</label>
+                        <input type="number" id="catSort" min="0" step="1" value="0">
+                    </div>
+                    <div style="flex:1; display:flex; align-items:flex-end; padding-bottom:6px;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;"><input type="checkbox" id="catActive" checked style="width:auto;"> Active</label>
+                    </div>
+                </div>
+
+                <label style="margin-top:12px;">Detail fields (meta fields)</label>
+                <div style="font-size:11px; color:#999; margin:0 0 8px;">Field name + example text. Leave empty to use the built-in fields (Watches / Perfume / Shoes / Sunglasses) or none.</div>
+                <div id="catFields"></div>
+                <button type="button" id="catAddFieldBtn" style="width:auto; padding:8px 16px; margin:4px 0 0; background:transparent; border:1px dashed rgba(212,175,106,0.55); color:#d4af6a;">+ Add field</button>
+
+                <div style="margin-top:14px;">
+                    <button type="button" id="catSaveBtn" style="width:auto; padding:12px 24px;">Save Category</button>
+                    <button type="button" id="catCancelBtn" style="width:auto; padding:12px 24px; display:none; background:#888;">Cancel Edit</button>
+                </div>
+                <div id="catMsg"></div>
+            </div>
+
+            <p class="section-label">Categories</p>
+            <div class="section-card">
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+                    <button type="button" id="catImportBtn" style="width:auto; padding:8px 16px; margin:0;">Import categories from products</button>
+                    <span id="catImportMsg" style="font-size:12px;"></span>
+                </div>
+                <div id="catList"><p style="font-size:12px;color:#999;">Loading...</p></div>
             </div>
         </div>
 
@@ -555,51 +742,136 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 <div id="iconMsg"></div>
             </div>
 
-            <p class="section-label">Set brand icon</p>
-            <div class="section-card" id="brandIconSection">
-                <div style="font-size:12px; color:#888; margin-bottom:10px;">Icon shown inside that brand's circle on the shop page. Square images look best; without an icon the circle shows the brand's first letter.</div>
-                <select id="iconBrandSelect"></select>
+        </div>
 
-                <div class="icon-preview-row">
-                    <div class="icon-preview-circle" id="brandIconPreviewCircle">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <!-- Panel: Home Cards (one fanned deck per section on index.html) -->
+        <div class="admin-panel" id="panel-homecards" style="display:none;">
+
+            <!-- ===== SECTIONS (categories) ===== -->
+            <p class="section-label" id="hsFormLabel">Add a section (category)</p>
+            <div class="section-card">
+                <div style="font-size:12px; color:#888; margin-bottom:10px;">Each section = its own card deck on the homepage (e.g. Watches &rarr; cards 1/2/3, Shoes &rarr; cards 1/2/3). Sections show in "Order"; empty or inactive sections are hidden.</div>
+                <input type="hidden" id="hsEditId" value="">
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="hsName">Section Name (admin + dropdown)</label>
+                        <input type="text" id="hsName" placeholder="e.g. Watches">
                     </div>
                     <div style="flex:1;">
-                        <label style="margin-top:0;">Icon Image</label>
-                        <input type="file" id="brandIconFileInput" accept=".jpg,.jpeg,.png,.webp">
+                        <label for="hsEyebrow">Small label above title (optional)</label>
+                        <input type="text" id="hsEyebrow" placeholder="e.g. Collection 01">
                     </div>
                 </div>
 
-                <button type="button" id="uploadBrandIconBtn" style="margin-top:16px;">Upload Brand Icon</button>
-                <div id="brandIconMsg"></div>
-            </div>
-        </div>
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="hsTitle">Title (white)</label>
+                        <input type="text" id="hsTitle" placeholder="e.g. Luxury">
+                    </div>
+                    <div style="flex:1;">
+                        <label for="hsAccentWord">Accent word (gold italic)</label>
+                        <input type="text" id="hsAccentWord" placeholder="e.g. Watches">
+                    </div>
+                </div>
+                <div style="font-size:11px; color:#999; margin:4px 0 10px;">Shows as: <b>Luxury</b> <i style="color:#b8933f;">Watches</i>. Leave Title empty to use the Section Name.</div>
 
-        <!-- Panel: Home Cards (fanned deck on index.html) -->
-        <div class="admin-panel" id="panel-homecards" style="display:none;">
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="hsViewAllText">"View all" button text</label>
+                        <input type="text" id="hsViewAllText" placeholder="View all">
+                    </div>
+                    <div style="flex:2;">
+                        <label for="hsViewAllLink">"View all" link (empty = no button)</label>
+                        <input type="text" id="hsViewAllLink" placeholder="e.g. products.html?category=Watches">
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="hsSortOrder">Order</label>
+                        <input type="number" id="hsSortOrder" min="0" step="1" value="0">
+                    </div>
+                    <div style="flex:1; display:flex; align-items:flex-end; padding-bottom:6px;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;"><input type="checkbox" id="hsActive" checked style="width:auto;"> Active</label>
+                    </div>
+                </div>
+
+                <button type="button" id="hsSaveBtn" style="margin-top:14px; width:auto; padding:12px 24px;">Save Section</button>
+                <button type="button" id="hsCancelEditBtn" style="margin-top:14px; width:auto; padding:12px 24px; display:none; background:#888;">Cancel Edit</button>
+                <div id="hsMsg"></div>
+            </div>
+
+            <p class="section-label">Existing sections</p>
+            <div class="section-card">
+                <div id="hsList"><p style="font-size:12px;color:#999;">Loading...</p></div>
+            </div>
+
+            <!-- ===== CARDS ===== -->
             <p class="section-label" id="hcFormLabel">Add a home card</p>
             <div class="section-card">
-                <div style="font-size:12px; color:#888; margin-bottom:10px;">Fanned 8&times;10 card deck at the very top of the homepage. Card numbers (1., 2., 3.) come automatically from the order. Auto-slides every 5 seconds; visitors can swipe, use arrows, or tap side cards.</div>
+                <div style="font-size:12px; color:#888; margin-bottom:10px;">Card numbers (1., 2., 3.) restart inside each section and follow the order. Each deck auto-slides every 5 seconds; visitors can swipe, use arrows, or tap side cards.</div>
                 <input type="hidden" id="hcEditId" value="">
 
+                <label for="hcSection">Section (category)</label>
+                <select id="hcSection"><option value="">— Choose a section —</option></select>
+
+                <label for="hcImageInput">Card Image (top half of the card — portrait or square looks best)</label>
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+                    <div id="hcImagePreview" style="width:70px; height:70px; border-radius:8px; background:#222; overflow:hidden; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#777; font-size:10px;">No image</div>
+                    <div style="flex:1;">
+                        <input type="file" id="hcImageInput" accept=".jpg,.jpeg,.png,.webp,.gif" style="margin:0;">
+                        <label id="hcRemoveImageWrap" style="display:none; align-items:center; gap:8px; margin:8px 0 0; text-transform:none;"><input type="checkbox" id="hcRemoveImage" style="width:auto; margin:0;"> Remove current image</label>
+                    </div>
+                </div>
+
                 <label for="hcHeading">Heading</label>
-                <input type="text" id="hcHeading" placeholder="e.g. 100% Authentic — Guaranteed">
+                <input type="text" id="hcHeading" placeholder="e.g. Automatic Chronographs">
 
                 <label for="hcBody">Body Text</label>
-                <textarea id="hcBody" rows="4" placeholder="Main card text. Press Enter for a new paragraph."></textarea>
+                <textarea id="hcBody" rows="3" placeholder="Short card text. Press Enter for a new line."></textarea>
 
                 <label for="hcHighlight">Highlight Line (optional, shown in accent color)</label>
-                <input type="text" id="hcHighlight" placeholder="e.g. Trust is the only thing we sell twice.">
+                <input type="text" id="hcHighlight" placeholder="e.g. New arrivals every week">
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="hcBtnText">Button text (empty = no button)</label>
+                        <input type="text" id="hcBtnText" placeholder="e.g. Shop now">
+                    </div>
+                    <div style="flex:2;">
+                        <label for="hcBtnLink">Button link</label>
+                        <input type="text" id="hcBtnLink" placeholder="e.g. products.html?category=Watches or product.html?id=754">
+                    </div>
+                </div>
 
                 <label for="hcCaption">Footer Caption (optional, under the dots)</label>
                 <input type="text" id="hcCaption" placeholder="Shown when this card is in the center">
 
-                <label for="hcSkin">Card Color</label>
+                <label for="hcSkin">Card Color (preset)</label>
                 <select id="hcSkin">
                     <option value="cream">Cream</option>
                     <option value="green">Deep Green</option>
                     <option value="clay">Clay</option>
                 </select>
+
+                <div style="display:flex; gap:12px;">
+                    <div style="flex:1;">
+                        <label for="hcBg">Custom card color (overrides preset)</label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="color" id="hcBgPick" value="#f5efe2" style="width:44px; height:38px; padding:2px; margin:0; cursor:pointer;">
+                            <input type="text" id="hcBg" placeholder="empty = preset color" style="flex:1; margin:0;">
+                        </div>
+                    </div>
+                    <div style="flex:1;">
+                        <label for="hcAccent">Accent color (line under image + highlight)</label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="color" id="hcAccentPick" value="#d4af6a" style="width:44px; height:38px; padding:2px; margin:0; cursor:pointer;">
+                            <input type="text" id="hcAccent" placeholder="empty = gold" style="flex:1; margin:0;">
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size:11px; color:#999; margin:4px 0 10px;">Pick a color or type a hex like #1a3c2e. Clear the text box to go back to the preset / gold. Text on the card auto-switches light/dark to stay readable.</div>
 
                 <div style="display:flex; gap:12px;">
                     <div style="flex:1;">
@@ -621,11 +893,11 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                         <input type="number" id="hcHMobile" min="0" step="10" value="0">
                     </div>
                 </div>
-                <div style="font-size:11px; color:#999; margin:4px 0 10px;">Sizes apply to the whole deck (all cards), saved together with any card. 0 keeps the default 800&times;1300 shape.</div>
+                <div style="font-size:11px; color:#999; margin:4px 0 10px;">Sizes apply to ALL decks (every section), saved together with any card. 0 keeps the default 800&times;1300 shape.</div>
 
                 <div style="display:flex; gap:12px;">
                     <div style="flex:1;">
-                        <label for="hcSortOrder">Order</label>
+                        <label for="hcSortOrder">Order (inside its section)</label>
                         <input type="number" id="hcSortOrder" min="0" step="1" value="0">
                     </div>
                     <div style="flex:1; display:flex; align-items:flex-end; padding-bottom:6px;">
@@ -638,7 +910,7 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 <div id="hcMsg"></div>
             </div>
 
-            <p class="section-label">Existing cards</p>
+            <p class="section-label">Existing cards (grouped by section)</p>
             <div class="section-card">
                 <div id="hcList"><p style="font-size:12px;color:#999;">Loading...</p></div>
             </div>
@@ -708,6 +980,22 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                     <div class="icon-preview-circle" id="sbImagePreview" style="border-radius:8px; width:110px; height:44px;"></div>
                     <input type="file" id="sbImageInput" accept=".jpg,.jpeg,.png,.webp">
                 </div>
+
+                <label for="sbTargetType">Show this banner on</label>
+                <select id="sbTargetType">
+                    <option value="all">General — all pages (when no category / story banner)</option>
+                    <option value="category">A category</option>
+                    <option value="story">A story</option>
+                </select>
+                <div id="sbTargetCategoryWrap" style="display:none;">
+                    <label for="sbTargetCategory">Category</label>
+                    <select id="sbTargetCategory"><option value="">— Choose category —</option></select>
+                </div>
+                <div id="sbTargetStoryWrap" style="display:none;">
+                    <label for="sbTargetStory">Story</label>
+                    <select id="sbTargetStory"><option value="">— Choose story —</option></select>
+                </div>
+                <div style="font-size:11px; color:#999; margin:4px 0 10px;">Priority on the shop page: story banners (when that story is tapped) &rarr; category banners (for the selected category) &rarr; general banners.</div>
 
                 <label for="sbLink">Link (optional — where a tap goes)</label>
                 <input type="text" id="sbLink" placeholder="e.g. product.html?id=754 or https://wa.me/919099370999">
@@ -934,17 +1222,23 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
             <div class="form-row">
                 <div>
                     <label for="editCategory">Category</label>
-                    <input type="text" id="editCategory" required>
+                    <select id="editCategory" required><option value="">— Select category —</option></select>
                 </div>
                 <div>
                     <label for="editBrand">Brand</label>
-                    <input type="text" id="editBrand" required>
+                    <input type="text" id="editBrand" list="dlBrands" autocomplete="off" required>
+                    <div class="name-hint" data-hint-for="editBrand"></div>
                 </div>
             </div>
 
             <div id="editLongevityWrap">
                 <label for="editLongevity">Longevity</label>
                 <input type="text" id="editLongevity" placeholder="e.g. 6-8 hours">
+            </div>
+
+            <div id="editCmetaSection" style="display:none;">
+                <label style="font-weight:700;">Category details</label>
+                <div id="editCmetaFields"></div>
             </div>
 
             <div id="editMetaSection" style="display:none;">
@@ -1002,25 +1296,54 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                     <label>In the Box</label>
                     <input type="text" id="es_in_box">
                 </div>
+
+                <div class="meta-group" id="edit-meta-sunglasses" style="display:none;">
+                    <div class="form-row">
+                        <div><label>Size</label><input type="text" id="esg_size" placeholder="e.g. Medium / Large"></div>
+                        <div><label>Millimeter</label><input type="text" id="esg_model" placeholder="e.g. 58-14-140 mm"></div>
+                    </div>
+                    <div class="form-row">
+                        <div><label>Lens Colour</label><input type="text" id="esg_frame_colour" placeholder="e.g. Black / Brown Gradient"></div>
+                        <div><label>Frame</label><input type="text" id="esg_frame_shape" placeholder="e.g. Gold Metal / Black Acetate"></div>
+                    </div>
+                </div>
             </div>
 
             <label for="editDescription">Description</label>
             <textarea id="editDescription" rows="4" maxlength="1000"></textarea>
 
-            <label>Images (up to 4 total)</label>
-            <div class="modal-image-grid" id="editExistingImages"></div>
+            <label>Images (up to 4 total) <span style="font-weight:400; color:#8f897d; font-size:11px;">— drag to reorder, #1 is the main image</span></label>
+            <style>
+                .eimg-grid { display:flex; flex-wrap:wrap; gap:10px; margin:6px 0 4px; touch-action:pan-y; }
+                .eimg-item { position:relative; width:78px; height:78px; border-radius:10px; overflow:hidden; border:1px solid rgba(212,175,106,0.25); background:#100e0a; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:none; transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease; }
+                .eimg-item img { width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none; }
+                .eimg-item.is-dragging { opacity:.35; }
+                .eimg-item.is-over { box-shadow:0 0 0 2px #d4af6a; transform:scale(1.06); }
+                .eimg-ghost { position:fixed; z-index:99999; width:78px; height:78px; border-radius:10px; overflow:hidden; pointer-events:none; box-shadow:0 12px 28px rgba(0,0,0,.6), 0 0 0 2px #d4af6a; transform:translate(-50%,-50%) scale(1.08); }
+                .eimg-ghost img { width:100%; height:100%; object-fit:cover; }
+                .eimg-num { position:absolute; left:4px; bottom:4px; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:rgba(13,11,8,.85); color:#d4af6a; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+                .eimg-main { position:absolute; left:0; right:0; top:0; background:#d4af6a; color:#1a1508; font-size:9px; font-weight:800; letter-spacing:.08em; text-align:center; padding:2px 0; }
+                .eimg-new { position:absolute; right:4px; bottom:4px; background:#2e7d4f; color:#fff; font-size:9px; font-weight:700; padding:1px 5px; border-radius:6px; }
+                .eimg-remove { position:absolute; top:3px; right:3px; width:22px; height:22px; border-radius:50%; border:0; background:#e0342e; color:#fff; font-size:15px; line-height:22px; padding:0; cursor:pointer; z-index:2; }
+                .eimg-main ~ .eimg-remove { top:16px; }
+                .eimg-zoom { position:absolute; inset:auto auto 4px 4px; }
+                #editDropZone.drag-active { border-color:#d4af6a !important; background:rgba(212,175,106,0.08) !important; color:#d4af6a !important; }
+            </style>
+            <div class="eimg-grid" id="editImageGrid"></div>
             <div class="image-drop" id="editDropZone" style="margin-top:10px;">
-                Click to add images
+                <span id="editDropText">Click or drag &amp; drop images here</span>
                 <input type="file" id="editImageInput" accept=".jpg,.jpeg,.png,.webp" multiple>
             </div>
-                      <div class="preview-grid" id="editNewPreviewGrid"></div>
 
-            <label style="margin-top:14px;">Product Video (mp4/webm, max 50MB)</label>
-            <div id="editCurrentVideo" style="font-size:12px; color:#888; margin-bottom:6px;"></div>
-            <input type="file" id="editVideoInput" accept=".mp4,.webm,.mov">
-            <label style="display:flex; align-items:center; gap:6px; font-weight:400; margin-top:6px;">
-                <input type="checkbox" id="editRemoveVideo" style="width:auto;"> Remove current video
-            </label>            <label>Variants</label>
+            <label style="margin-top:14px;">Product Videos</label>
+            <div id="editCurrentVideo" style="display:none;"></div>
+            <input type="checkbox" id="editRemoveVideo" style="display:none;">
+            <div class="vid-list" id="editVideoList"></div>
+            <div class="vid-picker">
+                <button type="button" class="vid-add-btn" id="editAddVideoBtn">+ Add videos</button>
+                <span class="vid-hint">Max 50MB each.</span>
+                <input type="file" id="editVideoInput" accept=".mp4,.webm,.mov" multiple style="display:none;">
+            </div>            <label>Variants</label>
             <div id="editVariantRows"></div>
             <button type="button" id="editAddVariantBtn" class="modal-add-variant-btn">+ Add variant</button>
 
@@ -1104,6 +1427,10 @@ function showPanel(name) {
     if (name === 'homecards') {
         loadHcList();
     }
+
+    if (name === 'categories') {
+        loadCatPanel();
+    }
 }
 
 document.querySelectorAll('.admin-nav-link').forEach(link => {
@@ -1126,7 +1453,6 @@ function unlockUI() {
     showPanel('add');
     loadDeleteList(1, false);
     loadIconCategoryOptions();
-    loadIconBrandOptions();
     loadCatalogSnapshot();
     loadHeroList();
 }
@@ -1173,10 +1499,17 @@ function detectMetaKind(catValue) {
     if (c.includes('watch')) return 'watch';
     if (c.includes('perfume') || c.includes('fragrance') || c.includes('attar')) return 'perfume';
     if (c.includes('shoe') || c.includes('sneaker') || c.includes('footwear')) return 'shoes';
+    if (c.includes('sunglass') || c.includes('goggle') || c.includes('eyewear')) return 'sunglasses';
     return null;
 }
 
+/* Custom fields (Admin -> Categories) take over when the category has them */
 function updateMetaSection() {
+    updateMetaSectionLegacy();
+    applyCustomMeta('add');
+}
+
+function updateMetaSectionLegacy() {
     const kind = detectMetaKind(categoryInput.value);
     // Longevity + Notes are perfume-only fields
     const lw = document.getElementById('longevityWrap');
@@ -1194,8 +1527,14 @@ function updateMetaSection() {
     }
 }
 categoryInput.addEventListener('input', updateMetaSection);
+categoryInput.addEventListener('change', updateMetaSection);
 
 function getMetaDetails() {
+    if (catCustomFields(categoryInput.value).length) return null;   /* saved via product_meta.php */
+    return getMetaDetailsLegacy();
+}
+
+function getMetaDetailsLegacy() {
     const kind = detectMetaKind(categoryInput.value);
     if (kind === 'watch') return { kind, fields: {
         movement: document.getElementById('w_movement').value.trim(),
@@ -1214,6 +1553,13 @@ function getMetaDetails() {
         formulation: document.getElementById('p_formulation').value.trim(),
         bottle_size: document.getElementById('p_bottle_size').value.trim()
     }};
+    if (kind === 'sunglasses') return { kind, fields: {
+        size: document.getElementById('sg_size').value.trim(),                 /* Size */
+        model: document.getElementById('sg_model').value.trim(),               /* Millimeter */
+        frame_colour: document.getElementById('sg_frame_colour').value.trim(), /* Lens Colour */
+        frame_shape: document.getElementById('sg_frame_shape').value.trim(),   /* Frame */
+        fit: ''
+    }};
     if (kind === 'shoes') return { kind, fields: {
         colour: document.getElementById('s_colour').value.trim(),
         material: document.getElementById('s_material').value.trim(),
@@ -1229,7 +1575,7 @@ function getMetaDetails() {
 }
 
 function clearMetaFields() {
-    document.querySelectorAll('#metaSection input[type="text"]').forEach(i => i.value = '');
+    document.querySelectorAll('#metaSection input[type="text"], #cmetaFields input').forEach(i => i.value = '');
     updateMetaSection();
 }
 
@@ -1281,12 +1627,15 @@ function addFiles(files) {
 }
 
 function renderPreviews() {
-    previewGrid.innerHTML = selectedFiles.map((file, i) => `
+    previewGrid.innerHTML = selectedFiles.map((file, i) => {
+        const url = URL.createObjectURL(file);
+        return `
         <div class="preview-item">
-            <img src="${URL.createObjectURL(file)}" alt="preview">
+            <img src="${url}" alt="preview" style="cursor:zoom-in;" onclick="openImageLightbox('${url}')" title="View full image">
             <button type="button" class="remove-btn" onclick="removeFile(${i})">×</button>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function removeFile(index) {
@@ -1431,6 +1780,451 @@ async function saveNotesForProduct(productId, adminPassword) {
     }
 }
 
+// =========================================================
+// CATEGORIES (managed list + custom meta fields)
+// =========================================================
+let managedCats = [];          /* from manage_categories.php?all=1 */
+let managedCatsLoaded = false;
+let editCmetaValues = {};
+
+function catKey(name) { return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+
+function catDef(name) {
+    const k = catKey(name);
+    return managedCats.find(c => catKey(c.name) === k) || null;
+}
+
+function catCustomFields(name) {
+    const d = catDef(name);
+    return d && Array.isArray(d.fields) ? d.fields : [];
+}
+
+async function loadManagedCats() {
+    try {
+        const res = await fetch(`${API_BASE}/manage_categories.php?all=1&t=${Date.now()}`);
+        const data = await res.json();
+        managedCats = data.success ? data.categories : [];
+    } catch (e) {
+        managedCats = [];
+    }
+    managedCatsLoaded = true;
+    refreshCategorySelects();
+}
+
+/* Options = active managed categories. If none are set up yet, fall back to
+   the category names already used on products, so the form still works. */
+function categoryOptionNames() {
+    const active = managedCats.filter(c => Number(c.active));
+    if (active.length) return active.map(c => c.name);
+    const seen = new Set();
+    return (productNames.category || []).map(x => x.name).filter(n => {
+        const k = catKey(n); if (!k || seen.has(k)) return false; seen.add(k); return true;
+    }).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+}
+
+function fillCategorySelect(sel, current) {
+    if (!sel) return;
+    const names = categoryOptionNames();
+    const cur = current !== undefined ? current : sel.value;
+    let html = '<option value="">— Select category —</option>' +
+        names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+    const match = names.find(n => catKey(n) === catKey(cur));
+    if (cur && !match) html += `<option value="${escapeHtml(cur)}">${escapeHtml(cur)} (not in Categories)</option>`;
+    sel.innerHTML = html;
+    sel.value = match || cur || '';
+    sel.dispatchEvent(new Event('change'));
+}
+
+function refreshCategorySelects() {
+    fillCategorySelect(document.getElementById('category'));
+    const ec = document.getElementById('editCategory');
+    if (ec && ec.value) fillCategorySelect(ec);
+}
+
+/* Render custom fields for 'add' or 'edit'. Returns true if custom fields are active. */
+function applyCustomMeta(which) {
+    const isAdd = which === 'add';
+    const sel = document.getElementById(isAdd ? 'category' : 'editCategory');
+    const box = document.getElementById(isAdd ? 'cmetaFields' : 'editCmetaFields');
+    const section = document.getElementById(isAdd ? 'cmetaSection' : 'editCmetaSection');
+    const label = isAdd ? document.getElementById('cmetaLabel') : null;
+    if (!sel || !box || !section) return false;
+
+    const fields = catCustomFields(sel.value);
+    if (!fields.length) {
+        section.style.display = 'none';
+        if (label) label.style.display = 'none';
+        box.innerHTML = '';
+        return false;
+    }
+
+    /* keep typed values when re-rendering */
+    const keep = {};
+    box.querySelectorAll('[data-cmeta-key]').forEach(i => { if (i.value) keep[i.dataset.cmetaKey] = i.value; });
+    const pre = isAdd ? keep : Object.assign({}, editCmetaValues, keep);
+
+    box.innerHTML = '<div class="form-row" style="flex-wrap:wrap;">' + fields.map(f => `
+        <div style="flex:1 1 45%; min-width:180px;">
+            <label>${escapeHtml(f.label)}</label>
+            <input type="text" data-cmeta-key="${escapeHtml(f.key)}" placeholder="${escapeHtml(f.placeholder || '')}" value="${escapeHtml(pre[f.key] || '')}">
+        </div>`).join('') + '</div>';
+
+    section.style.display = 'block';
+    if (label) label.style.display = 'block';
+
+    /* hide the built-in groups for this category */
+    if (isAdd) {
+        metaLabel.style.display = 'none';
+        metaSection.style.display = 'none';
+    } else {
+        const legacy = document.getElementById('editMetaSection');
+        if (legacy) legacy.style.display = 'none';
+    }
+    return true;
+}
+
+function collectCustomMeta(which) {
+    const sel = document.getElementById(which === 'add' ? 'category' : 'editCategory');
+    if (!sel || !catCustomFields(sel.value).length) return null;
+    const out = {};
+    document.querySelectorAll(`#${which === 'add' ? 'cmetaFields' : 'editCmetaFields'} [data-cmeta-key]`)
+        .forEach(i => { out[i.dataset.cmetaKey] = i.value.trim(); });
+    return out;
+}
+
+async function saveProductMeta(productId, values) {
+    try {
+        const fd = new FormData();
+        fd.append('admin_password', adminPassword);
+        fd.append('product_id', productId);
+        fd.append('values', JSON.stringify(values));
+        await fetch(`${API_BASE}/product_meta.php`, { method: 'POST', body: fd });
+    } catch (e) {
+        console.warn('Custom fields not saved:', e);
+    }
+}
+
+function deleteProductMeta(productId) {
+    const fd = new FormData();
+    fd.append('admin_password', adminPassword);
+    fd.append('product_id', productId);
+    fd.append('action', 'delete');
+    fetch(`${API_BASE}/product_meta.php`, { method: 'POST', body: fd }).catch(() => {});
+}
+
+/* "Add it in Categories" link under the dropdown */
+document.querySelectorAll('[data-goto-panel]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    showPanel(a.dataset.gotoPanel);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}));
+
+/* ---------- Categories panel ---------- */
+const catList = document.getElementById('catList');
+const catEditId = document.getElementById('catEditId');
+const catOldName = document.getElementById('catOldName');
+const catName = document.getElementById('catName');
+const catSort = document.getElementById('catSort');
+const catActive = document.getElementById('catActive');
+const catFields = document.getElementById('catFields');
+const catSaveBtn = document.getElementById('catSaveBtn');
+const catCancelBtn = document.getElementById('catCancelBtn');
+const catFormLabel = document.getElementById('catFormLabel');
+const catMsg = document.getElementById('catMsg');
+
+function addCatFieldRow(f = {}) {
+    const row = document.createElement('div');
+    row.className = 'cf-row';
+    row.dataset.key = f.key || '';
+    row.innerHTML = `
+        <input type="text" class="cf-label" placeholder="Field name, e.g. Lens Colour" value="${escapeHtml(f.label || '')}">
+        <input type="text" class="cf-ph" placeholder="Example text, e.g. Black / Brown" value="${escapeHtml(f.placeholder || '')}">
+        <div class="cf-btns">
+            <button type="button" class="cf-up" title="Move up">↑</button>
+            <button type="button" class="cf-down" title="Move down">↓</button>
+            <button type="button" class="cf-del" title="Remove">×</button>
+        </div>`;
+    row.querySelector('.cf-up').addEventListener('click', () => { if (row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling); });
+    row.querySelector('.cf-down').addEventListener('click', () => { if (row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row); });
+    row.querySelector('.cf-del').addEventListener('click', () => row.remove());
+    catFields.appendChild(row);
+}
+document.getElementById('catAddFieldBtn').addEventListener('click', () => {
+    addCatFieldRow();
+    const inputs = catFields.querySelectorAll('.cf-label');
+    inputs[inputs.length - 1].focus();
+});
+
+function resetCatForm() {
+    catEditId.value = '';
+    catOldName.value = '';
+    catName.value = '';
+    catSort.value = '0';
+    catActive.checked = true;
+    catFields.innerHTML = '';
+    catFormLabel.textContent = 'Add a category';
+    catSaveBtn.textContent = 'Save Category';
+    catCancelBtn.style.display = 'none';
+}
+catCancelBtn.addEventListener('click', () => { resetCatForm(); catMsg.textContent = ''; });
+
+async function loadCatPanel() {
+    catList.innerHTML = '<p style="font-size:12px;color:#999;">Loading...</p>';
+    await loadManagedCats();
+    const counts = {};
+    (productNames.category || []).forEach(x => { counts[catKey(x.name)] = (counts[catKey(x.name)] || 0) + x.count; });
+
+    if (!managedCats.length) {
+        catList.innerHTML = '<p style="font-size:12px;color:#999;">No categories yet. Press <b>Import categories from products</b> to add the ones you already use, or add one above.</p>';
+        return;
+    }
+    catList.innerHTML = managedCats.map(c => `
+        <div class="delete-row">
+            <div class="delete-row-thumb" style="width:40px;height:40px;border-radius:8px;background:#1a1508;color:#d4af6a;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;">${counts[catKey(c.name)] || 0}</div>
+            <div class="delete-row-info">
+                <div class="delete-row-name">${escapeHtml(c.name)} ${Number(c.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
+                <div class="delete-row-price" style="font-weight:400;">
+                    ${c.fields.length ? c.fields.map(f => `<span class="cat-chip">${escapeHtml(f.label)}</span>`).join('') : `<span style="color:#8f897d;">${detectMetaKind(c.name) ? 'Built-in fields' : 'No detail fields'}</span>`}
+                    · Order ${escapeHtml(String(c.sort_order))}
+                </div>
+            </div>
+            <div class="delete-row-actions">
+                <button type="button" class="btn-pill btn-edit" data-cat-edit="${c.id}">Edit</button>
+                <button type="button" class="btn-pill btn-delete" data-cat-del="${c.id}">Delete</button>
+            </div>
+        </div>`).join('');
+
+    catList.querySelectorAll('[data-cat-edit]').forEach(b => b.addEventListener('click', () => {
+        const c = managedCats.find(x => String(x.id) === b.dataset.catEdit);
+        if (!c) return;
+        catEditId.value = c.id;
+        catOldName.value = c.name;
+        catName.value = c.name;
+        catSort.value = c.sort_order;
+        catActive.checked = !!Number(c.active);
+        catFields.innerHTML = '';
+        c.fields.forEach(f => addCatFieldRow(f));
+        catFormLabel.textContent = 'Edit category';
+        catSaveBtn.textContent = 'Update Category';
+        catCancelBtn.style.display = 'inline-block';
+        catMsg.textContent = '';
+        catFormLabel.scrollIntoView({ behavior: 'smooth' });
+    }));
+
+    catList.querySelectorAll('[data-cat-del]').forEach(b => b.addEventListener('click', async () => {
+        const c = managedCats.find(x => String(x.id) === b.dataset.catDel);
+        if (!c || !confirm(`Remove "${c.name}" from the category list?\n\nProducts keep their category — it just won't be in the dropdown.`)) return;
+        const fd = new FormData();
+        fd.append('admin_password', adminPassword);
+        fd.append('action', 'delete');
+        fd.append('id', c.id);
+        const res = await fetch(`${API_BASE}/manage_categories.php`, { method: 'POST', body: fd });
+        const d = await res.json().catch(() => ({}));
+        if (!d.success) alert(d.error || 'Delete failed');
+        if (catEditId.value === String(c.id)) resetCatForm();
+        loadCatPanel();
+    }));
+}
+
+catSaveBtn.addEventListener('click', async () => {
+    const name = catName.value.trim().replace(/\s+/g, ' ');
+    catMsg.className = 'error';
+    if (!name) { catMsg.textContent = 'Category name is required.'; return; }
+
+    const fields = [...catFields.querySelectorAll('.cf-row')].map(r => ({
+        key: r.dataset.key || '',
+        label: r.querySelector('.cf-label').value.trim(),
+        placeholder: r.querySelector('.cf-ph').value.trim()
+    })).filter(f => f.label);
+
+    const oldName = catOldName.value;
+    const renamed = oldName && name !== oldName;
+    if (renamed && !confirm(`Rename "${oldName}" to "${name}"?\n\nAll products in "${oldName}" will move to "${name}".`)) return;
+
+    catSaveBtn.disabled = true;
+    catMsg.className = '';
+    catMsg.textContent = 'Saving...';
+    try {
+        const fd = new FormData();
+        fd.append('admin_password', adminPassword);
+        fd.append('action', 'save');
+        if (catEditId.value) fd.append('id', catEditId.value);
+        fd.append('name', name);
+        fd.append('sort_order', catSort.value || '0');
+        fd.append('active', catActive.checked ? '1' : '0');
+        fd.append('fields', JSON.stringify(fields));
+        const res = await fetch(`${API_BASE}/manage_categories.php`, { method: 'POST', body: fd });
+        const d = await res.json().catch(() => ({}));
+        if (res.status === 403) { catMsg.className = 'error'; catMsg.textContent = 'Wrong admin password — re-enter it.'; return; }
+        if (!res.ok || !d.success) { catMsg.className = 'error'; catMsg.textContent = d.error || 'Save failed'; return; }
+
+        let extra = '';
+        if (renamed) {
+            const spellings = (productNames.category || []).filter(x => catKey(x.name) === catKey(oldName) || nameKey(x.name) === nameKey(oldName)).map(x => x.name);
+            if (spellings.length) {
+                const rf = new FormData();
+                rf.append('admin_password', adminPassword);
+                rf.append('field', 'category');
+                rf.append('canonical', name);
+                rf.append('rename', '1');
+                spellings.filter(n => n !== name).forEach(n => rf.append('variants[]', n));
+                const rr = await fetch(`${API_BASE}/merge_product_names.php`, { method: 'POST', body: rf });
+                const rd = await rr.json().catch(() => ({}));
+                extra = rd.success ? ` · ${rd.updated} product(s) moved` : ` · products NOT renamed: ${rd.error || 'error'}`;
+            }
+        }
+        catMsg.className = 'success';
+        catMsg.textContent = (catEditId.value ? 'Category updated' : 'Category added') + extra;
+        resetCatForm();
+        await loadProductNames();
+        loadCatPanel();
+    } catch (err) {
+        catMsg.className = 'error';
+        catMsg.textContent = 'Network error: ' + err.message;
+    } finally {
+        catSaveBtn.disabled = false;
+    }
+});
+
+document.getElementById('catImportBtn').addEventListener('click', async () => {
+    const msgEl = document.getElementById('catImportMsg');
+    await loadProductNames();
+    const seen = new Set();
+    const names = (productNames.category || [])
+        .filter(x => { const k = nameKey(x.name); if (seen.has(k)) return false; seen.add(k); return true; })
+        .map(x => x.name);
+    if (!names.length) { msgEl.style.color = '#e0342e'; msgEl.textContent = 'No product categories found.'; return; }
+    const fd = new FormData();
+    fd.append('admin_password', adminPassword);
+    fd.append('action', 'import');
+    names.forEach(n => fd.append('names[]', n));
+    const res = await fetch(`${API_BASE}/manage_categories.php`, { method: 'POST', body: fd });
+    const d = await res.json().catch(() => ({}));
+    msgEl.style.color = d.success ? '#6fbf8a' : '#e0342e';
+    msgEl.textContent = d.success ? `✓ Added ${d.added} categor${d.added === 1 ? 'y' : 'ies'}` : (d.error || 'Import failed');
+    loadCatPanel();
+});
+
+// ---- Product videos (multiple) ----
+const VIDEO_EXTS = ['mp4', 'webm', 'mov'];
+const VIDEO_MAX_MB = 50;
+
+function fmtMB(bytes) { return (bytes / 1024 / 1024).toFixed(1) + ' MB'; }
+
+/* Validate picked files, returns { ok: File[], skipped: string[] } */
+function pickVideoFiles(fileList) {
+    const ok = [], skipped = [];
+    Array.from(fileList || []).forEach(f => {
+        const ext = f.name.split('.').pop().toLowerCase();
+        if (!VIDEO_EXTS.includes(ext)) skipped.push(`${f.name} (not mp4/webm/mov)`);
+        else if (f.size > VIDEO_MAX_MB * 1024 * 1024) skipped.push(`${f.name} (${fmtMB(f.size)} — over ${VIDEO_MAX_MB}MB)`);
+        else ok.push(f);
+    });
+    return { ok, skipped };
+}
+
+/* Chunked upload of ONE extra video (video 2, 3...) for a product */
+async function uploadExtraVideo(productId, file, onProgress) {
+    const post = async (fields, chunk) => {
+        const fd = new FormData();
+        fd.append('admin_password', adminPassword);
+        Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+        if (chunk) fd.append('chunk', chunk, 'chunk.bin');
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                const res = await fetch(`${API_BASE}/product_videos.php`, { method: 'POST', body: fd });
+                const data = await res.json().catch(() => null);
+                if (res.ok && data && data.success) return data;
+                if (data && data.error && res.status !== 403) throw Object.assign(new Error(data.error), { fatal: true });
+                if (res.status === 403 && data) throw Object.assign(new Error(data.error), { fatal: true });
+            } catch (e) {
+                if (e.fatal || attempt === 3) throw e;
+            }
+            await new Promise(r => setTimeout(r, 1200 * attempt));
+        }
+        throw new Error('Upload failed');
+    };
+
+    const start = await post({ action: 'start', product_id: productId, filename: file.name });
+    const total = Math.max(1, Math.ceil(file.size / VIDEO_CHUNK_SIZE));
+    for (let i = 0; i < total; i++) {
+        await post({ action: 'chunk', token: start.token, index: i }, file.slice(i * VIDEO_CHUNK_SIZE, (i + 1) * VIDEO_CHUNK_SIZE));
+        if (onProgress) onProgress((i + 1) / total);
+    }
+    const done = await post({ action: 'finish', token: start.token });
+    return done.video;
+}
+
+async function deleteExtraVideo(videoId) {
+    const fd = new FormData();
+    fd.append('admin_password', adminPassword);
+    fd.append('action', 'delete');
+    fd.append('id', videoId);
+    const res = await fetch(`${API_BASE}/product_videos.php`, { method: 'POST', body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) throw new Error(data.error || 'Delete failed');
+}
+
+function deleteAllExtraVideos(productId) {
+    const fd = new FormData();
+    fd.append('admin_password', adminPassword);
+    fd.append('action', 'delete_all');
+    fd.append('product_id', productId);
+    return fetch(`${API_BASE}/product_videos.php`, { method: 'POST', body: fd }).catch(() => {});
+}
+
+/* ---- Add form: selected videos ---- */
+let addVideos = [];   /* [{ file, url }] */
+const addVideoList = document.getElementById('addVideoList');
+const addVideoInput = document.getElementById('videoInput');
+
+function renderAddVideos() {
+    addVideoList.innerHTML = addVideos.map((v, i) => `
+        <div class="vid-row" data-i="${i}">
+            <video src="${v.url}" muted playsinline preload="metadata"></video>
+            <div class="vid-info">
+                <div class="vid-name">${i === 0 ? '<span class="vid-tag">MAIN</span>' : `<span class="vid-tag new">#${i + 1}</span>`}${escapeHtml(v.file.name)}</div>
+                <small>${fmtMB(v.file.size)}</small>
+                <div class="vid-progress" style="display:none;"><i></i></div>
+            </div>
+            <button type="button" class="vid-x" data-remove-add-video="${i}" aria-label="Remove video">×</button>
+        </div>`).join('');
+    addVideoList.querySelectorAll('[data-remove-add-video]').forEach(b => b.addEventListener('click', () => {
+        const [gone] = addVideos.splice(Number(b.dataset.removeAddVideo), 1);
+        if (gone) URL.revokeObjectURL(gone.url);
+        renderAddVideos();
+    }));
+}
+
+function clearAddVideos() {
+    addVideos.forEach(v => URL.revokeObjectURL(v.url));
+    addVideos = [];
+    addVideoInput.value = '';
+    renderAddVideos();
+}
+
+document.getElementById('addVideoBtn').addEventListener('click', () => addVideoInput.click());
+addVideoInput.addEventListener('change', () => {
+    const { ok, skipped } = pickVideoFiles(addVideoInput.files);
+    ok.forEach(f => addVideos.push({ file: f, url: URL.createObjectURL(f) }));
+    addVideoInput.value = '';
+    renderAddVideos();
+    if (skipped.length) alert('Skipped:\n' + skipped.join('\n'));
+});
+
+/* New product id: from the API, or look it up by exact name */
+async function resolveNewProductId(data, name) {
+    const direct = data.id || data.product_id || (data.product && data.product.id);
+    if (direct) return direct;
+    try {
+        const r = await fetch(`${API_BASE}/get_products.php?search=${encodeURIComponent(name)}&page=1&t=${Date.now()}`);
+        const d = await r.json();
+        const hits = (d.products || []).filter(p => String(p.name).trim() === String(name).trim());
+        if (hits.length) return Math.max(...hits.map(p => Number(p.id) || 0));
+    } catch (_) {}
+    return null;
+}
+
 // ---- Add product submit ----
 // Shrink photos before upload: phone shots are 3-8MB each; at 1600px
 // JPEG 85% they drop to ~250-500KB with no visible loss. This is what
@@ -1475,9 +2269,9 @@ form.addEventListener('submit', async (e) => {
     formData.append('admin_password', adminPassword);
     formData.append('name', document.getElementById('name').value);
     formData.append('price', document.getElementById('price').value);
-    formData.append('category', document.getElementById('category').value);
+    formData.append('category', snapName('category', document.getElementById('category').value));
     formData.append('gender', document.getElementById('gender').value);
-    formData.append('brand', document.getElementById('brand').value);
+    formData.append('brand', snapName('brand', document.getElementById('brand').value));
     formData.append('longevity', document.getElementById('longevity').value.trim());
     formData.append('description', descriptionInput.value.trim());
     uploadFiles.forEach(file => formData.append('images[]', file));
@@ -1490,8 +2284,8 @@ form.addEventListener('submit', async (e) => {
         Object.entries(meta.fields).forEach(([k, v]) => formData.append(k, v));
     }
 
-    const videoFile = document.getElementById('videoInput').files[0];
-    if (videoFile) formData.append('video', videoFile);
+    const videosToUpload = addVideos.slice();
+    if (videosToUpload[0]) formData.append('video', videosToUpload[0].file);   /* video 1 = main */
 
     try {
         const res = await fetch(`${API_BASE}/add_product.php`, { method: 'POST', body: formData });
@@ -1510,26 +2304,49 @@ form.addEventListener('submit', async (e) => {
         if (res.ok && data.success) {
             // If add_product.php returns the new id directly, use it. Otherwise
             // resolve it by searching for the exact product name we just created.
-            let newProductId = data.id || data.product_id || null;
-            if (!newProductId) {
-                try {
-                    const searchName = document.getElementById('name').value.trim();
-                    const lookupRes = await fetch(`${API_BASE}/get_products.php?search=${encodeURIComponent(searchName)}&page=1`);
-                    const lookupData = await lookupRes.json();
-                    if (lookupData.success && lookupData.products && lookupData.products.length > 0) {
-                        newProductId = lookupData.products[0].id;
-                    }
-                } catch (lookupErr) {
-                    // fine — notes just won't attach for this product this time
-                }
-            }
+            const productName = document.getElementById('name').value;
+            const newProductId = (data.id || data.product_id || null) ||
+                (videosToUpload.length > 1 ? await resolveNewProductId(data, productName) : null);
             if (newProductId) {
                 await saveNotesForProduct(newProductId, adminPassword);
             }
+            const addCustomValues = collectCustomMeta('add');
+            if (addCustomValues) {
+                const pidForMeta = newProductId || await resolveNewProductId(data, productName);
+                if (pidForMeta) await saveProductMeta(pidForMeta, addCustomValues);
+            }
 
-            msg.textContent = 'Product added successfully!';
-            msg.className = 'success';
+            /* Videos 2, 3, ... */
+            let videoNote = '';
+            if (videosToUpload.length > 1) {
+                if (!newProductId) {
+                    videoNote = ' (extra videos not uploaded — open Edit and add them)';
+                } else {
+                    let vFail = 0;
+                    for (let i = 1; i < videosToUpload.length; i++) {
+                        msg.textContent = `Product added — uploading video ${i + 1} of ${videosToUpload.length}...`;
+                        msg.className = '';
+                        const row = addVideoList.querySelector(`.vid-row[data-i="${i}"]`);
+                        const bar = row && row.querySelector('.vid-progress');
+                        if (bar) bar.style.display = '';
+                        try {
+                            await uploadExtraVideo(newProductId, videosToUpload[i].file, pct => {
+                                if (bar) bar.firstElementChild.style.width = Math.round(pct * 100) + '%';
+                            });
+                        } catch (e) {
+                            vFail++;
+                            console.warn('Extra video failed:', e);
+                        }
+                    }
+                    if (vFail) videoNote = ` (${vFail} extra video(s) failed — add them from Edit)`;
+                }
+            }
+
+            msg.textContent = 'Product added successfully!' + videoNote;
+            msg.className = videoNote ? 'error' : 'success';
+            clearAddVideos();
             form.reset();
+            setTimeout(() => { document.getElementById('category').value = ''; updateMetaSection(); }, 0);
             selectedFiles = [];
             renderPreviews();
             variantSection.style.display = 'none';
@@ -1537,8 +2354,10 @@ form.addEventListener('submit', async (e) => {
             noteRows.innerHTML = '';
             clearMetaFields();
             descCount.textContent = '0 / 1000';
+            /* Refresh side lists in the background — don't block the form */
             loadDeleteList(1, false);
             loadCatalogSnapshot();
+            msg.scrollIntoView({ block: 'nearest' });
         } else {
             msg.textContent = data.error || 'Something went wrong.';
             msg.className = 'error';
@@ -1574,7 +2393,8 @@ async function loadDeleteList(page = 1, append = false) {
 
         deletePage = data.page;
         const rowsHtml = data.products.map(p => `
-            <div class="delete-row" data-id="${p.id}">
+            <div class="delete-row${bulkSelected.has(String(p.id)) ? ' is-selected' : ''}" data-id="${p.id}">
+                <input type="checkbox" class="bulk-check" data-id="${p.id}"${bulkSelected.has(String(p.id)) ? ' checked' : ''} aria-label="Select product">
                 <img class="delete-row-thumb" src="${p.image ? escapeHtml(p.image) : ''}" alt="${escapeHtml(p.name)}">
                 <div class="delete-row-info">
                     <div class="delete-row-name">${escapeHtml(p.name)}</div>
@@ -1596,6 +2416,7 @@ async function loadDeleteList(page = 1, append = false) {
         deleteList.querySelectorAll('.btn-edit').forEach(b => {
             b.addEventListener('click', () => openEditModal(b.dataset.id));
         });
+        bindBulkChecks();
     } catch (err) {
         deleteList.innerHTML = `<div style="font-size:13px; color:#c0392b; padding:10px 0;">${escapeHtml(err.message)}</div>`;
     }
@@ -1640,7 +2461,11 @@ async function handleDelete(id, btnEl) {
         }
 
         if (res.ok && data.success) {
+            deleteAllExtraVideos(id);
+            deleteProductMeta(id);
+            bulkSelected.delete(String(id));
             row.remove();
+            updateBulkBar();
         } else {
             alert('Delete failed: ' + (data.error || `HTTP ${res.status}`));
             btnEl.disabled = false;
@@ -1654,12 +2479,456 @@ async function handleDelete(id, btnEl) {
 }
 
 deleteSearchInput.addEventListener('input', () => {
+    bulkSelected.clear();
+    updateBulkBar();
     clearTimeout(deleteDebounce);
     deleteDebounce = setTimeout(() => loadDeleteList(1, false), 350);
 });
 
 deleteLoadMoreBtn.addEventListener('click', () => {
     loadDeleteList(deletePage + 1, true);
+});
+
+/* =========================================================
+   BULK DELETE
+   ========================================================= */
+const bulkSelected = new Set();
+const bulkSelectAll = document.getElementById('bulkSelectAll');
+const bulkCount = document.getElementById('bulkCount');
+const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+const bulkMsg = document.getElementById('bulkMsg');
+let bulkRunning = false;
+
+function updateBulkBar() {
+    const rows = deleteList.querySelectorAll('.bulk-check');
+    const n = bulkSelected.size;
+    bulkCount.textContent = n + ' selected';
+    bulkDeleteBtn.disabled = n === 0 || bulkRunning;
+    bulkDeleteBtn.textContent = n ? `Delete selected (${n})` : 'Delete selected';
+    const checked = [...rows].filter(c => c.checked).length;
+    bulkSelectAll.checked = rows.length > 0 && checked === rows.length;
+    bulkSelectAll.indeterminate = checked > 0 && checked < rows.length;
+}
+
+/* Load More rebuilds the list HTML, so listeners and checkbox state are
+   lost on old rows. We use ONE delegated listener on the list and re-sync
+   every checkbox from the Set after each render. */
+function bindBulkChecks() {
+    deleteList.querySelectorAll('.bulk-check').forEach(cb => {
+        const on = bulkSelected.has(String(cb.dataset.id));
+        cb.checked = on;
+        cb.closest('.delete-row').classList.toggle('is-selected', on);
+    });
+    updateBulkBar();
+}
+
+function setBulkRow(cb, on) {
+    const id = String(cb.dataset.id);
+    cb.checked = on;
+    if (on) bulkSelected.add(id); else bulkSelected.delete(id);
+    cb.closest('.delete-row').classList.toggle('is-selected', on);
+}
+
+deleteList.addEventListener('change', e => {
+    const cb = e.target.closest('.bulk-check');
+    if (!cb) return;
+    setBulkRow(cb, cb.checked);
+    updateBulkBar();
+});
+
+deleteList.addEventListener('click', e => {
+    if (e.target.closest('button, a, input, img')) return;
+    const row = e.target.closest('.delete-row');
+    const cb = row && row.querySelector('.bulk-check');
+    if (!cb) return;
+    setBulkRow(cb, !cb.checked);
+    updateBulkBar();
+});
+
+bulkSelectAll.addEventListener('change', () => {
+    deleteList.querySelectorAll('.bulk-check').forEach(cb => setBulkRow(cb, bulkSelectAll.checked));
+    updateBulkBar();
+});
+
+/* Delete one product. Retries on firewall / rate-limit / network hiccups.
+   Returns { ok, reason, stop } */
+async function bulkDeleteOne(id) {
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    let last = 'unknown error';
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            const fd = new FormData();
+            fd.append('admin_password', adminPassword);
+            fd.append('id', id);
+            const res = await fetch(`${API_BASE}/delete_product.php`, { method: 'POST', body: fd });
+            const text = await res.text();
+            let data = null;
+            try { data = JSON.parse(text); } catch (_) {}
+
+            if (res.ok && data && data.success) { deleteAllExtraVideos(id); deleteProductMeta(id); return { ok: true }; }
+
+            /* Real wrong password = JSON from PHP. A 403 WITHOUT JSON is the
+               Hostinger firewall blocking too many requests -> wait + retry. */
+            if (res.status === 403 && data && /password/i.test(data.error || '')) {
+                return { ok: false, reason: 'wrong admin password', stop: true };
+            }
+            if (data && data.error && res.status < 500 && res.status !== 403 && res.status !== 429) {
+                return { ok: false, reason: data.error };           /* e.g. not found — no point retrying */
+            }
+            last = data && data.error ? data.error
+                 : res.status === 403 ? 'blocked by server firewall (403)'
+                 : res.status === 429 ? 'too many requests (429)'
+                 : `HTTP ${res.status}`;
+        } catch (err) {
+            last = 'network error / blocked (' + err.message + ')';
+        }
+        await wait(1500 * attempt);                                  /* 1.5s, 3s, 4.5s */
+    }
+    return { ok: false, reason: last };
+}
+
+bulkDeleteBtn.addEventListener('click', async () => {
+    const ids = [...bulkSelected];
+    if (!ids.length) return;
+    if (!confirm(`Delete ${ids.length} product(s)? This can't be undone.`)) return;
+    if (ids.length >= 10 && prompt(`Type DELETE to confirm removing ${ids.length} products`) !== 'DELETE') return;
+
+    bulkRunning = true;
+    updateBulkBar();
+    bulkSelectAll.disabled = true;
+    let ok = 0;
+    const failed = [];
+    let stopped = false;
+
+    for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const row = deleteList.querySelector(`.delete-row[data-id="${CSS.escape(id)}"]`);
+        const name = row ? row.querySelector('.delete-row-name').textContent : `ID ${id}`;
+        bulkMsg.style.color = '#d4af6a';
+        bulkMsg.textContent = `Deleting ${i + 1} / ${ids.length}: ${name}`;
+        if (row) row.style.opacity = '0.4';
+
+        const r = await bulkDeleteOne(id);
+
+        if (r.ok) {
+            ok++;
+            bulkSelected.delete(id);
+            if (row) row.remove();
+        } else {
+            failed.push({ id, name, reason: r.reason });
+            if (row) row.style.opacity = '';
+            if (r.stop) {
+                stopped = true;
+                sessionStorage.removeItem('adminPassword');
+                adminPassword = '';
+                break;
+            }
+        }
+        updateBulkBar();
+        await new Promise(res => setTimeout(res, 250));   /* gentle pace so the firewall doesn't block */
+    }
+
+    bulkRunning = false;
+    bulkSelectAll.disabled = false;
+
+    if (stopped) {
+        bulkMsg.style.color = '#e0342e';
+        bulkMsg.textContent = `Deleted ${ok}. Stopped: wrong admin password — re-enter it and press Delete selected again.`;
+    } else if (failed.length) {
+        bulkMsg.style.color = '#e0342e';
+        bulkMsg.innerHTML = `Deleted ${ok} product(s). <b>${failed.length} failed</b> and are still selected — press <b>Delete selected</b> again to retry:` +
+            '<ul style="margin:6px 0 0 18px; padding:0;">' +
+            failed.map(f => `<li>${escapeHtml(f.name)} — ${escapeHtml(f.reason)}</li>`).join('') +
+            '</ul>';
+    } else {
+        bulkMsg.style.color = '#6fbf8a';
+        bulkMsg.textContent = `✓ Deleted all ${ok} product(s).`;
+    }
+    updateBulkBar();
+    loadProductNames();
+    if (!deleteList.querySelector('.delete-row')) loadDeleteList(1, false);
+});
+
+/* =========================================================
+   CATEGORY / BRAND NAME MATCHING
+   "casio", "CASIO ", "Casios" -> existing "Casio"
+   ========================================================= */
+let productNames = { category: [], brand: [] };
+
+/* Same rule as name_tools.php nameKey() */
+function nameKey(name) {
+    let k = String(name || '').trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+    if (k.length > 3) {
+        if (/(ch|sh|x|z|ss)es$/.test(k)) k = k.slice(0, -2);
+        else if (/[^s]s$/.test(k)) k = k.slice(0, -1);
+    }
+    return k;
+}
+
+function tidyName(name) {
+    return String(name || '').trim().replace(/\s+/g, ' ');
+}
+
+/* Existing spelling (most used) if it matches, else tidied input */
+function snapName(field, value) {
+    const v = tidyName(value);
+    if (!v) return v;
+    const key = nameKey(v);
+    const hit = (productNames[field] || []).find(x => nameKey(x.name) === key);
+    return hit ? hit.name : v;
+}
+
+async function loadProductNames() {
+    try {
+        const res = await fetch(`${API_BASE}/get_product_names.php?t=${Date.now()}`);
+        const data = await res.json();
+        if (!data.success) return;
+        productNames.category = data.categories || [];
+        productNames.brand = data.brands || [];
+
+        /* One suggestion per real name (skip duplicate spellings) */
+        const uniq = list => {
+            const seen = new Set();
+            return list.filter(x => { const k = nameKey(x.name); if (seen.has(k)) return false; seen.add(k); return true; });
+        };
+        document.getElementById('dlCategories').innerHTML = uniq(productNames.category).map(x => `<option value="${escapeHtml(x.name)}"></option>`).join('');
+        if (typeof fillRenameFrom === 'function') setTimeout(fillRenameFrom, 0);
+        document.getElementById('dlBrands').innerHTML = uniq(productNames.brand).map(x => `<option value="${escapeHtml(x.name)}"></option>`).join('');
+    } catch (e) {
+        console.log('Name list failed:', e);
+    }
+}
+
+/* Live hint under the input + snap on leaving the field */
+[['category', 'category'], ['brand', 'brand'], ['editCategory', 'category'], ['editBrand', 'brand']].forEach(([inputId, field]) => {
+    const input = document.getElementById(inputId);
+    const hint = document.querySelector(`.name-hint[data-hint-for="${inputId}"]`);
+    if (!input || !hint) return;
+
+    const showHint = () => {
+        const v = tidyName(input.value);
+        if (!v) { hint.textContent = ''; hint.className = 'name-hint'; return; }
+        const snapped = snapName(field, v);
+        if (snapped !== v) {
+            hint.textContent = `✓ Will use existing: "${snapped}"`;
+            hint.className = 'name-hint match';
+        } else if ((productNames[field] || []).some(x => x.name === v)) {
+            hint.textContent = '';
+            hint.className = 'name-hint';
+        } else {
+            hint.textContent = `+ New ${field}`;
+            hint.className = 'name-hint new';
+        }
+    };
+    input.addEventListener('input', showHint);
+    input.addEventListener('blur', () => {
+        const snapped = snapName(field, input.value);
+        if (snapped !== input.value) {
+            input.value = snapped;
+            input.dispatchEvent(new Event('input'));   /* keeps meta-section detection in sync */
+        }
+        showHint();
+    });
+});
+
+loadProductNames().then(() => loadManagedCats());
+
+/* ---------- Duplicate scanner + merge ---------- */
+const dupScanBtn = document.getElementById('dupScanBtn');
+const dupResults = document.getElementById('dupResults');
+
+async function scanDuplicates() {
+    dupScanBtn.disabled = true;
+    dupScanBtn.textContent = 'Scanning...';
+    dupResults.innerHTML = '';
+    try {
+        const res = await fetch(`${API_BASE}/get_product_names.php?t=${Date.now()}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Scan failed');
+
+        productNames.category = data.categories || [];
+        productNames.brand = data.brands || [];
+
+        const groups = [
+            ...data.duplicates.category.map(g => ({ ...g, field: 'category' })),
+            ...data.duplicates.brand.map(g => ({ ...g, field: 'brand' }))
+        ].sort((a, b) => (a.similar ? 1 : 0) - (b.similar ? 1 : 0));
+
+        if (!groups.length) {
+            dupResults.innerHTML = '<p style="font-size:13px; color:#6fbf8a; margin:10px 0 0;">✓ No duplicates found. All categories and brands are clean.</p>';
+            return;
+        }
+
+        dupResults.innerHTML = `
+            <p style="font-size:12px; color:#d4af6a; margin:10px 0 0;">${groups.length} group(s) found. Pick the spelling to keep and press Merge.</p>
+            ${groups.map((g, gi) => `
+                <div class="dup-group" data-gi="${gi}">
+                    <div style="font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#8f897d;">${g.field}${g.similar ? ' · <span style="color:#e0a43e;">possible typo — check before merging</span>' : ''}</div>
+                    <div class="dup-variants">${g.variants.map(v => `<b>${escapeHtml(v.name)}</b> ${v.count}`).join(' &nbsp; ')}</div>
+                    <div class="dup-row">
+                        <select class="dup-pick">
+                            ${g.variants.map(v => `<option value="${escapeHtml(v.name)}">Keep "${escapeHtml(v.name)}"</option>`).join('')}
+                            <option value="__custom">Type a new spelling...</option>
+                        </select>
+                        <input type="text" class="dup-custom" placeholder="e.g. Casio" style="display:none;">
+                        <button type="button" class="dup-merge">Merge</button>
+                    </div>
+                    <div class="dup-msg" style="font-size:12px; margin-top:6px;"></div>
+                </div>`).join('')}
+            <button type="button" id="dupMergeAllBtn" style="width:auto; padding:10px 20px; margin-top:12px;">Merge all exact matches (typo groups stay for manual check)</button>
+        `;
+
+        const mergeGroup = async (g, box) => {
+            const pick = box.querySelector('.dup-pick');
+            const custom = box.querySelector('.dup-custom');
+            const msgEl = box.querySelector('.dup-msg');
+            const btn = box.querySelector('.dup-merge');
+            const canonical = pick.value === '__custom' ? tidyName(custom.value) : pick.value;
+
+            if (!canonical) { msgEl.style.color = '#e0342e'; msgEl.textContent = 'Type the spelling to keep.'; return false; }
+            if (!g.similar && nameKey(canonical) !== g.key) { msgEl.style.color = '#e0342e'; msgEl.textContent = 'That spelling doesn\'t match this group.'; return false; }
+
+            btn.disabled = true;
+            msgEl.style.color = '#d4af6a';
+            msgEl.textContent = 'Merging...';
+
+            const fd = new FormData();
+            fd.append('admin_password', adminPassword);
+            fd.append('field', g.field);
+            fd.append('canonical', canonical);
+            if (g.similar) fd.append('allow_similar', '1');
+            g.variants.forEach(v => { if (v.name !== canonical) fd.append('variants[]', v.name); });
+
+            try {
+                const res = await fetch(`${API_BASE}/merge_product_names.php`, { method: 'POST', body: fd });
+                const d = await res.json();
+                if (res.ok && d.success) {
+                    msgEl.style.color = '#6fbf8a';
+                    msgEl.textContent = `✓ Merged into "${canonical}" — ${d.updated} product(s) updated` +
+                        (d.other_tables && d.other_tables.length ? ` · also: ${d.other_tables.join(', ')}` : '');
+                    box.querySelector('.dup-row').style.display = 'none';
+                    return true;
+                }
+                msgEl.style.color = '#e0342e';
+                msgEl.textContent = d.error || `HTTP ${res.status}`;
+            } catch (err) {
+                msgEl.style.color = '#e0342e';
+                msgEl.textContent = 'Network error: ' + err.message;
+            }
+            btn.disabled = false;
+            return false;
+        };
+
+        dupResults.querySelectorAll('.dup-group').forEach(box => {
+            const g = groups[Number(box.dataset.gi)];
+            const pick = box.querySelector('.dup-pick');
+            const custom = box.querySelector('.dup-custom');
+            pick.addEventListener('change', () => { custom.style.display = pick.value === '__custom' ? '' : 'none'; });
+            box.querySelector('.dup-merge').addEventListener('click', async () => {
+                if (await mergeGroup(g, box)) loadProductNames();
+            });
+        });
+
+        document.getElementById('dupMergeAllBtn').addEventListener('click', async (e) => {
+            if (!confirm(`Merge all ${groups.length} group(s) using the most-used spelling (unless you changed the dropdown)?`)) return;
+            e.target.disabled = true;
+            for (const box of dupResults.querySelectorAll('.dup-group')) {
+                if (box.querySelector('.dup-row').style.display === 'none') continue;
+                const g = groups[Number(box.dataset.gi)];
+                if (g.similar) continue; /* typos need a manual check */
+                await mergeGroup(g, box);
+            }
+            e.target.textContent = 'Done';
+            loadProductNames();
+            loadDeleteList(1, false);
+        });
+    } catch (err) {
+        dupResults.innerHTML = `<p style="font-size:13px; color:#e0342e; margin:10px 0 0;">${escapeHtml(err.message)}</p>`;
+    } finally {
+        dupScanBtn.disabled = false;
+        dupScanBtn.textContent = 'Scan again';
+    }
+}
+dupScanBtn.addEventListener('click', scanDuplicates);
+
+/* ---------- Rename category / brand ---------- */
+const renField = document.getElementById('renField');
+const renFrom = document.getElementById('renFrom');
+const renTo = document.getElementById('renTo');
+const renBtn = document.getElementById('renBtn');
+const renMsg = document.getElementById('renMsg');
+
+function fillRenameFrom() {
+    const list = productNames[renField.value] || [];
+    /* one option per real name; value = key, all spellings get renamed */
+    const groups = new Map();
+    list.forEach(x => {
+        const k = nameKey(x.name);
+        if (!groups.has(k)) groups.set(k, { label: x.name, names: [], count: 0 });
+        const g = groups.get(k);
+        g.names.push(x.name);
+        g.count += x.count;
+    });
+    renFrom._groups = groups;
+    const keep = renFrom.value;
+    renFrom.innerHTML = '<option value="">— Current name —</option>' +
+        [...groups.entries()]
+            .sort((a, b) => a[1].label.localeCompare(b[1].label, undefined, { sensitivity: 'base' }))
+            .map(([k, g]) => `<option value="${escapeHtml(k)}">${escapeHtml(g.label)} (${g.count})${g.names.length > 1 ? ' · ' + g.names.length + ' spellings' : ''}</option>`)
+            .join('');
+    if (keep && groups.has(keep)) renFrom.value = keep;
+}
+renField.addEventListener('change', fillRenameFrom);
+renFrom.addEventListener('focus', fillRenameFrom);
+
+renBtn.addEventListener('click', async () => {
+    const g = renFrom._groups && renFrom._groups.get(renFrom.value);
+    const newName = tidyName(renTo.value);
+    renMsg.style.color = '#e0342e';
+    if (!g) { renMsg.textContent = 'Choose the current name.'; return; }
+    if (!newName) { renMsg.textContent = 'Type the new name.'; return; }
+    const variants = g.names.filter(n => n !== newName);
+    if (!variants.length) { renMsg.textContent = 'That is already the name.'; return; }
+
+    /* Renaming onto another existing name = merge; confirm */
+    const other = [...renFrom._groups.entries()].find(([k, x]) => k !== renFrom.value && nameKey(newName) === k);
+    const what = renField.value;
+    if (!confirm(other
+        ? `"${newName}" already exists. Move all ${g.count} product(s) from "${g.label}" into "${other[1].label}"?`
+        : `Rename ${what} "${g.label}" to "${newName}" on ${g.count} product(s)?`)) return;
+
+    const target = other ? other[1].label : newName;
+    renBtn.disabled = true;
+    renMsg.style.color = '#d4af6a';
+    renMsg.textContent = 'Renaming...';
+    try {
+        const fd = new FormData();
+        fd.append('admin_password', adminPassword);
+        fd.append('field', what);
+        fd.append('canonical', target);
+        fd.append('rename', '1');
+        variants.filter(n => n !== target).forEach(n => fd.append('variants[]', n));
+        const res = await fetch(`${API_BASE}/merge_product_names.php`, { method: 'POST', body: fd });
+        const d = await res.json();
+        if (res.ok && d.success) {
+            renMsg.style.color = '#6fbf8a';
+            renMsg.textContent = `✓ Renamed to "${target}" — ${d.updated} product(s) updated` +
+                (d.other_tables && d.other_tables.length ? ` · also: ${d.other_tables.join(', ')}` : '');
+            renTo.value = '';
+            await loadProductNames();
+            fillRenameFrom();
+            loadDeleteList(1, false);
+        } else {
+            renMsg.style.color = '#e0342e';
+            renMsg.textContent = d.error || `HTTP ${res.status}`;
+        }
+    } catch (err) {
+        renMsg.style.color = '#e0342e';
+        renMsg.textContent = 'Network error: ' + err.message;
+    } finally {
+        renBtn.disabled = false;
+    }
 });
 
 // ---- Category icon uploader ----
@@ -1742,127 +3011,6 @@ uploadIconBtn.addEventListener('click', async () => {
         uploadIconBtn.textContent = 'Upload Icon';
     }
 });
-
-// ---- Brand icons ----
-const iconBrandSelect = document.getElementById('iconBrandSelect');
-const brandIconFileInput = document.getElementById('brandIconFileInput');
-const uploadBrandIconBtn = document.getElementById('uploadBrandIconBtn');
-const brandIconMsg = document.getElementById('brandIconMsg');
-const brandIconPreviewCircle = document.getElementById('brandIconPreviewCircle');
-
-let brandIconMap = {};
-
-if (brandIconFileInput) {
-    brandIconFileInput.addEventListener('change', () => {
-        const file = brandIconFileInput.files[0];
-        if (file) {
-            brandIconPreviewCircle.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="icon preview">`;
-        }
-    });
-}
-
-function showBrandIconCurrent() {
-    const img = brandIconMap[iconBrandSelect.value];
-    if (img && !brandIconFileInput.files[0]) {
-        brandIconPreviewCircle.innerHTML = `<img src="${escapeHtml(img)}" alt="current icon">`;
-    }
-}
-
-async function loadIconBrandOptions() {
-    if (!iconBrandSelect) return;
-    try {
-        const [bRes, iRes] = await Promise.all([
-            fetch(`${API_BASE}/get_brands.php`),
-            fetch(`${API_BASE}/get_brand_icons.php`)
-        ]);
-        const bData = await bRes.json();
-        const iData = await iRes.json();
-
-        if (iData.success && Array.isArray(iData.icons)) {
-            brandIconMap = {};
-            iData.icons.forEach(i => { brandIconMap[i.brand_name] = i.image; });
-        }
-
-        if (bData.success && Array.isArray(bData.brands)) {
-            iconBrandSelect.innerHTML = '';
-            bData.brands.forEach(b => {
-                const opt = document.createElement('option');
-                opt.value = b.brand;
-                opt.textContent = brandIconMap[b.brand] ? `${b.brand} (icon set)` : b.brand;
-                iconBrandSelect.appendChild(opt);
-            });
-            showBrandIconCurrent();
-        }
-    } catch (err) {
-        // dropdown stays empty
-    }
-}
-
-if (iconBrandSelect) {
-    iconBrandSelect.addEventListener('change', () => {
-        brandIconFileInput.value = '';
-        brandIconPreviewCircle.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
-        showBrandIconCurrent();
-    });
-}
-
-if (uploadBrandIconBtn) {
-    uploadBrandIconBtn.addEventListener('click', async () => {
-        const file = brandIconFileInput.files[0];
-        if (!iconBrandSelect.value) {
-            brandIconMsg.textContent = 'No brands found — add products first.';
-            brandIconMsg.className = 'error';
-            return;
-        }
-        if (!file) {
-            brandIconMsg.textContent = 'Choose an image first.';
-            brandIconMsg.className = 'error';
-            return;
-        }
-
-        uploadBrandIconBtn.disabled = true;
-        uploadBrandIconBtn.textContent = 'Uploading...';
-        brandIconMsg.textContent = '';
-        brandIconMsg.className = '';
-
-        const formData = new FormData();
-        formData.append('admin_password', adminPassword);
-        formData.append('brand_name', iconBrandSelect.value);
-        formData.append('icon', file);
-
-        try {
-            const res = await fetch(`${API_BASE}/set_brand_icon.php`, { method: 'POST', body: formData });
-            const data = await res.json();
-
-            if (res.status === 403) {
-                brandIconMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
-                brandIconMsg.className = 'error';
-                sessionStorage.removeItem('adminPassword');
-                adminPassword = '';
-                document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
-                passwordGate.style.display = 'block';
-                return;
-            }
-
-            if (res.ok && data.success) {
-                brandIconMsg.textContent = 'Brand icon updated!';
-                brandIconMsg.className = 'success';
-                brandIconFileInput.value = '';
-                brandIconMap[data.brand_name] = data.image;
-                loadIconBrandOptions();
-            } else {
-                brandIconMsg.textContent = data.error || 'Upload failed.';
-                brandIconMsg.className = 'error';
-            }
-        } catch (err) {
-            brandIconMsg.textContent = 'Network error: ' + err.message;
-            brandIconMsg.className = 'error';
-        } finally {
-            uploadBrandIconBtn.disabled = false;
-            uploadBrandIconBtn.textContent = 'Upload Brand Icon';
-        }
-    });
-}
 
 // ---- Hero Slider manager ----
 
@@ -1956,14 +3104,52 @@ if (heroCancelEditBtn) {
     heroCancelEditBtn.addEventListener('click', resetHeroForm);
 }
 
-/* ---------- HOME CARDS ADMIN ---------- */
+/* ---------- HOME CARDS ADMIN (sections + cards) ---------- */
+
+/* Shared: handle 403 = wrong saved password */
+function hcHandleForbidden(msgEl) {
+    sessionStorage.removeItem('adminPassword');
+    msgEl.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
+    msgEl.className = 'error';
+    document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
+    passwordGate.style.display = 'block';
+}
+
+/* ===== SECTIONS ===== */
+const hsList = document.getElementById('hsList');
+const hsEditId = document.getElementById('hsEditId');
+const hsName = document.getElementById('hsName');
+const hsEyebrow = document.getElementById('hsEyebrow');
+const hsTitle = document.getElementById('hsTitle');
+const hsAccentWord = document.getElementById('hsAccentWord');
+const hsViewAllText = document.getElementById('hsViewAllText');
+const hsViewAllLink = document.getElementById('hsViewAllLink');
+const hsSortOrder = document.getElementById('hsSortOrder');
+const hsActive = document.getElementById('hsActive');
+const hsSaveBtn = document.getElementById('hsSaveBtn');
+const hsCancelEditBtn = document.getElementById('hsCancelEditBtn');
+const hsFormLabel = document.getElementById('hsFormLabel');
+const hsMsg = document.getElementById('hsMsg');
+
+/* ===== CARDS ===== */
 const hcList = document.getElementById('hcList');
 const hcEditId = document.getElementById('hcEditId');
+const hcSection = document.getElementById('hcSection');
+const hcImageInput = document.getElementById('hcImageInput');
+const hcImagePreview = document.getElementById('hcImagePreview');
+const hcRemoveImage = document.getElementById('hcRemoveImage');
+const hcRemoveImageWrap = document.getElementById('hcRemoveImageWrap');
 const hcHeading = document.getElementById('hcHeading');
 const hcBody = document.getElementById('hcBody');
 const hcHighlight = document.getElementById('hcHighlight');
+const hcBtnText = document.getElementById('hcBtnText');
+const hcBtnLink = document.getElementById('hcBtnLink');
 const hcCaption = document.getElementById('hcCaption');
 const hcSkin = document.getElementById('hcSkin');
+const hcBg = document.getElementById('hcBg');
+const hcBgPick = document.getElementById('hcBgPick');
+const hcAccent = document.getElementById('hcAccent');
+const hcAccentPick = document.getElementById('hcAccentPick');
 const hcSortOrder = document.getElementById('hcSortOrder');
 const hcWDesktop = document.getElementById('hcWDesktop');
 const hcHDesktop = document.getElementById('hcHDesktop');
@@ -1975,21 +3161,231 @@ const hcCancelEditBtn = document.getElementById('hcCancelEditBtn');
 const hcFormLabel = document.getElementById('hcFormLabel');
 const hcMsg = document.getElementById('hcMsg');
 
-let hcCached = [];
+if (hcBgPick) hcBgPick.addEventListener('input', () => { hcBg.value = hcBgPick.value; });
+if (hcAccentPick) hcAccentPick.addEventListener('input', () => { hcAccent.value = hcAccentPick.value; });
 
+let hcCached = [];
+let hsCached = [];
+
+function hcSetPreview(src) {
+    hcImagePreview.innerHTML = src
+        ? `<img src="${escapeHtml(src)}" alt="preview" style="width:100%;height:100%;object-fit:cover;">`
+        : 'No image';
+}
+
+if (hcImageInput) {
+    hcImageInput.addEventListener('change', () => {
+        const f = hcImageInput.files[0];
+        if (f) {
+            hcSetPreview(URL.createObjectURL(f));
+            hcRemoveImage.checked = false;
+        }
+    });
+}
+
+/* ---------- SECTION FORM ---------- */
+function resetHsForm() {
+    hsEditId.value = '';
+    hsName.value = '';
+    hsEyebrow.value = '';
+    hsTitle.value = '';
+    hsAccentWord.value = '';
+    hsViewAllText.value = '';
+    hsViewAllLink.value = '';
+    hsSortOrder.value = '0';
+    hsActive.checked = true;
+    hsFormLabel.textContent = 'Add a section (category)';
+    hsSaveBtn.textContent = 'Save Section';
+    hsCancelEditBtn.style.display = 'none';
+    hsMsg.textContent = '';
+    hsMsg.className = '';
+}
+
+if (hsCancelEditBtn) hsCancelEditBtn.addEventListener('click', resetHsForm);
+
+function fillSectionDropdown() {
+    const keep = hcSection.value;
+    hcSection.innerHTML = '<option value="">— Choose a section —</option>' +
+        hsCached.map(s => `<option value="${s.id}">${escapeHtml(s.name)}${Number(s.active) ? '' : ' (inactive)'}</option>`).join('');
+    if (keep && hsCached.some(s => String(s.id) === keep)) hcSection.value = keep;
+}
+
+function renderHsList() {
+    if (!hsCached.length) {
+        hsList.innerHTML = '<p style="font-size:12px;color:#999;">No sections yet. Add one above (e.g. Watches), then add cards to it.</p>';
+        return;
+    }
+    hsList.innerHTML = hsCached.map(s => {
+        const count = hcCached.filter(c => String(c.section_id) === String(s.id)).length;
+        const shown = (s.title || s.name) + (s.accent_word ? ' ' + s.accent_word : '');
+        return `
+            <div class="delete-row">
+                <div class="delete-row-thumb" style="width:36px;height:36px;border-radius:6px;background:#1a1508;color:#d4af6a;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">${count}</div>
+                <div class="delete-row-info">
+                    <div class="delete-row-name">${escapeHtml(s.name)} ${Number(s.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
+                    <div class="delete-row-price">"${escapeHtml(shown)}" · ${count} card${count === 1 ? '' : 's'} · Order ${escapeHtml(String(s.sort_order != null ? s.sort_order : 0))}</div>
+                </div>
+                <div class="delete-row-actions">
+                    <button type="button" class="btn-pill btn-edit" data-hs-add="${s.id}">+ Card</button>
+                    <button type="button" class="btn-pill btn-edit" data-hs-edit="${s.id}">Edit</button>
+                    <button type="button" class="btn-pill btn-delete" data-hs-delete="${s.id}">Delete</button>
+                </div>
+            </div>`;
+    }).join('');
+
+    hsList.querySelectorAll('[data-hs-add]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            resetHcForm();
+            hcSection.value = btn.dataset.hsAdd;
+            hcFormLabel.scrollIntoView({ behavior: 'smooth' });
+            hcHeading.focus({ preventScroll: true });
+        });
+    });
+
+    hsList.querySelectorAll('[data-hs-edit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const s = hsCached.find(x => String(x.id) === btn.dataset.hsEdit);
+            if (!s) return;
+            hsEditId.value = s.id;
+            hsName.value = s.name || '';
+            hsEyebrow.value = s.eyebrow || '';
+            hsTitle.value = s.title || '';
+            hsAccentWord.value = s.accent_word || '';
+            hsViewAllText.value = s.view_all_text || '';
+            hsViewAllLink.value = s.view_all_link || '';
+            hsSortOrder.value = s.sort_order != null ? s.sort_order : 0;
+            hsActive.checked = !!Number(s.active);
+            hsFormLabel.textContent = 'Edit section';
+            hsSaveBtn.textContent = 'Update Section';
+            hsCancelEditBtn.style.display = 'inline-block';
+            hsFormLabel.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    hsList.querySelectorAll('[data-hs-delete]').forEach(btn => {
+        btn.addEventListener('click', () => deleteHomeSection(btn.dataset.hsDelete, btn));
+    });
+}
+
+async function deleteHomeSection(id, btn) {
+    const count = hcCached.filter(c => String(c.section_id) === String(id)).length;
+    if (!confirm('Delete this section?')) return;
+    let deleteCards = false;
+    if (count > 0) {
+        deleteCards = confirm(`This section has ${count} card(s).\n\nOK = delete the cards too\nCancel = keep the cards (they become "No section" and hide from the homepage until you move them)`);
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+    const formData = new FormData();
+    formData.append('admin_password', adminPassword);
+    formData.append('id', id);
+    formData.append('delete_cards', deleteCards ? '1' : '0');
+    try {
+        const res = await fetch(`${API_BASE}/delete_home_section.php`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            if (hsEditId.value === String(id)) resetHsForm();
+            loadHcList();
+        } else {
+            alert(data.error || 'Delete failed');
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+        }
+    } catch (err) {
+        alert('Network error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+    }
+}
+
+if (hsSaveBtn) {
+    hsSaveBtn.addEventListener('click', async () => {
+        const isEdit = !!hsEditId.value;
+        if (!hsName.value.trim()) {
+            hsMsg.textContent = 'Section name is required.';
+            hsMsg.className = 'error';
+            return;
+        }
+
+        hsSaveBtn.disabled = true;
+        hsMsg.textContent = 'Saving...';
+        hsMsg.className = '';
+
+        const formData = new FormData();
+        formData.append('admin_password', adminPassword);
+        if (isEdit) formData.append('id', hsEditId.value);
+        formData.append('name', hsName.value.trim());
+        formData.append('eyebrow', hsEyebrow.value.trim());
+        formData.append('title', hsTitle.value.trim());
+        formData.append('accent_word', hsAccentWord.value.trim());
+        formData.append('view_all_text', hsViewAllText.value.trim());
+        formData.append('view_all_link', hsViewAllLink.value.trim());
+        formData.append('sort_order', hsSortOrder.value || '0');
+        formData.append('active', hsActive.checked ? '1' : '0');
+
+        try {
+            const res = await fetch(`${API_BASE}/save_home_section.php`, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (res.status === 403) { hcHandleForbidden(hsMsg); return; }
+
+            if (res.ok && data.success) {
+                resetHsForm();
+                hsMsg.textContent = isEdit ? 'Section saved!' : 'Section added! Now add cards to it below.';
+                hsMsg.className = 'success';
+                await loadHcList();
+                if (!isEdit && data.id) hcSection.value = String(data.id);
+            } else {
+                hsMsg.textContent = data.error || 'Something went wrong.';
+                hsMsg.className = 'error';
+            }
+        } catch (err) {
+            hsMsg.textContent = 'Network error: ' + err.message;
+            hsMsg.className = 'error';
+        } finally {
+            hsSaveBtn.disabled = false;
+        }
+    });
+}
+
+/* Always re-draw the image to a fresh JPEG (max 1200px).
+   Strips EXIF/metadata so the Hostinger firewall (ModSecurity) doesn't block the upload. */
+async function hcCleanImage(file) {
+    const bmp = await createImageBitmap(file);
+    const maxSide = Math.max(bmp.width, bmp.height);
+    const scale = maxSide > 1200 ? 1200 / maxSide : 1;
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * scale);
+    c.height = Math.round(bmp.height * scale);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.85));
+    if (!blob) throw new Error('encode failed');
+    return blob;
+}
+
+/* ---------- CARD FORM ---------- */
 function resetHcForm() {
     hcEditId.value = '';
     hcHeading.value = '';
     hcBody.value = '';
     hcHighlight.value = '';
+    hcBtnText.value = '';
+    hcBtnLink.value = '';
     hcCaption.value = '';
     hcSkin.value = 'cream';
+    hcBg.value = '';
+    hcAccent.value = '';
     hcSortOrder.value = '0';
     hcActive.checked = true;
-    hcWDesktop.value = '0';
-    hcHDesktop.value = '0';
-    hcWMobile.value = '0';
-    hcHMobile.value = '0';
+    hcImageInput.value = '';
+    hcRemoveImage.checked = false;
+    hcRemoveImageWrap.style.display = 'none';
+    hcSetPreview('');
+    /* keep the chosen section + deck sizes so adding several cards in a row is quick */
     hcFormLabel.textContent = 'Add a home card';
     hcSaveBtn.textContent = 'Save Card';
     hcCancelEditBtn.style.display = 'none';
@@ -1999,65 +3395,112 @@ function resetHcForm() {
 
 if (hcCancelEditBtn) hcCancelEditBtn.addEventListener('click', resetHcForm);
 
+function hcCardRow(c, i) {
+    const skinColor = { cream: '#f5efe2', green: '#123b27', clay: '#e3b9a4' };
+    const thumb = c.image
+        ? `<img src="${escapeHtml(c.image)}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+        : `${i + 1}.`;
+    return `
+        <div class="delete-row">
+            <div class="delete-row-thumb" style="width:40px;height:50px;border-radius:6px;overflow:hidden;background:${c.card_bg || skinColor[c.skin] || '#f5efe2'};display:flex;align-items:center;justify-content:center;color:${c.skin === 'green' ? '#f2f8f4' : '#2a241a'};font-family:Georgia,serif;font-size:13px;flex-shrink:0;">${thumb}</div>
+            <div class="delete-row-info">
+                <div class="delete-row-name">${i + 1}. ${escapeHtml(c.heading)} ${Number(c.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
+                <div class="delete-row-price">${c.image ? 'Image' : 'No image'} · ${c.btn_text ? 'Button: ' + escapeHtml(c.btn_text) : 'No button'} · Order ${escapeHtml(String(c.sort_order != null ? c.sort_order : 0))}</div>
+            </div>
+            <div class="delete-row-actions">
+                <button type="button" class="btn-pill btn-edit" data-hc-edit="${c.id}">Edit</button>
+                <button type="button" class="btn-pill btn-delete" data-hc-delete="${c.id}">Delete</button>
+            </div>
+        </div>`;
+}
+
+function renderHcList() {
+    if (!hcCached.length) {
+        hcList.innerHTML = '<p style="font-size:12px;color:#999;">No cards yet.</p>';
+        return;
+    }
+
+    const groups = hsCached.map(s => ({
+        title: s.name + (Number(s.active) ? '' : ' (inactive)'),
+        cards: hcCached.filter(c => String(c.section_id) === String(s.id))
+    }));
+    const ids = new Set(hsCached.map(s => String(s.id)));
+    const loose = hcCached.filter(c => !ids.has(String(c.section_id)));
+    if (loose.length) groups.push({ title: 'No section — edit these and choose a section', cards: loose, warn: true });
+
+    hcList.innerHTML = groups.map(g => `
+        <div style="margin:10px 0 4px; font-size:12px; font-weight:700; letter-spacing:.04em; color:${g.warn ? '#e0342e' : '#b8933f'}; text-transform:uppercase;">${escapeHtml(g.title)} · ${g.cards.length}</div>
+        ${g.cards.length ? g.cards.map(hcCardRow).join('') : '<p style="font-size:12px;color:#999;margin:4px 0 10px;">No cards in this section.</p>'}
+    `).join('');
+
+    hcList.querySelectorAll('[data-hc-edit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const c = hcCached.find(x => String(x.id) === btn.dataset.hcEdit);
+            if (!c) return;
+            hcEditId.value = c.id;
+            hcSection.value = Number(c.section_id) > 0 && ids.has(String(c.section_id)) ? String(c.section_id) : '';
+            hcHeading.value = c.heading;
+            hcBody.value = c.body || '';
+            hcHighlight.value = c.highlight || '';
+            hcBtnText.value = c.btn_text || '';
+            hcBtnLink.value = c.btn_link || '';
+            hcCaption.value = c.caption || '';
+            hcSkin.value = c.skin || 'cream';
+            hcBg.value = c.card_bg || '';
+            if (c.card_bg) hcBgPick.value = c.card_bg;
+            hcAccent.value = c.accent || '';
+            if (c.accent) hcAccentPick.value = c.accent;
+            hcSortOrder.value = c.sort_order != null ? c.sort_order : 0;
+            hcActive.checked = !!Number(c.active);
+            hcWDesktop.value = c.card_w_desktop != null ? c.card_w_desktop : 0;
+            hcHDesktop.value = c.card_h_desktop != null ? c.card_h_desktop : 0;
+            hcWMobile.value = c.card_w_mobile != null ? c.card_w_mobile : 0;
+            hcHMobile.value = c.card_h_mobile != null ? c.card_h_mobile : 0;
+            hcImageInput.value = '';
+            hcRemoveImage.checked = false;
+            hcRemoveImageWrap.style.display = c.image ? 'flex' : 'none';
+            hcSetPreview(c.image || '');
+            hcFormLabel.textContent = 'Edit home card';
+            hcSaveBtn.textContent = 'Update Card';
+            hcCancelEditBtn.style.display = 'inline-block';
+            hcMsg.textContent = '';
+            hcFormLabel.scrollIntoView({ behavior: 'smooth' });
+        });
+    });
+
+    hcList.querySelectorAll('[data-hc-delete]').forEach(btn => {
+        btn.addEventListener('click', () => deleteHomeCard(btn.dataset.hcDelete, btn));
+    });
+}
+
+/* Loads sections + cards together (called when the panel opens) */
 async function loadHcList() {
     if (!hcList) return;
     hcList.innerHTML = '<p style="font-size:12px;color:#999;">Loading...</p>';
+    hsList.innerHTML = '<p style="font-size:12px;color:#999;">Loading...</p>';
 
     try {
         const res = await fetch(`${API_BASE}/get_home_cards.php?all=1&t=${Date.now()}`);
         const data = await res.json();
 
-        if (!data.success || !Array.isArray(data.cards) || !data.cards.length) {
-            hcList.innerHTML = '<p style="font-size:12px;color:#999;">No cards yet.</p>';
-            hcCached = [];
-            return;
+        hsCached = data.success && Array.isArray(data.sections) ? data.sections : [];
+        hcCached = data.success && Array.isArray(data.cards) ? data.cards : [];
+
+        /* Deck sizes are shared: pre-fill them from any card so a new card doesn't reset them */
+        if (!hcEditId.value && hcCached.length) {
+            const c0 = hcCached[0];
+            hcWDesktop.value = c0.card_w_desktop || 0;
+            hcHDesktop.value = c0.card_h_desktop || 0;
+            hcWMobile.value = c0.card_w_mobile || 0;
+            hcHMobile.value = c0.card_h_mobile || 0;
         }
 
-        hcCached = data.cards;
-        const skinColor = { cream: '#f5efe2', green: '#123b27', clay: '#e3b9a4' };
-
-        hcList.innerHTML = data.cards.map((c, i) => `
-            <div class="delete-row">
-                <div class="delete-row-thumb" style="width:36px;height:45px;border-radius:6px;background:${skinColor[c.skin] || '#f5efe2'};display:flex;align-items:center;justify-content:center;color:${c.skin === 'green' ? '#f2f8f4' : '#2a241a'};font-family:Georgia,serif;font-size:13px;">${i + 1}.</div>
-                <div class="delete-row-info">
-                    <div class="delete-row-name">${escapeHtml(c.heading)} ${Number(c.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
-                    <div class="delete-row-price">${escapeHtml(c.skin)} · Order ${escapeHtml(String(c.sort_order != null ? c.sort_order : 0))}</div>
-                </div>
-                <div class="delete-row-actions">
-                    <button type="button" class="btn-pill btn-edit" data-hc-edit="${c.id}">Edit</button>
-                    <button type="button" class="btn-pill btn-delete" data-hc-delete="${c.id}">Delete</button>
-                </div>
-            </div>
-        `).join('');
-
-        hcList.querySelectorAll('[data-hc-edit]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const c = hcCached.find(x => String(x.id) === btn.dataset.hcEdit);
-                if (!c) return;
-                hcEditId.value = c.id;
-                hcHeading.value = c.heading;
-                hcBody.value = c.body || '';
-                hcHighlight.value = c.highlight || '';
-                hcCaption.value = c.caption || '';
-                hcSkin.value = c.skin || 'cream';
-                hcSortOrder.value = c.sort_order != null ? c.sort_order : 0;
-                hcActive.checked = !!Number(c.active);
-                hcWDesktop.value = c.card_w_desktop != null ? c.card_w_desktop : 0;
-                hcHDesktop.value = c.card_h_desktop != null ? c.card_h_desktop : 0;
-                hcWMobile.value = c.card_w_mobile != null ? c.card_w_mobile : 0;
-                hcHMobile.value = c.card_h_mobile != null ? c.card_h_mobile : 0;
-                hcFormLabel.textContent = 'Edit home card';
-                hcSaveBtn.textContent = 'Update Card';
-                hcCancelEditBtn.style.display = 'inline-block';
-                hcFormLabel.scrollIntoView({ behavior: 'smooth' });
-            });
-        });
-
-        hcList.querySelectorAll('[data-hc-delete]').forEach(btn => {
-            btn.addEventListener('click', () => deleteHomeCard(btn.dataset.hcDelete, btn));
-        });
+        fillSectionDropdown();
+        renderHsList();
+        renderHcList();
     } catch (err) {
         hcList.innerHTML = `<p style="font-size:12px;color:#e0342e;">Couldn't load cards: ${escapeHtml(err.message)}</p>`;
+        hsList.innerHTML = `<p style="font-size:12px;color:#e0342e;">Couldn't load sections: ${escapeHtml(err.message)}</p>`;
     }
 }
 
@@ -2072,6 +3515,7 @@ async function deleteHomeCard(id, btn) {
         const res = await fetch(`${API_BASE}/delete_home_card.php`, { method: 'POST', body: formData });
         const data = await res.json();
         if (res.ok && data.success) {
+            if (hcEditId.value === String(id)) resetHcForm();
             loadHcList();
         } else {
             alert(data.error || 'Delete failed');
@@ -2089,6 +3533,11 @@ if (hcSaveBtn) {
     hcSaveBtn.addEventListener('click', async () => {
         const isEdit = !!hcEditId.value;
 
+        if (!hcSection.value) {
+            hcMsg.textContent = 'Choose a section first (add one above if the list is empty).';
+            hcMsg.className = 'error';
+            return;
+        }
         if (!hcHeading.value.trim()) {
             hcMsg.textContent = 'Heading is required.';
             hcMsg.className = 'error';
@@ -2102,11 +3551,16 @@ if (hcSaveBtn) {
         const formData = new FormData();
         formData.append('admin_password', adminPassword);
         if (isEdit) formData.append('id', hcEditId.value);
+        formData.append('section_id', hcSection.value);
         formData.append('heading', hcHeading.value.trim());
         formData.append('body', hcBody.value.trim());
         formData.append('highlight', hcHighlight.value.trim());
+        formData.append('btn_text', hcBtnText.value.trim());
+        formData.append('btn_link', hcBtnLink.value.trim());
         formData.append('caption', hcCaption.value.trim());
         formData.append('skin', hcSkin.value);
+        formData.append('card_bg', hcBg.value.trim());
+        formData.append('accent', hcAccent.value.trim());
         formData.append('sort_order', hcSortOrder.value || '0');
         formData.append('active', hcActive.checked ? '1' : '0');
         formData.append('card_w_desktop', hcWDesktop.value || '0');
@@ -2114,25 +3568,35 @@ if (hcSaveBtn) {
         formData.append('card_w_mobile', hcWMobile.value || '0');
         formData.append('card_h_mobile', hcHMobile.value || '0');
 
+        const file = hcImageInput.files[0];
+        if (file) {
+            hcMsg.textContent = 'Preparing image...';
+            try {
+                const clean = await hcCleanImage(file);
+                formData.append('image', clean, 'card.jpg');
+            } catch (e) {
+                hcMsg.textContent = 'Could not read this image. Try a different JPG/PNG.';
+                hcMsg.className = 'error';
+                hcSaveBtn.disabled = false;
+                return;
+            }
+            hcMsg.textContent = 'Uploading...';
+        } else if (isEdit && hcRemoveImage.checked) {
+            formData.append('remove_image', '1');
+        }
+
         const endpoint = isEdit ? 'update_home_card.php' : 'add_home_card.php';
 
         try {
             const res = await fetch(`${API_BASE}/${endpoint}`, { method: 'POST', body: formData });
             const data = await res.json();
 
-            if (res.status === 403) {
-                sessionStorage.removeItem('adminPassword');
-                hcMsg.textContent = 'Incorrect admin password saved in this session. Re-enter it above.';
-                hcMsg.className = 'error';
-                document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
-                passwordGate.style.display = 'block';
-                return;
-            }
+            if (res.status === 403) { hcHandleForbidden(hcMsg); return; }
 
             if (res.ok && data.success) {
+                resetHcForm();
                 hcMsg.textContent = isEdit ? 'Saved!' : 'Card added!';
                 hcMsg.className = 'success';
-                resetHcForm();
                 loadHcList();
             } else {
                 hcMsg.textContent = data.error || 'Something went wrong.';
@@ -2439,8 +3903,76 @@ if (sbImageInput) {
     });
 }
 
+/* ---- Banner targets (general / category / story) ---- */
+const sbTargetType = document.getElementById('sbTargetType');
+const sbTargetCategory = document.getElementById('sbTargetCategory');
+const sbTargetStory = document.getElementById('sbTargetStory');
+const sbTargetCategoryWrap = document.getElementById('sbTargetCategoryWrap');
+const sbTargetStoryWrap = document.getElementById('sbTargetStoryWrap');
+let sbTargets = {};        /* banner_id -> target row */
+let sbStories = [];
+
+function sbToggleTargetFields() {
+    sbTargetCategoryWrap.style.display = sbTargetType.value === 'category' ? '' : 'none';
+    sbTargetStoryWrap.style.display = sbTargetType.value === 'story' ? '' : 'none';
+}
+sbTargetType.addEventListener('change', sbToggleTargetFields);
+
+async function sbLoadTargetOptions() {
+    try {
+        const [catRes, stRes, tRes] = await Promise.all([
+            fetch(`${API_BASE}/get_categories.php?t=${Date.now()}`).then(r => r.json()).catch(() => null),
+            fetch(`${API_BASE}/get_story_icons.php?all=1&t=${Date.now()}`).then(r => r.json()).catch(() => null),
+            fetch(`${API_BASE}/shop_banner_targets.php?t=${Date.now()}`).then(r => r.json()).catch(() => null)
+        ]);
+
+        const keepCat = sbTargetCategory.value;
+        const cats = catRes && catRes.success ? catRes.categories.map(c => c.category) : [];
+        const seen = new Set();
+        sbTargetCategory.innerHTML = '<option value="">— Choose category —</option>' + cats
+            .filter(c => { const k = String(c).trim().toLowerCase(); if (!k || seen.has(k)) return false; seen.add(k); return true; })
+            .map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        if (keepCat) sbTargetCategory.value = keepCat;
+
+        const keepStory = sbTargetStory.value;
+        sbStories = stRes && stRes.success ? (stRes.icons || stRes.stories || []) : [];
+        sbTargetStory.innerHTML = '<option value="">— Choose story —</option>' + sbStories
+            .map(st => `<option value="${st.id}">${escapeHtml(st.title || ('Story ' + st.id))}${st.category ? ' (' + escapeHtml(st.category) + ')' : ''}${Number(st.active) === 0 ? ' — inactive' : ''}</option>`).join('');
+        if (keepStory) sbTargetStory.value = keepStory;
+
+        sbTargets = {};
+        if (tRes && tRes.success) tRes.targets.forEach(t => { sbTargets[String(t.banner_id)] = t; });
+    } catch (e) {
+        console.log('Banner target options failed:', e);
+    }
+}
+
+function sbTargetLabel(id) {
+    const t = sbTargets[String(id)];
+    if (!t || t.target_type === 'all') return '<span style="color:#8f897d;">General</span>';
+    if (t.target_type === 'category') return `<span style="color:#d4af6a;">Category: ${escapeHtml(t.category || '')}</span>`;
+    const st = sbStories.find(x => String(x.id) === String(t.story_id));
+    return `<span style="color:#6fbf8a;">Story: ${escapeHtml(st ? st.title : '#' + t.story_id)}</span>`;
+}
+
+async function sbSaveTarget(bannerId) {
+    const fd = new FormData();
+    fd.append('admin_password', adminPassword);
+    fd.append('banner_id', bannerId);
+    fd.append('target_type', sbTargetType.value);
+    fd.append('category', sbTargetCategory.value);
+    fd.append('story_id', sbTargetStory.value || '0');
+    const res = await fetch(`${API_BASE}/shop_banner_targets.php`, { method: 'POST', body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) throw new Error(data.error || `Target save failed (HTTP ${res.status})`);
+}
+
 function resetSbForm() {
     sbEditId.value = '';
+    sbTargetType.value = 'all';
+    sbTargetCategory.value = '';
+    sbTargetStory.value = '';
+    sbToggleTargetFields();
     sbImageInput.value = '';
     sbImagePreview.innerHTML = '';
     sbLink.value = '';
@@ -2462,6 +3994,7 @@ async function loadSbList() {
     sbList.innerHTML = '<p style="font-size:12px;color:#999;">Loading...</p>';
 
     try {
+        await sbLoadTargetOptions();
         const res = await fetch(`${API_BASE}/get_shop_banners.php?all=1&t=${Date.now()}`);
         const data = await res.json();
 
@@ -2475,7 +4008,7 @@ async function loadSbList() {
                 <img class="delete-row-thumb" src="${escapeHtml(b.image)}" alt="Banner" style="width:80px;height:32px;object-fit:cover;border-radius:6px;">
                 <div class="delete-row-info">
                     <div class="delete-row-name">${b.link ? escapeHtml(b.link) : '(no link)'} ${Number(b.active) ? '' : '<span style="color:#999;font-weight:400;">(inactive)</span>'}</div>
-                    <div class="delete-row-price">Order ${escapeHtml(String(b.sort_order != null ? b.sort_order : 0))}</div>
+                    <div class="delete-row-price">${sbTargetLabel(b.id)} · Order ${escapeHtml(String(b.sort_order != null ? b.sort_order : 0))}</div>
                 </div>
                 <div class="delete-row-actions">
                     <button type="button" class="btn-pill btn-edit" data-sb-edit="${b.id}">Edit</button>
@@ -2494,6 +4027,11 @@ async function loadSbList() {
                 sbActive.checked = !!Number(b.active);
                 sbHeightMobile.value = b.height_mobile != null ? b.height_mobile : 0;
                 sbHeightDesktop.value = b.height_desktop != null ? b.height_desktop : 0;
+                const t = sbTargets[String(b.id)];
+                sbTargetType.value = t ? t.target_type : 'all';
+                sbTargetCategory.value = t && t.category ? t.category : '';
+                sbTargetStory.value = t && t.story_id ? String(t.story_id) : '';
+                sbToggleTargetFields();
                 sbImagePreview.innerHTML = `<img src="${escapeHtml(b.image)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
                 sbFormLabel.textContent = 'Edit shop banner';
                 sbSaveBtn.textContent = 'Update Banner';
@@ -2525,6 +4063,11 @@ async function deleteShopBanner(id, btn) {
         const data = await res.json();
 
         if (res.ok && data.success) {
+            const tfd = new FormData();
+            tfd.append('admin_password', adminPassword);
+            tfd.append('banner_id', id);
+            tfd.append('action', 'delete');
+            fetch(`${API_BASE}/shop_banner_targets.php`, { method: 'POST', body: tfd }).catch(() => {});
             loadSbList();
         } else {
             alert(data.error || 'Delete failed');
@@ -2544,6 +4087,16 @@ if (sbSaveBtn) {
 
         if (!isEdit && !sbImageInput.files[0]) {
             sbMsg.textContent = 'Pick a banner image first.';
+            sbMsg.className = 'error';
+            return;
+        }
+        if (sbTargetType.value === 'category' && !sbTargetCategory.value) {
+            sbMsg.textContent = 'Choose a category for this banner.';
+            sbMsg.className = 'error';
+            return;
+        }
+        if (sbTargetType.value === 'story' && !sbTargetStory.value) {
+            sbMsg.textContent = 'Choose a story for this banner.';
             sbMsg.className = 'error';
             return;
         }
@@ -2578,9 +4131,29 @@ if (sbSaveBtn) {
             }
 
             if (res.ok && data.success) {
-                sbMsg.textContent = isEdit ? 'Saved!' : 'Banner added!';
-                sbMsg.className = 'success';
+                /* Find the banner id to attach the target to */
+                let bannerId = isEdit ? sbEditId.value : (data.id || (data.banner && data.banner.id) || '');
+                if (!bannerId) {
+                    try {
+                        const lr = await fetch(`${API_BASE}/get_shop_banners.php?all=1&t=${Date.now()}`);
+                        const ld = await lr.json();
+                        if (ld.success && ld.banners.length) {
+                            bannerId = String(Math.max(...ld.banners.map(b => Number(b.id) || 0)));
+                        }
+                    } catch (_) {}
+                }
+                try {
+                    if (bannerId) await sbSaveTarget(bannerId);
+                    sbMsg.textContent = isEdit ? 'Saved!' : 'Banner added!';
+                    sbMsg.className = 'success';
+                } catch (tErr) {
+                    sbMsg.textContent = 'Banner saved, but placement failed: ' + tErr.message;
+                    sbMsg.className = 'error';
+                }
+                const keepMsg = [sbMsg.textContent, sbMsg.className];
                 resetSbForm();
+                sbMsg.textContent = keepMsg[0];
+                sbMsg.className = keepMsg[1];
                 loadSbList();
             } else {
                 sbMsg.textContent = data.error || 'Something went wrong.';
@@ -2749,17 +4322,88 @@ const editModalClose = document.getElementById('editModalClose');
 const editModalLoading = document.getElementById('editModalLoading');
 const editModalErrorBox = document.getElementById('editModalErrorBox');
 const editProductForm = document.getElementById('editProductForm');
-const editExistingImages = document.getElementById('editExistingImages');
 const editDropZone = document.getElementById('editDropZone');
 const editImageInput = document.getElementById('editImageInput');
-const editNewPreviewGrid = document.getElementById('editNewPreviewGrid');
+const editImageGrid = document.getElementById('editImageGrid');
+const editDropText = document.getElementById('editDropText');
 const editVariantRows = document.getElementById('editVariantRows');
 const editAddVariantBtn = document.getElementById('editAddVariantBtn');
 const editFormMsg = document.getElementById('editFormMsg');
 const editSaveBtn = document.getElementById('editSaveBtn');
 
-let editKeptImages = [];   // URLs of existing images the user hasn't removed
-let editNewFiles = [];     // newly selected File objects
+/* One ordered list for ALL images (existing + new).
+   { kind: 'url', url }  = already on server
+   { kind: 'file', file, preview } = newly picked, not uploaded yet
+   Order in this array = final order on the product (index 0 = main image). */
+/* Edit modal videos
+   editMainVideo: current main video URL (p.video) or ''
+   editExtraVideos: [{ id, url, removed }] from product_videos.php
+   editNewVideos: [{ file, url }] picked in this session */
+let editMainVideo = '';
+let editMainRemoved = false;
+let editExtraVideos = [];
+let editNewVideos = [];
+
+function renderEditVideos() {
+    const list = document.getElementById('editVideoList');
+    if (!list) return;
+    const rows = [];
+
+    if (editMainVideo) {
+        rows.push(`
+            <div class="vid-row ${editMainRemoved ? 'is-removed' : ''}">
+                <video src="${escapeHtml(editMainVideo)}#t=1" muted playsinline preload="metadata"></video>
+                <div class="vid-info"><div class="vid-name"><span class="vid-tag">MAIN</span><a href="${escapeHtml(editMainVideo)}" target="_blank" style="color:inherit;">Current video</a></div>
+                <small>${editMainRemoved ? 'Will be removed on save' : 'Saved'}</small></div>
+                ${editMainRemoved
+                    ? '<button type="button" class="vid-undo" data-main-undo="1">Undo</button>'
+                    : '<button type="button" class="vid-x" data-main-remove="1" aria-label="Remove video">×</button>'}
+            </div>`);
+    }
+
+    editExtraVideos.forEach((v, i) => rows.push(`
+        <div class="vid-row ${v.removed ? 'is-removed' : ''}">
+            <video src="${escapeHtml(v.url)}#t=1" muted playsinline preload="metadata"></video>
+            <div class="vid-info"><div class="vid-name"><span class="vid-tag" style="background:#6d675c;color:#fff;">EXTRA</span><a href="${escapeHtml(v.url)}" target="_blank" style="color:inherit;">Video ${i + 2}</a></div>
+            <small>${v.removed ? 'Will be removed on save' : 'Saved'}</small></div>
+            ${v.removed
+                ? `<button type="button" class="vid-undo" data-extra-undo="${i}">Undo</button>`
+                : `<button type="button" class="vid-x" data-extra-remove="${i}" aria-label="Remove video">×</button>`}
+        </div>`));
+
+    editNewVideos.forEach((v, i) => rows.push(`
+        <div class="vid-row" data-new-i="${i}">
+            <video src="${v.url}" muted playsinline preload="metadata"></video>
+            <div class="vid-info"><div class="vid-name"><span class="vid-tag new">NEW</span>${escapeHtml(v.file.name)}</div>
+            <small>${fmtMB(v.file.size)} · uploads on save</small>
+            <div class="vid-progress" style="display:none;"><i></i></div></div>
+            <button type="button" class="vid-x" data-new-remove="${i}" aria-label="Remove video">×</button>
+        </div>`));
+
+    list.innerHTML = rows.join('') || '<div style="font-size:12px; color:#888; margin-bottom:6px;">No videos yet.</div>';
+
+    list.querySelectorAll('[data-main-remove]').forEach(b => b.addEventListener('click', () => { editMainRemoved = true; renderEditVideos(); }));
+    list.querySelectorAll('[data-main-undo]').forEach(b => b.addEventListener('click', () => { editMainRemoved = false; renderEditVideos(); }));
+    list.querySelectorAll('[data-extra-remove]').forEach(b => b.addEventListener('click', () => { editExtraVideos[Number(b.dataset.extraRemove)].removed = true; renderEditVideos(); }));
+    list.querySelectorAll('[data-extra-undo]').forEach(b => b.addEventListener('click', () => { editExtraVideos[Number(b.dataset.extraUndo)].removed = false; renderEditVideos(); }));
+    list.querySelectorAll('[data-new-remove]').forEach(b => b.addEventListener('click', () => {
+        const [gone] = editNewVideos.splice(Number(b.dataset.newRemove), 1);
+        if (gone) URL.revokeObjectURL(gone.url);
+        renderEditVideos();
+    }));
+}
+
+document.getElementById('editAddVideoBtn').addEventListener('click', () => document.getElementById('editVideoInput').click());
+document.getElementById('editVideoInput').addEventListener('change', (e) => {
+    const { ok, skipped } = pickVideoFiles(e.target.files);
+    ok.forEach(f => editNewVideos.push({ file: f, url: URL.createObjectURL(f) }));
+    e.target.value = '';
+    renderEditVideos();
+    if (skipped.length) alert('Skipped:\n' + skipped.join('\n'));
+});
+
+let editImages = [];
+const EDIT_MAX_IMAGES = 4;
 
 function closeEditModal() {
     editModalOverlay.classList.remove('open');
@@ -2768,49 +4412,156 @@ editModalClose.addEventListener('click', closeEditModal);
 /* Clicking outside the card no longer closes the modal — a stray tap
    was wiping in-progress edits. Close only via the X button. */
 
-function renderEditExistingImages() {
-    editExistingImages.innerHTML = editKeptImages.map((url, i) => `
-        <div class="modal-image-item">
-            <img src="${escapeHtml(url)}" alt="" style="cursor:zoom-in;" onclick="openImageLightbox('${escapeHtml(url)}')" title="View full image">
-            <button type="button" class="modal-image-remove" onclick="removeEditExistingImage(${i})">×</button>
-        </div>
-    `).join('');
-}
-function removeEditExistingImage(i) {
-    editKeptImages.splice(i, 1);
-    renderEditExistingImages();
+function renderEditImages() {
+    editImageGrid.innerHTML = editImages.map((img, i) => {
+        const src = img.kind === 'url' ? img.url : img.preview;
+        return `
+        <div class="eimg-item" data-index="${i}" title="Drag to reorder · double-click to view">
+            <img src="${escapeHtml(src)}" alt="">
+            ${i === 0 ? '<span class="eimg-main">MAIN</span>' : ''}
+            <button type="button" class="eimg-remove" data-remove="${i}" aria-label="Remove image">×</button>
+            <span class="eimg-num">${i + 1}</span>
+            ${img.kind === 'file' ? '<span class="eimg-new">NEW</span>' : ''}
+        </div>`;
+    }).join('');
+
+    const left = EDIT_MAX_IMAGES - editImages.length;
+    editDropZone.style.display = left > 0 ? '' : 'none';
+    editDropText.textContent = left > 0
+        ? `Click or drag & drop images here (${left} more allowed)`
+        : 'Maximum 4 images';
+
+    editImageGrid.querySelectorAll('[data-remove]').forEach(btn => {
+        btn.addEventListener('pointerdown', e => e.stopPropagation());
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const i = Number(btn.dataset.remove);
+            const [gone] = editImages.splice(i, 1);
+            if (gone && gone.kind === 'file') URL.revokeObjectURL(gone.preview);
+            renderEditImages();
+        });
+    });
+
+    editImageGrid.querySelectorAll('.eimg-item').forEach(el => {
+        el.addEventListener('dblclick', () => {
+            const img = editImages[Number(el.dataset.index)];
+            if (img && typeof openImageLightbox === 'function') openImageLightbox(img.kind === 'url' ? img.url : img.preview);
+        });
+        el.addEventListener('pointerdown', startEditImageDrag);
+    });
 }
 
-function renderEditNewPreviews() {
-    editNewPreviewGrid.innerHTML = editNewFiles.map((file, i) => `
-        <div class="preview-item">
-            <img src="${URL.createObjectURL(file)}" alt="preview">
-            <button type="button" class="remove-btn" onclick="removeEditNewFile(${i})">×</button>
-        </div>
-    `).join('');
-}
-function removeEditNewFile(i) {
-    editNewFiles.splice(i, 1);
-    renderEditNewPreviews();
-}
-
-editDropZone.addEventListener('click', () => editImageInput.click());
-editImageInput.addEventListener('change', () => {
+/* Add File objects (from picker or drag & drop) */
+function addEditImageFiles(fileList) {
     const validExt = ['jpg', 'jpeg', 'png', 'webp'];
-    for (const file of Array.from(editImageInput.files)) {
-        if (editKeptImages.length + editNewFiles.length >= 4) {
+    let skipped = 0;
+    for (const file of Array.from(fileList)) {
+        if (editImages.length >= EDIT_MAX_IMAGES) {
             editFormMsg.textContent = 'Maximum 4 images allowed.';
             editFormMsg.className = 'error';
             break;
         }
         const ext = file.name.split('.').pop().toLowerCase();
-        if (!validExt.includes(ext)) continue;
-        if (file.size > 5 * 1024 * 1024) continue;
-        editNewFiles.push(file);
+        if (!validExt.includes(ext) || file.size > 5 * 1024 * 1024) { skipped++; continue; }
+        editImages.push({ kind: 'file', file, preview: URL.createObjectURL(file) });
     }
+    if (skipped) {
+        editFormMsg.textContent = `${skipped} file(s) skipped — only JPG/PNG/WEBP under 5MB.`;
+        editFormMsg.className = 'error';
+    }
+    renderEditImages();
+}
+
+/* ---- Reorder: pointer-based drag (works with mouse AND touch) ---- */
+let eDrag = null;
+
+function startEditImageDrag(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    const el = e.currentTarget;
+    eDrag = {
+        from: Number(el.dataset.index),
+        el,
+        startX: e.clientX,
+        startY: e.clientY,
+        active: false,
+        ghost: null,
+        over: null,
+        pointerId: e.pointerId
+    };
+    el.setPointerCapture(e.pointerId);
+    el.addEventListener('pointermove', moveEditImageDrag);
+    el.addEventListener('pointerup', endEditImageDrag);
+    el.addEventListener('pointercancel', endEditImageDrag);
+}
+
+function moveEditImageDrag(e) {
+    if (!eDrag) return;
+    if (!eDrag.active) {
+        if (Math.hypot(e.clientX - eDrag.startX, e.clientY - eDrag.startY) < 6) return;
+        eDrag.active = true;
+        eDrag.el.classList.add('is-dragging');
+        const ghost = document.createElement('div');
+        ghost.className = 'eimg-ghost';
+        ghost.innerHTML = `<img src="${eDrag.el.querySelector('img').src}" alt="">`;
+        document.body.appendChild(ghost);
+        eDrag.ghost = ghost;
+    }
+    e.preventDefault();
+    eDrag.ghost.style.left = e.clientX + 'px';
+    eDrag.ghost.style.top = e.clientY + 'px';
+
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const target = under ? under.closest('.eimg-item') : null;
+    if (eDrag.over && eDrag.over !== target) eDrag.over.classList.remove('is-over');
+    if (target && target !== eDrag.el && editImageGrid.contains(target)) {
+        target.classList.add('is-over');
+        eDrag.over = target;
+    } else {
+        eDrag.over = null;
+    }
+}
+
+function endEditImageDrag() {
+    if (!eDrag) return;
+    const d = eDrag;
+    eDrag = null;
+    d.el.removeEventListener('pointermove', moveEditImageDrag);
+    d.el.removeEventListener('pointerup', endEditImageDrag);
+    d.el.removeEventListener('pointercancel', endEditImageDrag);
+    try { d.el.releasePointerCapture(d.pointerId); } catch (_) {}
+    if (d.ghost) d.ghost.remove();
+    d.el.classList.remove('is-dragging');
+
+    if (d.active && d.over) {
+        const to = Number(d.over.dataset.index);
+        /* Move (insert) — dragging 4 onto 1 makes it 1 and shifts the rest down */
+        const [moved] = editImages.splice(d.from, 1);
+        editImages.splice(to, 0, moved);
+        renderEditImages();
+    }
+}
+
+/* ---- Drop zone: click + drag & drop files ---- */
+editDropZone.addEventListener('click', () => editImageInput.click());
+editImageInput.addEventListener('change', () => {
+    addEditImageFiles(editImageInput.files);
     editImageInput.value = '';
-    renderEditNewPreviews();
 });
+['dragenter', 'dragover'].forEach(ev => editDropZone.addEventListener(ev, e => {
+    e.preventDefault();
+    editDropZone.classList.add('drag-active');
+}));
+['dragleave', 'dragend'].forEach(ev => editDropZone.addEventListener(ev, () => {
+    editDropZone.classList.remove('drag-active');
+}));
+editDropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    editDropZone.classList.remove('drag-active');
+    if (e.dataTransfer && e.dataTransfer.files.length) addEditImageFiles(e.dataTransfer.files);
+});
+/* Stop the browser opening a file if it's dropped just outside the zone */
+editModalOverlay.addEventListener('dragover', e => e.preventDefault());
+editModalOverlay.addEventListener('drop', e => e.preventDefault());
 
 function addEditVariantRow(value = '') {
     const row = document.createElement('div');
@@ -2834,11 +4585,17 @@ function getEditVariants() {
 const EDIT_META_FIELDS = {
     watch:   ['movement','case_diameter','case_material','dial_color','glass_type','strap_material','water_resistance','clasp_type','warranty'],
     perfume: ['fragrance','family','formulation','bottle_size'],
-    shoes:   ['colour','material','shoe_type','sole','closure','quality','fit','occasion','in_box']
+    shoes:   ['colour','material','shoe_type','sole','closure','quality','fit','occasion','in_box'],
+    sunglasses: ['size','model','frame_colour','frame_shape']   /* Size, Millimeter, Lens Colour, Frame */
 };
-const EDIT_META_PREFIX = { watch: 'ew_', perfume: 'ep_', shoes: 'es_' };
+const EDIT_META_PREFIX = { watch: 'ew_', perfume: 'ep_', shoes: 'es_', sunglasses: 'esg_' };
 
 function updateEditMetaSection() {
+    updateEditMetaSectionLegacy();
+    applyCustomMeta('edit');
+}
+
+function updateEditMetaSectionLegacy() {
     const kind = detectMetaKind(document.getElementById('editCategory').value);
     const elw = document.getElementById('editLongevityWrap');
     if (elw) elw.style.display = (kind === 'perfume') ? '' : 'none';
@@ -2854,6 +4611,7 @@ function updateEditMetaSection() {
     }
 }
 document.getElementById('editCategory').addEventListener('input', updateEditMetaSection);
+document.getElementById('editCategory').addEventListener('change', updateEditMetaSection);
 
 function fillEditMetaFields(kind, details) {
     Object.entries(EDIT_META_FIELDS).forEach(([k, cols]) => {
@@ -2872,6 +4630,11 @@ function fillEditMetaFields(kind, details) {
 }
 
 function getEditMetaDetails() {
+    if (catCustomFields(document.getElementById('editCategory').value).length) return null;
+    return getEditMetaDetailsLegacy();
+}
+
+function getEditMetaDetailsLegacy() {
     const kind = detectMetaKind(document.getElementById('editCategory').value);
     if (!kind || !EDIT_META_FIELDS[kind]) return null;
     const fields = {};
@@ -2879,6 +4642,7 @@ function getEditMetaDetails() {
         const el = document.getElementById(EDIT_META_PREFIX[kind] + c);
         fields[c] = el ? el.value.trim() : '';
     });
+    if (kind === 'sunglasses') fields.fit = '';   /* old "Fit" field is no longer used */
     return { kind, fields };
 }
 
@@ -2960,12 +4724,14 @@ async function openEditModal(id) {
     editProductForm.style.display = 'none';
     editFormMsg.textContent = '';
     editFormMsg.className = '';
-    editKeptImages = [];
-    editNewFiles = [];
+    editImages.forEach(img => { if (img.kind === 'file') URL.revokeObjectURL(img.preview); });
+    editImages = [];
     editVariantRows.innerHTML = '';
     editNoteRows.innerHTML = '';
 
     try {
+        /* Fetch the product and its notes at the same time */
+        const notesPromise = fetch(`${API_BASE}/get_product_notes.php?product_id=${encodeURIComponent(id)}`).then(r => r.json()).catch(() => null);
         const res = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(id)}`);
         const data = await res.json();
 
@@ -2981,28 +4747,57 @@ async function openEditModal(id) {
         document.getElementById('editName').value = p.name || '';
         document.getElementById('editPrice').value = p.price || '';
         document.getElementById('editGender').value = p.gender || 'men';
-        document.getElementById('editCategory').value = p.category || '';
+        fillCategorySelect(document.getElementById('editCategory'), p.category || '');
+        editCmetaValues = {};
+        fetch(`${API_BASE}/product_meta.php?product_id=${encodeURIComponent(p.id)}&t=${Date.now()}`)
+            .then(r => r.json())
+            .then(d => {
+                if (!d.success || String(document.getElementById('editId').value) !== String(p.id)) return;
+                editCmetaValues = d.values || {};
+                Object.entries(editCmetaValues).forEach(([k, v]) => {
+                    const el = document.querySelector(`#editCmetaFields [data-cmeta-key="${CSS.escape(k)}"]`);
+                    if (el && !el.value) el.value = v;
+                });
+            })
+            .catch(() => {});
         document.getElementById('editBrand').value = p.brand || '';
         document.getElementById('editLongevity').value = p.longevity || '';
         document.getElementById('editDescription').value = p.description || '';
 
              fillEditMetaFields(p.details_kind || null, p.details || null);
 
+             /* Sunglasses specs come from their own endpoint */
+             if (detectMetaKind(p.category) === 'sunglasses' && p.details_kind !== 'sunglasses') {
+                 fetch(`${API_BASE}/get_sunglasses_details.php?product_id=${encodeURIComponent(p.id)}`)
+                     .then(r => r.json())
+                     .then(d => { if (d.success && d.details) fillEditMetaFields('sunglasses', d.details); })
+                     .catch(() => {});
+             }
+
         document.getElementById('editVideoInput').value = '';
-        document.getElementById('editRemoveVideo').checked = false;
-        document.getElementById('editCurrentVideo').innerHTML = p.video
-            ? `Current: <a href="${escapeHtml(p.video)}" target="_blank">view video</a>`
-            : 'No video uploaded.';
-        editKeptImages = (p.images || []).slice();
-        renderEditExistingImages();
-        renderEditNewPreviews();
+        editNewVideos.forEach(v => URL.revokeObjectURL(v.url));
+        editNewVideos = [];
+        editMainVideo = p.video || '';
+        editMainRemoved = false;
+        editExtraVideos = [];
+        renderEditVideos();
+        fetch(`${API_BASE}/product_videos.php?product_id=${encodeURIComponent(p.id)}&t=${Date.now()}`)
+            .then(r => r.json())
+            .then(d => {
+                if (d.success && String(document.getElementById('editId').value) === String(p.id)) {
+                    editExtraVideos = d.videos.map(v => ({ id: v.id, url: v.url, removed: false }));
+                    renderEditVideos();
+                }
+            })
+            .catch(() => {});
+        editImages = (p.images || []).map(url => ({ kind: 'url', url }));
+        renderEditImages();
 
         (p.variants || []).forEach(v => addEditVariantRow(v));
 
         try {
-            const notesRes = await fetch(`${API_BASE}/get_product_notes.php?product_id=${encodeURIComponent(id)}`);
-            const notesData = await notesRes.json();
-            if (notesData.success) {
+            const notesData = await notesPromise;
+            if (notesData && notesData.success) {
                 (notesData.notes || []).forEach(n => addEditNoteRow(n.name, n.image));
             }
         } catch (notesErr) {
@@ -3021,7 +4816,7 @@ async function openEditModal(id) {
 editProductForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    if (editKeptImages.length + editNewFiles.length === 0) {
+    if (editImages.length === 0) {
         editFormMsg.textContent = 'At least one image is required.';
         editFormMsg.className = 'error';
         return;
@@ -3037,13 +4832,26 @@ editProductForm.addEventListener('submit', async (e) => {
     formData.append('id', document.getElementById('editId').value);
     formData.append('name', document.getElementById('editName').value);
     formData.append('price', document.getElementById('editPrice').value);
-    formData.append('category', document.getElementById('editCategory').value);
+    formData.append('category', snapName('category', document.getElementById('editCategory').value));
     formData.append('gender', document.getElementById('editGender').value);
-    formData.append('brand', document.getElementById('editBrand').value);
+    formData.append('brand', snapName('brand', document.getElementById('editBrand').value));
     formData.append('longevity', document.getElementById('editLongevity').value.trim());
     formData.append('description', document.getElementById('editDescription').value.trim());
-    editKeptImages.forEach(url => formData.append('existing_images[]', url));
-    const editUploadFiles = await Promise.all(editNewFiles.map(compressImage));
+    /* Existing URLs + new files, both in the order shown.
+       image_order[] tells the server the final mixed order:
+       "e:0" = 1st existing_images[] entry, "n:0" = 1st images[] file. */
+    let eIdx = 0, nIdx = 0;
+    const newFilesInOrder = [];
+    editImages.forEach(img => {
+        if (img.kind === 'url') {
+            formData.append('existing_images[]', img.url);
+            formData.append('image_order[]', 'e:' + (eIdx++));
+        } else {
+            newFilesInOrder.push(img.file);
+            formData.append('image_order[]', 'n:' + (nIdx++));
+        }
+    });
+    const editUploadFiles = await Promise.all(newFilesInOrder.map(compressImage));
     editUploadFiles.forEach(file => formData.append('images[]', file));
     getEditVariants().forEach(v => formData.append('variants[]', v));
 
@@ -3053,9 +4861,19 @@ editProductForm.addEventListener('submit', async (e) => {
         Object.entries(editMeta.fields).forEach(([k, v]) => formData.append(k, v)); 
     } 
 
-    const editVideoFile = document.getElementById('editVideoInput').files[0];
-    if (editVideoFile) formData.append('video', editVideoFile);
-    if (document.getElementById('editRemoveVideo').checked) formData.append('remove_video', '1');
+    /* Main video slot: keep, replace from new picks, or remove.
+       If the main is removed/missing, the first NEW video becomes the main;
+       otherwise new videos are added as extras. */
+    const newVids = editNewVideos.slice();
+    const mainFree = !editMainVideo || editMainRemoved;
+    let extrasToUpload = newVids;
+    if (mainFree && newVids.length) {
+        formData.append('video', newVids[0].file);
+        extrasToUpload = newVids.slice(1);
+    } else if (editMainVideo && editMainRemoved) {
+        formData.append('remove_video', '1');
+    }
+    const extrasToDelete = editExtraVideos.filter(v => v.removed);
 
     try {
         const res = await fetch(`${API_BASE}/update_product.php`, { method: 'POST', body: formData });
@@ -3071,12 +4889,39 @@ editProductForm.addEventListener('submit', async (e) => {
         if (res.ok && data.success) {
             const productId = document.getElementById('editId').value;
             await saveEditNotes(productId);
+            const editCustomValues = collectCustomMeta('edit');
+            if (editCustomValues) await saveProductMeta(productId, editCustomValues);
+
+            let vFail = 0;
+            for (const v of extrasToDelete) {
+                try { await deleteExtraVideo(v.id); } catch (e) { vFail++; }
+            }
+            for (let i = 0; i < extrasToUpload.length; i++) {
+                const v = extrasToUpload[i];
+                editSaveBtn.textContent = `Uploading video ${i + 1}/${extrasToUpload.length}...`;
+                const idx = editNewVideos.indexOf(v);
+                const bar = document.querySelector(`#editVideoList .vid-row[data-new-i="${idx}"] .vid-progress`);
+                if (bar) bar.style.display = '';
+                try {
+                    await uploadExtraVideo(productId, v.file, pct => { if (bar) bar.firstElementChild.style.width = Math.round(pct * 100) + '%'; });
+                } catch (e) {
+                    vFail++;
+                    console.warn('Extra video failed:', e);
+                }
+            }
+            if (vFail) {
+                editFormMsg.textContent = `Saved, but ${vFail} video action(s) failed. Reopen Edit to retry.`;
+                editFormMsg.className = 'error';
+                return;
+            }
+            editNewVideos.forEach(v => URL.revokeObjectURL(v.url));
+            editNewVideos = [];
 
             editFormMsg.textContent = 'Saved!';
             editFormMsg.className = 'success';
+            closeEditModal();
             loadDeleteList(1, false);
             loadCatalogSnapshot();
-            setTimeout(closeEditModal, 700);
         } else {
             editFormMsg.textContent = data.error || 'Something went wrong.';
             editFormMsg.className = 'error';

@@ -849,15 +849,60 @@ function clearMediaActive() {
  */
 function syncVideoThumbSize() {
     if (window.innerWidth < 768) return; // mobile size is fixed in CSS
-    const vThumb = document.querySelector('.gallery-thumb-video');
-    if (!vThumb) return;
+    const vThumbs = document.querySelectorAll('.gallery-thumb-video');
+    if (!vThumbs.length) return;
     const imgThumb = document.querySelector('.gallery-thumbs img');
     if (!imgThumb) return;
     const r = imgThumb.getBoundingClientRect();
     if (r.width > 10 && r.height > 10) {
-        vThumb.style.width = r.width + 'px';
-        vThumb.style.height = r.height + 'px';
-        vThumb.style.borderRadius = getComputedStyle(imgThumb).borderRadius;
+        vThumbs.forEach(vThumb => {
+            vThumb.style.width = r.width + 'px';
+            vThumb.style.height = r.height + 'px';
+            vThumb.style.borderRadius = getComputedStyle(imgThumb).borderRadius;
+        });
+    }
+}
+
+/* Extra videos (video 2, 3, ...) from product_videos.php — added after the main video tile */
+async function loadExtraVideos(productId) {
+    try {
+        const res = await fetch(`${API_BASE}/product_videos.php?product_id=${encodeURIComponent(productId)}`);
+        const data = await res.json();
+        if (!data.success || !Array.isArray(data.videos) || !data.videos.length) return;
+
+        let thumbs = document.querySelector('.gallery-thumbs');
+        if (!thumbs) {
+            /* Product had 1 image and no main video -> no thumb row yet: create it */
+            const mm = document.getElementById('mainMedia');
+            if (!mm) return;
+            const firstImg = (window.__galleryImages && window.__galleryImages[0]) || '';
+            thumbs = document.createElement('div');
+            thumbs.className = 'gallery-thumbs';
+            if (firstImg) {
+                const img = document.createElement('img');
+                img.src = firstImg;
+                img.className = 'active';
+                img.addEventListener('click', () => switchImage(firstImg, img));
+                thumbs.appendChild(img);
+            }
+            mm.insertAdjacentElement('afterend', thumbs);
+        }
+
+        data.videos.forEach(v => {
+            const tile = document.createElement('div');
+            tile.className = 'gallery-thumb-video';
+            tile.title = 'Watch video';
+            tile.innerHTML = `
+                <video class="vthumb-frame" src="${escapeHtml(v.url)}#t=1.2" muted playsinline preload="metadata" tabindex="-1"></video>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="8 5 19 12 8 19 8 5"/></svg>`;
+            tile.addEventListener('click', () => switchVideo(v.url, tile));
+            thumbs.appendChild(tile);
+        });
+
+        syncVideoThumbSize();
+        setTimeout(syncVideoThumbSize, 150);
+    } catch (e) {
+        /* extra videos are optional */
     }
 }
 window.addEventListener('resize', syncVideoThumbSize);
@@ -1124,6 +1169,7 @@ async function loadProduct() {
 
         loadRelatedByBrand(p.brand, p.id, p.category);
         loadProductNotes(p.id);
+        loadExtraVideos(p.id);
         loadSpecs(p);
 
         // Match the video tile to the image-thumb size once thumbs lay out
@@ -1190,10 +1236,56 @@ const SPEC_CONFIG = {
         ['fit','Fit','gem'],
         ['occasion','Occasion','leaf'],
         ['in_box','In the Box','flask']
+    ],
+    sunglasses: [
+        /* stored in: size, model, frame_colour, frame_shape */
+        ['size','Size','shield'],
+        ['model','Millimeter','ruler'],
+        ['frame_colour','Lens Colour','palette'],
+        ['frame_shape','Frame','layers']
     ]
 };
 
-function loadSpecs(p) {
+/* Custom category fields (Admin -> Categories) win when the category has them
+   and the product has values; otherwise the built-in specs below are used. */
+async function loadSpecs(p) {
+    try {
+        const [catRes, valRes] = await Promise.all([
+            fetch(`${API_BASE}/manage_categories.php`).then(r => r.json()),
+            fetch(`${API_BASE}/product_meta.php?product_id=${encodeURIComponent(p.id)}`).then(r => r.json())
+        ]);
+        const key = s => String(s || '').trim().replace(/\s+/g, ' ').toLowerCase();
+        const cat = catRes && catRes.success ? catRes.categories.find(c => key(c.name) === key(p.category)) : null;
+        const values = valRes && valRes.success ? (valRes.values || {}) : {};
+        const fields = cat && Array.isArray(cat.fields) ? cat.fields.filter(f => values[f.key] && String(values[f.key]).trim()) : [];
+
+        if (fields.length) {
+            const wrapEl = document.getElementById('productSpecs');
+            const gridEl = document.getElementById('pspecGrid');
+            if (!wrapEl || !gridEl) return;
+            const icons = ['shield', 'ruler', 'palette', 'layers', 'gem', 'drop', 'leaf', 'lock', 'strap', 'flask'];
+            const brandItem = p.brand ? `
+                <div class="pspec-item">
+                    ${SPEC_ICONS['gem']}
+                    <span class="pspec-label">Brand</span>
+                    <span class="pspec-value">${escapeHtml(String(p.brand)).toUpperCase()}</span>
+                </div>` : '';
+            gridEl.innerHTML = brandItem + fields.map((f, i) => `
+                <div class="pspec-item">
+                    ${SPEC_ICONS[icons[i % icons.length]] || ''}
+                    <span class="pspec-label">${escapeHtml(f.label)}</span>
+                    <span class="pspec-value">${escapeHtml(String(values[f.key]))}</span>
+                </div>`).join('');
+            wrapEl.style.display = 'block';
+            return;
+        }
+    } catch (e) {
+        /* fall back to built-in specs */
+    }
+    loadSpecsLegacy(p);
+}
+
+function loadSpecsLegacy(p) {
     const wrapEl = document.getElementById('productSpecs');
     const gridEl = document.getElementById('pspecGrid');
     if (!wrapEl || !gridEl) return;
