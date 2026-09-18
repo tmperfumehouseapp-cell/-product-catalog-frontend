@@ -1343,7 +1343,78 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 <button type="button" class="vid-add-btn" id="editAddVideoBtn">+ Add videos</button>
                 <span class="vid-hint">Max 50MB each.</span>
                 <input type="file" id="editVideoInput" accept=".mp4,.webm,.mov" multiple style="display:none;">
-            </div>            <label>Variants</label>
+            </div>
+            <label style="margin-top:16px;">Product Film <span style="font-weight:400;color:#8f897d;font-size:11px;">— separate big video shown before "More from …" (not in the gallery)</span></label>
+            <div class="svf-box" id="svfBox">
+                <style>
+                    .svf-box { border:1px dashed rgba(212,175,106,.45); border-radius:10px; padding:12px; margin-top:6px; }
+                    .svf-preview { display:none; margin-bottom:10px; }
+                    .svf-preview video { width:100%; max-height:220px; border-radius:8px; background:#000; display:block; }
+                    .svf-meta { font-size:11px; color:#8f897d; margin-top:5px; }
+                    .svf-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+                    .svf-row input[type=text] { flex:1; min-width:160px; margin:0; }
+                    .svf-btn { border:1px solid #d4af6a; background:transparent; color:#d4af6a; padding:8px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; }
+                    .svf-btn:hover { background:#d4af6a; color:#1a1508; }
+                    .svf-btn.svf-danger { border-color:#e0342e; color:#e0342e; }
+                    .svf-btn.svf-danger:hover { background:#e0342e; color:#fff; }
+                    .svf-btn[disabled] { opacity:.5; pointer-events:none; }
+                    .svf-prog { height:4px; background:rgba(212,175,106,.15); border-radius:3px; overflow:hidden; margin-top:10px; display:none; }
+                    .svf-prog span { display:block; height:100%; width:0; background:#d4af6a; transition:width .2s; }
+                    .svf-msg { font-size:12px; margin-top:8px; min-height:14px; }
+                    .svf-size { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:10px; }
+                    .svf-size fieldset { border:1px solid rgba(212,175,106,.2); border-radius:8px; padding:8px 10px 10px; margin:0; min-width:0; }
+                    .svf-size legend { font-size:11px; color:#d4af6a; letter-spacing:.06em; padding:0 4px; }
+                    .svf-size .svf-pair { display:flex; gap:8px; }
+                    .svf-size .svf-pair label { flex:1; font-size:10px; color:#8f897d; margin:0; display:block; }
+                    .svf-size input[type=number] { width:100%; margin:3px 0 0; }
+                    .svf-fit { display:flex; gap:8px; align-items:center; margin-top:10px; font-size:12px; color:#8f897d; flex-wrap:wrap; }
+                    .svf-fit select { width:auto; margin:0; }
+                    @media (max-width:600px) { .svf-size { grid-template-columns:1fr; } }
+                </style>
+                <div class="svf-preview" id="svfPreview">
+                    <video id="svfVideo" controls muted playsinline preload="metadata"></video>
+                    <div class="svf-meta" id="svfMeta"></div>
+                </div>
+                <div class="svf-row">
+                    <input type="text" id="svfTitle" onkeydown="if(event.key==='Enter')event.preventDefault()" placeholder="Heading above video (optional) e.g. Watch it in action" maxlength="120">
+                </div>
+                <div id="svfSettings" style="display:none;">
+                    <div class="svf-size">
+                        <fieldset>
+                            <legend>DESKTOP</legend>
+                            <div class="svf-pair">
+                                <label>Width (px)<input type="number" id="svfWd" min="0" max="4000" placeholder="Auto" onkeydown="if(event.key==='Enter')event.preventDefault()"></label>
+                                <label>Height (px)<input type="number" id="svfHd" min="0" max="4000" placeholder="Auto" onkeydown="if(event.key==='Enter')event.preventDefault()"></label>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>MOBILE</legend>
+                            <div class="svf-pair">
+                                <label>Width (px)<input type="number" id="svfWm" min="0" max="4000" placeholder="Full" onkeydown="if(event.key==='Enter')event.preventDefault()"></label>
+                                <label>Height (px)<input type="number" id="svfHm" min="0" max="4000" placeholder="Auto" onkeydown="if(event.key==='Enter')event.preventDefault()"></label>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <div class="svf-fit">
+                        <span>When width + height are both set:</span>
+                        <select id="svfFit">
+                            <option value="contain">Fit — show whole video (black bars)</option>
+                            <option value="cover">Fill — fill the box (crops edges)</option>
+                        </select>
+                        <button type="button" class="svf-btn" id="svfTitleBtn">Save heading &amp; size</button>
+                    </div>
+                    <div class="vid-hint" style="margin-top:6px;">Leave empty for automatic. Desktop width is capped to the screen; mobile empty width = full screen width.</div>
+                </div>
+                <div class="svf-row" style="margin-top:8px;">
+                    <button type="button" class="svf-btn" id="svfPickBtn">+ Upload film</button>
+                    <button type="button" class="svf-btn svf-danger" id="svfDeleteBtn" style="display:none;">Remove film</button>
+                    <span class="vid-hint">mp4 / webm / mov, up to 300MB. Saves instantly (no need to press Save Changes).</span>
+                    <input type="file" id="svfInput" accept=".mp4,.webm,.mov" style="display:none;">
+                </div>
+                <div class="svf-prog" id="svfProg"><span></span></div>
+                <div class="svf-msg" id="svfMsg"></div>
+            </div>
+            <label>Variants</label>
             <div id="editVariantRows"></div>
             <button type="button" id="editAddVariantBtn" class="modal-add-variant-btn">+ Add variant</button>
 
@@ -1372,6 +1443,26 @@ const unlockBtn = document.getElementById('unlockBtn');
 const gateMsg = document.getElementById('gateMsg');
 
 let adminPassword = sessionStorage.getItem('adminPassword') || '';
+let adminUnlocked = false;   /* panels stay closed until the server accepts the password */
+
+/* Ask the server if the password is right (product_showcase_video.php action=verify).
+   Returns true / false, or null if the server could not be reached. */
+async function verifyAdminPassword(pw) {
+    try {
+        const fd = new FormData();
+        fd.append('admin_password', pw);
+        fd.append('action', 'verify');
+        const res = await fetch(`${API_BASE}/product_showcase_video.php`, { method: 'POST', body: fd });
+        const data = await res.json().catch(() => null);
+        if (res.status === 403) return false;
+        if (data && data.success) return true;
+        verifyAdminPassword.lastError = (data && data.error) || ('Server error ' + res.status);
+        return null;
+    } catch (e) {
+        verifyAdminPassword.lastError = 'Could not reach the server. Try again.';
+        return null;
+    }
+}
 
 // ---- Mobile drawer open/close ----
 const adminHamburgerBtn = document.getElementById('adminHamburgerBtn');
@@ -1394,6 +1485,7 @@ if (adminDrawerOverlay) adminDrawerOverlay.addEventListener('click', closeAdminD
 // ---- Tab switching: only one panel visible at a time ----
 // Keeps the desktop sidebar links AND the mobile drawer links in sync.
 function showPanel(name) {
+    if (!adminUnlocked) return;   /* no panel opens without the right password */
     document.querySelectorAll('.admin-panel').forEach(p => p.style.display = 'none');
     const panel = document.getElementById('panel-' + name);
     if (panel) panel.style.display = 'block';
@@ -1449,6 +1541,7 @@ document.querySelectorAll('.drawer-link').forEach(link => {
 });
 
 function unlockUI() {
+    adminUnlocked = true;
     passwordGate.style.display = 'none';
     showPanel('add');
     loadDeleteList(1, false);
@@ -1460,16 +1553,32 @@ function unlockUI() {
 // (auto-unlock trigger moved to the end of this script — see bottom —
 // so it fires only after every const/function it depends on is defined)
 
-unlockBtn.addEventListener('click', () => {
+unlockBtn.addEventListener('click', async () => {
     const entered = adminPasswordInput.value.trim();
     if (!entered) {
         gateMsg.textContent = 'Enter a password.';
         gateMsg.className = 'error';
         return;
     }
-    adminPassword = entered;
-    sessionStorage.setItem('adminPassword', entered);
-    unlockUI();
+    unlockBtn.disabled = true;
+    gateMsg.textContent = 'Checking…';
+    gateMsg.className = '';
+    const ok = await verifyAdminPassword(entered);
+    unlockBtn.disabled = false;
+
+    if (ok === true) {
+        adminPassword = entered;
+        sessionStorage.setItem('adminPassword', entered);
+        gateMsg.textContent = '';
+        adminPasswordInput.value = '';
+        unlockUI();
+    } else {
+        adminPassword = '';
+        sessionStorage.removeItem('adminPassword');
+        gateMsg.textContent = ok === false ? 'Wrong password.' : verifyAdminPassword.lastError;
+        gateMsg.className = 'error';
+        adminPasswordInput.select();
+    }
 });
 
 adminPasswordInput.addEventListener('keydown', (e) => {
@@ -4744,6 +4853,7 @@ async function openEditModal(id) {
 
         const p = data.product;
         document.getElementById('editId').value = p.id;
+        if (typeof svfLoad === 'function') svfLoad(p.id);
         document.getElementById('editName').value = p.name || '';
         document.getElementById('editPrice').value = p.price || '';
         document.getElementById('editGender').value = p.gender || 'men';
@@ -4938,7 +5048,15 @@ editProductForm.addEventListener('submit', async (e) => {
 // Fires now that every const/function above it is fully defined —
 // prevents the temporal-dead-zone crash that happened when this ran
 // too early (before deleteList/editModalOverlay etc. were declared).
-if (adminPassword) unlockUI();
+/* Saved password from this tab: re-check it with the server before opening */
+if (adminPassword) {
+    verifyAdminPassword(adminPassword).then(ok => {
+        if (ok === true) { unlockUI(); return; }
+        adminPassword = '';
+        sessionStorage.removeItem('adminPassword');
+        if (ok === false) { gateMsg.textContent = 'Please log in again.'; gateMsg.className = 'error'; }
+    });
+}
 
 
 (function () {
@@ -5533,6 +5651,173 @@ function openImageLightbox(url) {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && lb.style.display === 'flex') closeLb();
     });
+})();
+</script>
+<script>
+/* =========================================================
+   PRODUCT FILM (admin) — one separate video per product,
+   stored by product_showcase_video.php. Lives inside the
+   Edit product modal and saves instantly.
+   ========================================================= */
+(function () {
+    const EP = `${API_BASE}/product_showcase_video.php`;
+    const CHUNK = 2 * 1024 * 1024;              /* 2MB chunks */
+    const MAX = 300 * 1024 * 1024;
+    const EXTS = ['mp4', 'webm', 'mov'];
+    const $ = id => document.getElementById(id);
+    if (!$('svfBox')) return;
+
+    let pid = null;
+    const pass = () => (typeof adminPassword !== 'undefined' && adminPassword) || sessionStorage.getItem('adminPassword') || '';
+    const mb = b => (b / 1048576).toFixed(1) + ' MB';
+    const say = (t, ok) => { $('svfMsg').textContent = t || ''; $('svfMsg').style.color = ok ? '#7bd88f' : '#ff8a80'; };
+    const prog = p => {
+        $('svfProg').style.display = p == null ? 'none' : 'block';
+        $('svfProg').firstElementChild.style.width = ((p || 0) * 100) + '%';
+    };
+
+    async function post(fields, chunk) {
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            const fd = new FormData();
+            fd.append('admin_password', pass());
+            Object.entries(fields).forEach(([k, v]) => fd.append(k, v));
+            if (chunk) fd.append('chunk', chunk, 'chunk.bin');
+            try {
+                const res = await fetch(EP, { method: 'POST', body: fd });
+                const data = await res.json().catch(() => null);
+                if (res.ok && data && data.success) return data;
+                if (data && data.error) throw Object.assign(new Error(data.error), { fatal: true });
+            } catch (e) {
+                if (e.fatal || attempt === 3) throw e;
+            }
+            await new Promise(r => setTimeout(r, 1200 * attempt));
+        }
+        throw new Error('Upload failed');
+    }
+
+    function show(video) {
+        const has = !!(video && video.url);
+        $('svfPreview').style.display = has ? 'block' : 'none';
+        $('svfDeleteBtn').style.display = has ? '' : 'none';
+        $('svfSettings').style.display = has ? '' : 'none';
+        $('svfPickBtn').textContent = has ? 'Replace film' : '+ Upload film';
+        const v = $('svfVideo');
+        if (has) {
+            if (v.getAttribute('src') !== video.url) v.src = video.url;
+            $('svfMeta').textContent = mb(video.size || 0) + ' — live on the product page';
+        } else {
+            v.removeAttribute('src'); v.load();
+        }
+        $('svfTitle').value = has ? (video.title || '') : $('svfTitle').value;
+        const L = (has && video.layout) || {};
+        const val = v => (Number(v) > 0 ? String(v) : '');
+        $('svfWd').value = val(L.w_desktop);
+        $('svfHd').value = val(L.h_desktop);
+        $('svfWm').value = val(L.w_mobile);
+        $('svfHm').value = val(L.h_mobile);
+        $('svfFit').value = L.fit === 'cover' ? 'cover' : 'contain';
+    }
+
+    /* called by the Edit modal when a product opens */
+    window.svfLoad = async function (productId) {
+        pid = String(productId);
+        $('svfTitle').value = '';
+        $('svfInput').value = '';
+        say(''); prog(null); show(null);
+        try {
+            const res = await fetch(`${EP}?product_id=${encodeURIComponent(pid)}&t=${Date.now()}`);
+            const data = await res.json();
+            if (String(pid) === String(productId) && data.success) {
+                show(data.video);
+                if (!data.api) say('Server has the OLD product_showcase_video.php — upload the new one to product-api/ or sizes will not save.');
+            }
+        } catch (e) { say('Could not load product film.'); }
+    };
+
+    /* heading + size fields sent with upload and "Save heading & size" */
+    function settingsFields() {
+        const n = id => String(Math.max(0, parseInt($(id).value, 10) || 0));
+        return {
+            title: $('svfTitle').value.trim(),
+            w_desktop: n('svfWd'), h_desktop: n('svfHd'),
+            w_mobile: n('svfWm'), h_mobile: n('svfHm'),
+            fit: $('svfFit').value
+        };
+    }
+
+    $('svfPickBtn').addEventListener('click', () => $('svfInput').click());
+
+    $('svfInput').addEventListener('change', async () => {
+        const file = $('svfInput').files[0];
+        if (!file || !pid) return;
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!EXTS.includes(ext)) return say('Only mp4, webm or mov.');
+        if (file.size > MAX) return say(`${mb(file.size)} is over 300MB.`);
+
+        const forId = pid;
+        ['svfPickBtn', 'svfDeleteBtn', 'svfTitleBtn'].forEach(id => $(id).disabled = true);
+        say(`Uploading ${file.name} (${mb(file.size)})…`, true);
+        prog(0);
+        try {
+            const start = await post({ action: 'start', product_id: forId, filename: file.name });
+            const total = Math.max(1, Math.ceil(file.size / CHUNK));
+            for (let i = 0; i < total; i++) {
+                await post({ action: 'chunk', token: start.token, index: i }, file.slice(i * CHUNK, (i + 1) * CHUNK));
+                prog((i + 1) / total);
+                say(`Uploading… ${Math.round((i + 1) / total * 100)}%`, true);
+            }
+            const done = await post(Object.assign({ action: 'finish', token: start.token }, settingsFields()));
+            if (pid === forId) show(done.video);
+            say('Film uploaded — live on the product page.', true);
+        } catch (e) {
+            say(e.message === 'Wrong admin password' ? 'Wrong admin password.' : 'Upload failed: ' + e.message);
+        } finally {
+            prog(null);
+            $('svfInput').value = '';
+            ['svfPickBtn', 'svfDeleteBtn', 'svfTitleBtn'].forEach(id => $(id).disabled = false);
+        }
+    });
+
+    $('svfTitleBtn').addEventListener('click', async () => {
+        if (!pid) return;
+        $('svfTitleBtn').disabled = true;
+        try {
+            const sent = settingsFields();
+            const d = await post(Object.assign({ action: 'meta', product_id: pid }, sent));
+            if (!d.api || !d.video || !d.video.layout) {
+                say('Heading saved, but SIZE NOT SAVED: server has the old product_showcase_video.php — upload the new one to product-api/.');
+                return;
+            }
+            show(d.video);
+            say('Heading & size saved — live on the product page.', true);
+        } catch (e) { say(e.message); }
+        finally { $('svfTitleBtn').disabled = false; }
+    });
+
+    $('svfDeleteBtn').addEventListener('click', async () => {
+        if (!pid || !confirm('Remove the product film from this product?')) return;
+        $('svfDeleteBtn').disabled = true;
+        try {
+            await post({ action: 'delete', product_id: pid });
+            $('svfTitle').value = '';
+            show(null);
+            say('Film removed.', true);
+        } catch (e) { say(e.message); }
+        finally { $('svfDeleteBtn').disabled = false; }
+    });
+
+    /* When a product is deleted (single or bulk), remove its film too */
+    if (typeof deleteAllExtraVideos === 'function') {
+        const original = deleteAllExtraVideos;
+        deleteAllExtraVideos = function (productId) {
+            const fd = new FormData();
+            fd.append('admin_password', pass());
+            fd.append('action', 'delete');
+            fd.append('product_id', productId);
+            fetch(EP, { method: 'POST', body: fd }).catch(() => {});
+            return original(productId);
+        };
+    }
 })();
 </script>
 </body>

@@ -1963,3 +1963,14 @@ body.admin-page { padding-top: 0; }
     height: 150px !important;
     aspect-ratio: unset !important;
 }
+
+/* =========================================================
+   SEARCH SUGGEST — dark theme hover fix
+   (old light hover #f7f2ea made white text invisible)
+   ========================================================= */
+.search-suggest-item { transition: background 0.2s ease; }
+.search-suggest-item:hover,
+.search-suggest-item:focus-visible { background: rgba(212,175,106,0.12) !important; outline: none; }
+.search-suggest-item:hover .search-suggest-name,
+.search-suggest-item:focus-visible .search-suggest-name { color: #d4af6a !important; }
+.search-suggest-viewall:hover { background: rgba(212,175,106,0.12) !important; color: #f0d9a8 !important; }

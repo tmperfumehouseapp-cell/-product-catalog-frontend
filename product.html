@@ -240,6 +240,53 @@ html, body { overflow-x: hidden; }
     }
     #peelLayer { display: none !important; }
 }
+
+/* =========================================================
+   PRODUCT FILM — one separate video per product
+   (product_showcase_video.php), before "More from <brand>"
+   ========================================================= */
+.pv-section { max-width: 1100px; margin: 34px auto 10px; padding: 0 16px; }
+/* Size comes from admin (Edit product -> Product film). Empty = automatic. */
+.pv-frame { width: var(--pv-w-d, 100%); max-width: 100%; margin: 0 auto; }
+.pv-head { text-align: center; margin-bottom: 16px; }
+.pv-eyebrow { display: block; font-size: 10px; letter-spacing: 0.28em; color: #d4af6a; margin-bottom: 6px; }
+.pv-title { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; font-size: clamp(20px, 3vw, 28px); color: #f2ecdf; margin: 0; }
+.pv-frame {
+    position: relative; overflow: hidden; border-radius: 16px;
+    border: 1px solid rgba(212,175,106,0.28); background: #000;
+    box-shadow: 0 24px 50px rgba(0,0,0,0.55);
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(.2,.8,.2,1);
+}
+.pv-section.in .pv-frame { opacity: 1; transform: none; }
+.pv-frame video { display: block; width: 100%; height: var(--pv-h-d, auto); max-height: var(--pv-h-d, 78vh); object-fit: var(--pv-fit, contain); background: #000; cursor: pointer; }
+.pv-play {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%) scale(0.9);
+    width: 64px; height: 64px; border-radius: 50%; border: 1px solid rgba(212,175,106,0.7);
+    background: rgba(13,11,8,0.6); color: #d4af6a; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.3s ease;
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.pv-frame.is-paused .pv-play { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+.pv-play svg { width: 24px; height: 24px; margin-left: 3px; }
+.pv-mute {
+    position: absolute; right: 14px; bottom: 16px; width: 38px; height: 38px; border-radius: 50%;
+    border: 1px solid rgba(212,175,106,0.5); background: rgba(13,11,8,0.65); color: #f2ecdf;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+.pv-mute:hover { background: #d4af6a; color: #1a1508; }
+.pv-mute svg { width: 17px; height: 17px; }
+.pv-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,0.12); }
+.pv-bar span { display: block; height: 100%; width: 0; background: #d4af6a; }
+@media (max-width: 640px) {
+    .pv-section { padding: 0; margin-top: 26px; }
+    .pv-head { padding: 0 16px; }
+    .pv-frame { width: var(--pv-w-m, 100%); border-radius: 0; border-left: 0; border-right: 0; }
+    .pv-section.pv-m-custom .pv-frame { border-radius: 14px; border: 1px solid rgba(212,175,106,0.28); }
+    .pv-frame video { height: var(--pv-h-m, auto); max-height: var(--pv-h-m, 70vh); }
+}
+@media (prefers-reduced-motion: reduce) { .pv-frame { opacity: 1; transform: none; transition: none; } }
 </style>
 <style>
 /* =========================================================
@@ -863,6 +910,98 @@ function syncVideoThumbSize() {
     }
 }
 
+/* =========================================================
+   PRODUCT FILM — separate video for this product, shown
+   before "More from <brand>". Managed in admin (Edit product
+   -> Product film). Section stays hidden if none uploaded.
+   - loads the file only when the section is near the screen
+   - autoplays muted in view, pauses off-screen
+   - tap video = play/pause, speaker button = sound on/off
+   ========================================================= */
+async function loadProductFilm(productId) {
+    const section = document.getElementById('pvSection');
+    if (!section) return;
+
+    let info = null;
+    try {
+        const res = await fetch(`${API_BASE}/product_showcase_video.php?product_id=${encodeURIComponent(productId)}&t=${Date.now()}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (data.success && data.video && data.video.url) info = data.video;
+    } catch (e) { return; }
+    if (!info) return;
+
+    const frame = document.getElementById('pvFrame');
+    const video = document.getElementById('pvVideo');
+    const playBtn = document.getElementById('pvPlay');
+    const muteBtn = document.getElementById('pvMute');
+    const bar = document.getElementById('pvBar');
+
+    document.getElementById('pvTitle').textContent = info.title || 'Watch it in action';
+
+    /* Admin sizes (px, 0 = automatic) + fit */
+    const L = info.layout || {};
+    const px = v => (Number(v) > 0 ? Number(v) + 'px' : '');
+    const setVar = (k, v) => { if (v) section.style.setProperty(k, v); else section.style.removeProperty(k); };
+    setVar('--pv-w-d', px(L.w_desktop));
+    setVar('--pv-h-d', px(L.h_desktop));
+    setVar('--pv-w-m', px(L.w_mobile));
+    setVar('--pv-h-m', px(L.h_mobile));
+    section.style.setProperty('--pv-fit', L.fit === 'cover' ? 'cover' : 'contain');
+    if (Number(L.w_desktop) > 1068) section.style.maxWidth = (Number(L.w_desktop) + 32) + 'px';
+    section.classList.toggle('pv-m-custom', Number(L.w_mobile) > 0);
+    section.style.display = '';
+
+    let userPaused = false;
+    let loaded = false;
+    const load = () => { if (!loaded) { loaded = true; video.src = info.url; video.load(); } };
+    const setPaused = (p) => frame.classList.toggle('is-paused', p);
+
+    video.addEventListener('play', () => setPaused(false));
+    video.addEventListener('pause', () => setPaused(true));
+    video.addEventListener('error', () => { section.style.display = 'none'; });
+    video.addEventListener('timeupdate', () => {
+        if (video.duration) bar.style.width = (video.currentTime / video.duration * 100) + '%';
+    });
+
+    const toggle = () => {
+        load();
+        if (video.paused) { userPaused = false; video.play().catch(() => {}); }
+        else { userPaused = true; video.pause(); }
+    };
+    video.addEventListener('click', toggle);
+    playBtn.addEventListener('click', toggle);
+
+    muteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        video.muted = !video.muted;
+        muteBtn.querySelector('.pv-ic-muted').style.display = video.muted ? '' : 'none';
+        muteBtn.querySelector('.pv-ic-sound').style.display = video.muted ? 'none' : '';
+        muteBtn.setAttribute('aria-label', video.muted ? 'Unmute video' : 'Mute video');
+        if (!video.muted && video.paused) { load(); video.play().catch(() => {}); }
+    });
+
+    if ('IntersectionObserver' in window) {
+        /* start downloading a little before it scrolls into view */
+        new IntersectionObserver((entries, obs) => {
+            if (entries[0].isIntersecting) { load(); obs.disconnect(); }
+        }, { rootMargin: '400px 0px' }).observe(section);
+
+        /* fade in + autoplay while visible, pause when scrolled away */
+        new IntersectionObserver((entries) => {
+            const en = entries[0];
+            if (en.isIntersecting) {
+                section.classList.add('in');
+                if (!userPaused) { load(); video.play().catch(() => {}); }
+            } else if (!video.paused) {
+                video.pause();
+            }
+        }, { threshold: 0.35 }).observe(frame);
+    } else {
+        section.classList.add('in');
+        load();
+    }
+}
+
 /* Extra videos (video 2, 3, ...) from product_videos.php — added after the main video tile */
 async function loadExtraVideos(productId) {
     try {
@@ -1140,6 +1279,22 @@ async function loadProduct() {
                 </div>
             </div>
 
+            <section class="pv-section" id="pvSection" style="display:none;" aria-label="Product video">
+                <div class="pv-head">
+                    <span class="pv-eyebrow">PRODUCT FILM</span>
+                    <h3 class="pv-title" id="pvTitle"></h3>
+                </div>
+                <div class="pv-frame is-paused" id="pvFrame">
+                    <video id="pvVideo" muted loop playsinline preload="none"></video>
+                    <button type="button" class="pv-play" id="pvPlay" aria-label="Play video"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4 20 12 7 20 7 4"/></svg></button>
+                    <button type="button" class="pv-mute" id="pvMute" aria-label="Unmute video">
+                        <svg class="pv-ic-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                        <svg class="pv-ic-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    </button>
+                    <div class="pv-bar"><span id="pvBar"></span></div>
+                </div>
+            </section>
+
             <div class="related-products" id="relatedProducts" style="display:none;">
                 <p class="related-heading">More from <span id="relatedBrandName"></span></p>
                 <div class="related-scroll" id="relatedScroll"></div>
@@ -1170,6 +1325,7 @@ async function loadProduct() {
         loadRelatedByBrand(p.brand, p.id, p.category);
         loadProductNotes(p.id);
         loadExtraVideos(p.id);
+        loadProductFilm(p.id);
         loadSpecs(p);
 
         // Match the video tile to the image-thumb size once thumbs lay out
