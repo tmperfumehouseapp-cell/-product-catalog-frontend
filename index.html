@@ -1220,21 +1220,6 @@ body { padding-top: 60px; }
 .why-us-item h4 { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; }
 .why-us-item p { font-size: 12px; color: #777; line-height: 1.5; margin: 0; }
 
-/* =========================================================
-   CATEGORY ICON ROW — small circles, no "All Category" item
-   ========================================================= */
-.category-icon-row {
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
-    padding: 14px 16px;
-    background: #fff;
-    scrollbar-width: none;
-}
-.category-icon-row::-webkit-scrollbar { display: none; }
-@media (min-width: 640px) { .category-icon-row { padding: 18px 20px; gap: 20px; } }
-@media (min-width: 900px) { .category-icon-row { max-width: 1200px; margin: 0 auto; padding: 14px 20px 10px; } }
-
 .cir-item {
     display: flex;
     flex-direction: column;
@@ -1268,85 +1253,6 @@ body { padding-top: 60px; }
     max-width: 60px;
 }
 @media (min-width: 640px) { .cir-label { font-size: 12px; max-width: 80px; } }
-
-/* =========================================================
-   CATEGORY SECTIONS — plain heading + red "View All", product row
-   ========================================================= */
-.category-sections { padding: 10px 16px 4px; background: #eef0ee; }
-@media (min-width: 640px) { .category-sections { padding: 12px 20px 4px; } }
-@media (min-width: 900px) { .category-sections { max-width: 1200px; margin: 0 auto; padding: 12px 20px 4px; } }
-
-.cat-section { margin-bottom: 26px; }
-.cat-section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-.cat-section-title { font-size: 17px; font-weight: 700; color: #e0342e; }
-@media (min-width: 640px) { .cat-section-title { font-size: 19px; } }
-.cat-section-viewall {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #e0342e;
-    text-decoration: none;
-    flex-shrink: 0;
-}
-@media (min-width: 640px) { .cat-section-viewall { font-size: 13px; } }
-.cat-section-viewall svg { width: 12px; height: 12px; }
-
-.cat-product-row {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-.cat-product-row::-webkit-scrollbar { display: none; }
-@media (min-width: 900px) { .cat-product-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; overflow: visible; } }
-
-.cat-product-card {
-    flex-shrink: 0;
-    width: 150px;
-    background: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    text-decoration: none;
-    color: inherit;
-}
-@media (min-width: 900px) { .cat-product-card { width: auto; } }
-.cat-product-card img {
-    width: 100%;
-    aspect-ratio: 8 / 10;
-    object-fit: cover;
-    background: #f0ede6;
-    display: block;
-}
-.cat-product-body { padding: 10px 12px; }
-.cat-product-brand {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #a8825c;
-    display: block;
-    margin-bottom: 3px;
-}
-@media (min-width: 640px) { .cat-product-brand { font-size: 10px; } }
-.cat-product-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 4px;
-    line-height: 1.3;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.cat-product-price { font-size: 14px; font-weight: 700; color: #e0342e; }
 
 .category-stories {
     display: flex;
@@ -2094,47 +2000,6 @@ body.admin-page { padding-top: 0; }
     .hero-arrow { width: 34px; height: 34px; top: 96px; }
 }
 
-/* =========================================================
-   PROMO VIDEO SECTION
-   ========================================================= */
-.promo-video-section {
-    position: relative;
-    width: 100%;
-    background: #000;
-    line-height: 0;
-    cursor: default;
-    overflow: hidden;
-}
-.promo-video-section.is-clickable { cursor: pointer; }
-/* ---- SIZE: heights come from the admin panel via CSS vars ---- */
-.promo-video {
-    display: block;
-    width: 100%;
-    height: var(--pv-h-mobile, 420px);
-    object-fit: cover;    /* crops to fill; use 'contain' to show full frame */
-    margin: 0 auto;
-}
-@media (min-width: 900px) {
-    .promo-video { height: var(--pv-h-desktop, 560px); }
-}
-.promo-mute-btn {
-    position: absolute;
-    right: 14px;
-    bottom: 14px;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(0,0,0,0.55);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 2;
-    transition: background 0.15s ease;
-}
-.promo-mute-btn:hover { background: rgba(0,0,0,0.75); }
 
 
 
@@ -2401,6 +2266,16 @@ body { background: #0d0b08; }
 .search-suggest-price { color: #d4af6a; }
 .search-suggest-viewall { color: #d4af6a; background: #120f0b; }
 .search-suggest-empty { color: #8f897d; }
+/* =========================================================
+   SEARCH SUGGEST — dark theme hover fix
+   (old light hover #f7f2ea made white text invisible)
+   ========================================================= */
+.search-suggest-item { transition: background 0.2s ease; }
+.search-suggest-item:hover,
+.search-suggest-item:focus-visible { background: rgba(212,175,106,0.12) !important; outline: none; }
+.search-suggest-item:hover .search-suggest-name,
+.search-suggest-item:focus-visible .search-suggest-name { color: #d4af6a !important; }
+.search-suggest-viewall:hover { background: rgba(212,175,106,0.12) !important; color: #f0d9a8 !important; }
 .drawer { background: #0f0d09; }
 .drawer-head { border-bottom: 1px solid rgba(212,175,106,0.16); }
 .drawer-logo { color: #f2ecdf; }
@@ -2443,7 +2318,6 @@ body { background: #0d0b08; }
 .hero-arrow { background: #15130e; color: #f2ecdf; border: 1px solid rgba(212,175,106,0.3); }
 
 /* Category icon circles */
-.category-icon-row { background: #0d0b08; border-top: 1px solid rgba(212,175,106,0.12); }
 .cir-circle {
     border: 1px solid rgba(212,175,106,0.45);
     background: #15130e;
@@ -2452,96 +2326,8 @@ body { background: #0d0b08; }
 }
 .cir-item:hover .cir-circle { box-shadow: 0 0 0 1px rgba(212,175,106,0.9), 0 0 20px rgba(212,175,106,0.22); transform: translateY(-3px); }
 
-/* =========================================================
-   DECK PEEL — scroll peels product cards off a stack
-   ========================================================= */
-.dpeel { position: relative; }
-.dpeel-stage {
-    position: sticky; top: 60px;
-    height: calc(100vh - 60px);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    overflow: hidden;
-}
-.dpeel-kicker { font-size: 10px; letter-spacing: 4px; color: #d4af6a; margin-bottom: 22px; }
-.dpeel-hint { position: absolute; bottom: 18px; font-size: 9px; letter-spacing: 3px; color: #5b564c; }
-.dpeel-deck { position: relative; width: min(64vw, 250px); height: min(86vw, 340px); }
-.dpeel-card {
-    position: absolute; inset: 0;
-    border-radius: 16px; overflow: hidden;
-    border: 1px solid rgba(212,175,106,0.45);
-    background: #15130e;
-    box-shadow: 0 22px 44px rgba(0,0,0,0.6);
-    display: flex; flex-direction: column;
-    text-decoration: none;
-    will-change: transform, opacity;
-}
-.dpeel-card img { flex: 1; width: 100%; object-fit: cover; min-height: 0; background: #100e0a; }
-.dpeel-card-foot { padding: 12px 14px 13px; background: #15130e; border-top: 1px solid rgba(212,175,106,0.18); }
-.dpeel-card-cat { font-size: 8px; letter-spacing: 2.5px; color: #d4af6a; }
-.dpeel-card-name {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: 15px; color: #f2ecdf; margin-top: 3px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-/* Reduced motion / no-JS fallback keeps it usable */
-@media (prefers-reduced-motion: reduce) {
-    .dpeel { height: auto !important; }
-    .dpeel-stage { position: static; height: auto; padding: 30px 0; }
-    .dpeel-hint { display: none; }
-}
-
-/* =========================================================
-   BRAND WALL — replaces the category circle row.
-   Auto-drifting serif brand names, alternating dim/gold.
-   Tap a name -> that brand's products.
-   ========================================================= */
-.brand-wall {
-    position: relative;
-    overflow: hidden;
-    padding: 26px 0 24px;
-    border-top: 1px solid rgba(212,175,106,0.12);
-    border-bottom: 1px solid rgba(212,175,106,0.12);
-}
-.brand-wall::before, .brand-wall::after {
-    content: ""; position: absolute; top: 0; bottom: 0; width: 70px; z-index: 2; pointer-events: none;
-}
-.brand-wall::before { left: 0; background: linear-gradient(90deg, #0d0b08, transparent); }
-.brand-wall::after { right: 0; background: linear-gradient(270deg, #0d0b08, transparent); }
-.brand-track {
-    display: inline-flex;
-    white-space: nowrap;
-    align-items: baseline;
-    will-change: transform;
-    /* drift is driven by JS (requestAnimationFrame) — immune to the
-       back/forward-cache animation freeze on mobile browsers */
-}
-.brand-wall-item {
-    font-family: Georgia, 'Times New Roman', serif;
-    font-size: clamp(22px, 4vw, 34px);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    text-decoration: none;
-    color: #3a3020;                 /* dim gold */
-    margin-right: 52px;
-    transition: color 0.25s ease, text-shadow 0.25s ease;
-}
-.brand-wall-item.is-gold { color: #d4af6a; }
-.brand-wall-item:hover {
-    color: #f0d9a8;
-    text-shadow: 0 0 18px rgba(240,217,168,0.35);
-}
-@media (max-width: 640px) {
-    .brand-wall { padding: 18px 0 16px; }
-    .brand-wall-item { margin-right: 34px; letter-spacing: 3px; }
-}
 .cir-label { color: #a89a7c; letter-spacing: 1px; }
 
-/* Category sections + product cards */
-.category-sections { background: #0d0b08; }
-.cat-section-title { color: #f2ecdf; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
-.cat-section-viewall { color: #d4af6a; background: transparent; border-bottom: 1px solid rgba(212,175,106,0.5); border-radius: 0; padding: 0 0 3px; box-shadow: none; letter-spacing: 2px; font-size: 10px; }
-.cat-section-viewall svg { display: none; }
 .card {
     background: #15130e;
     border: 1px solid rgba(212,175,106,0.18) !important;
@@ -2557,41 +2343,7 @@ body { background: #0d0b08; }
 .card-body { color: #d4af6a; }
 .card-wishlist-btn { background: rgba(13,11,8,0.7); color: #f2ecdf; }
 
-/* Homepage category product cards (cat-product-*) */
-.cat-product-card {
-    background: #15130e;
-    border: 1px solid rgba(212,175,106,0.18);
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 10px 22px rgba(0,0,0,0.35);
-    transition: transform 0.25s ease, border-color 0.25s ease;
-}
-.cat-product-card:hover { transform: translateY(-4px); border-color: rgba(212,175,106,0.6); }
-.cat-product-card img { background: #100e0a; }
-.cat-product-body { background: #15130e; }
-.cat-product-brand { color: #8f897d; }
-.cat-product-name { color: #f2ecdf; font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
-.cat-product-price { color: #d4af6a; font-weight: 700; }
 
-/* Promo video + footer */
-.promo-video-section {
-    border: 1px solid rgba(212,175,106,0.22);
-    border-radius: 8px;
-    overflow: hidden;
-    margin: 10px 16px 20px;
-    background: #000; /* any letterboxing shows black, not brown */
-}
-@media (min-width: 900px) { .promo-video-section { max-width: 1160px; margin: 10px auto 24px; } }
-@media (max-width: 640px) {
-    /* Full-bleed video on phones — fills edge to edge, no side gaps */
-    .promo-video-section { margin: 8px 0 16px; border-left: none; border-right: none; border-radius: 0; }
-    .promo-video {
-        width: 100% !important;
-        height: var(--pv-h-mobile, 420px) !important;
-        object-fit: cover !important;
-    }
-    .promo-mute-btn { right: 12px; bottom: 12px; width: 42px; height: 42px; }
-}
 .footer-brand-banner { background: #080705; border-top: 1px solid rgba(212,175,106,0.18); }
 .footer-brand-copy { color: #8f897d; }
 .footer-brand-copyright { color: #5b564c; }
@@ -2603,7 +2355,7 @@ body { background: #0d0b08; }
 
 
 /* HIDE ALL PRICES (site-wide request) */
-.shx-price, .cat-product-price, .search-suggest-price, .card-body .price { display: none !important; }
+.shx-price, .search-suggest-price, .card-body .price { display: none !important; }
 
 /* =========================================================
    PRODUCT-OPEN TRANSITION (View Transitions API)
@@ -2662,8 +2414,30 @@ body { background: #0d0b08; }
     #peelLayer { display: none !important; }
 }
 
-/* ============ HOME CARD DECK (fanned 8x10 cards) ============ */
-.home-deck { padding: 26px 0 8px; overflow: hidden; background: #0d0b08; }
+/* ============ HOME CARD DECKS — MOBILE (< 641px): fanned deck, one per section ============ */
+.home-decks { background: #0d0b08; }
+.home-deck { padding: 26px 0 6px; overflow: hidden; background: #0d0b08; border-bottom: 1px solid rgba(212,175,106,0.12); }
+.home-deck:last-child { border-bottom: 0; }
+.hd-section-head {
+    max-width: 900px;
+    margin: 0 auto 4px;
+    padding: 0 16px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+}
+.hd-eyebrow { font-size: 10px; letter-spacing: 0.2em; color: #9a8f7a; text-transform: uppercase; margin-bottom: 4px; }
+.hd-title { font-family: Georgia, 'Times New Roman', serif; font-size: 26px; color: #f5efe2; margin: 0; line-height: 1.1; font-weight: 700; }
+.hd-title em { color: #d4af6a; font-style: italic; }
+.hd-viewall {
+    color: #d4af6a; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap;
+    border: 1px solid rgba(212,175,106,0.45); padding: 7px 13px; border-radius: 999px;
+    transition: background 0.25s ease, color 0.25s ease;
+}
+.hd-viewall:hover { background: #d4af6a; color: #1a1508; }
+@media (max-width: 640px) { .hd-title { font-size: 21px; } }
+
 .home-deck-stage {
     position: relative;
     height: 540px;
@@ -2671,64 +2445,127 @@ body { background: #0d0b08; }
     margin: 0 auto;
 }
 @media (max-width: 640px) { .home-deck-stage { height: 420px; } }
-.hd-card {
+.home-deck-stage .hd-card {
     position: absolute;
     top: 50%;
     left: 50%;
     width: var(--hd-w, 300px);
-    aspect-ratio: 800 / 1300;   /* 800 x 1300 */
+    aspect-ratio: 800 / 1300;
     border-radius: 18px;
-    padding: 22px 20px;
     box-sizing: border-box;
     box-shadow: 0 16px 34px rgba(0,0,0,0.5);
     transition: transform 0.55s cubic-bezier(.25,.8,.3,1), opacity 0.55s ease, box-shadow 0.55s ease;
     overflow: hidden;
     cursor: pointer;
-    will-change: transform;
+    will-change: transform, opacity;
+    display: flex;
+    flex-direction: column;
+    transform: translate(-50%,-50%);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
-@media (max-width: 640px) { .hd-card { width: var(--hd-w-m, 225px); padding: 18px 16px; } }
-.home-deck.hd-fix-h .hd-card { aspect-ratio: auto; height: var(--hd-h); }
+@media (max-width: 640px) { .home-deck-stage .hd-card { width: var(--hd-w-m, 225px); } }
+.home-decks.hd-fix-h .home-deck-stage .hd-card { aspect-ratio: auto; height: var(--hd-h); }
 @media (max-width: 640px) {
-    .home-deck.hd-fix-h .hd-card { height: auto; aspect-ratio: 800 / 1300; }
-    .home-deck.hd-fix-h-m .hd-card { aspect-ratio: auto !important; height: var(--hd-h-m) !important; }
+    .home-decks.hd-fix-h .home-deck-stage .hd-card { height: auto; aspect-ratio: 800 / 1300; }
+    .home-decks.hd-fix-h-m .home-deck-stage .hd-card { aspect-ratio: auto !important; height: var(--hd-h-m) !important; }
 }
 .hd-card.hd-center {
     box-shadow: 0 22px 48px rgba(0,0,0,0.65), 0 0 0 1.5px rgba(212,175,106,0.5);
-    animation: hdSway 5s ease-in-out infinite;
     cursor: default;
 }
-@keyframes hdSway {
-    0%, 100% { transform: translate(-50%,-50%) rotate(0deg); }
-    50% { transform: translate(-50%,-50%) rotate(0.7deg); }
-}
-@media (prefers-reduced-motion: reduce) { .hd-card.hd-center { animation: none; } }
-.hd-card.hd-center::before {
+@media (prefers-reduced-motion: reduce) { .home-deck-stage .hd-card { transition: opacity 0.3s ease; } }
+
+/* FULL PHOTO card: image fills the whole card, text sits on a dark fade at the bottom.
+   Best image size = same shape as the card (e.g. 325 x 525, 650 x 1050, 800 x 1300). */
+.hd-card.hd-photo { background: #0d0b08 !important; color: #fff !important; }
+.hd-img { position: absolute; inset: 0; overflow: hidden; background: #151109; z-index: 0; }
+.hd-img img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.hd-img::after {
     content: "";
     position: absolute;
-    top: 0; bottom: 0; left: 0;
-    width: 14px;
-    background: linear-gradient(180deg, #d4af6a, #b8933f);
+    left: 0; right: 0; bottom: 0;
+    height: 62%;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 45%, rgba(0,0,0,0.88) 100%);
+    pointer-events: none;
 }
-.hd-card.hd-center .hd-card-pad { padding-left: 12px; }
+.hd-img .hd-num { position: absolute; top: 10px; left: 14px; margin: 0; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.6); z-index: 1; }
+.hd-photo .hd-card-pad {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    z-index: 1;
+    flex: none;
+    border-top: 0;
+    background: transparent;
+    padding: 16px 16px 16px;
+    overflow: visible;
+}
+.hd-photo .hd-card-pad::before {
+    content: "";
+    display: block;
+    width: 34px; height: 3px;
+    border-radius: 2px;
+    background: var(--hd-accent, #d4af6a);
+    margin-bottom: 9px;
+}
+.hd-photo .hd-head { color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+.hd-photo .hd-body { color: rgba(255,255,255,0.82) !important; }
+.hd-photo .hd-highlight { color: var(--hd-accent, #f0d9a8); }
+.hd-photo .hd-btn { margin-top: 10px; background: #d4af6a; color: #1a1508; }
 
-/* card color skins (rotate by admin choice) */
+.hd-card-pad {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 18px 18px;
+    border-top: 4px solid var(--hd-accent, #d4af6a);
+    min-height: 0;
+    overflow: hidden;
+}
+.hd-card.hd-noimg .hd-card-pad { border-top: 0; border-left: 10px solid var(--hd-accent, #d4af6a); padding: 22px 20px; }
+@media (max-width: 640px) {
+    .hd-card-pad { padding: 11px 12px 12px; }
+    .hd-card.hd-noimg .hd-card-pad { padding: 18px 16px; }
+}
+
+/* Custom card color: auto light/dark text for readability */
+.hd-txt-dark { color: #2a241a; }
+.hd-txt-dark .hd-body { color: rgba(42,36,26,0.72); }
+.hd-txt-light { color: #f2f8f4; }
+.hd-txt-light .hd-body { color: rgba(242,248,244,0.75); }
+
+/* card color skins */
 .hd-skin-cream { background: #f5efe2; color: #2a241a; }
 .hd-skin-cream .hd-body { color: #5c5546; }
 .hd-skin-green { background: #123b27; color: #f2f8f4; }
 .hd-skin-green .hd-body { color: #bcd6c6; }
-.hd-skin-green .hd-num { color: #a9d8bd; }
 .hd-skin-clay { background: #e3b9a4; color: #3a241a; }
 .hd-skin-clay .hd-body { color: #6e4a38; }
 
 .hd-num { font-family: Georgia, 'Times New Roman', serif; font-size: 24px; margin-bottom: 8px; }
-.hd-head { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; line-height: 1.25; margin-bottom: 10px; }
-.hd-body { font-size: 12px; line-height: 1.6; white-space: pre-line; }
-.hd-highlight { font-size: 12px; line-height: 1.5; color: #c2452d; margin-top: 10px; font-weight: 600; }
+.hd-head { font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 700; line-height: 1.25; margin-bottom: 6px; }
+.hd-body { font-size: 12px; line-height: 1.55; white-space: pre-line; }
+.hd-highlight { font-size: 12px; line-height: 1.5; color: #c2452d; margin-top: 8px; font-weight: 600; }
 .hd-skin-green .hd-highlight { color: #f0d9a8; }
+.hd-btn {
+    margin-top: auto;
+    align-self: flex-start;
+    background: #1a1508;
+    color: #d4af6a;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 7px 13px;
+    border-radius: 999px;
+    text-decoration: none;
+    letter-spacing: 0.03em;
+}
+.hd-txt-light .hd-btn, .hd-skin-green .hd-btn { background: #d4af6a; color: #1a1508; }
+.hd-photo .hd-body { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 @media (max-width: 640px) {
     .hd-num { font-size: 20px; }
-    .hd-head { font-size: 16px; }
+    .hd-head { font-size: 15px; }
     .hd-body { font-size: 11px; }
+    .hd-btn { font-size: 10px; padding: 6px 11px; }
 }
 
 .hd-arrow {
@@ -2750,7 +2587,7 @@ body { background: #0d0b08; }
 .hd-arrow-r { right: 8px; background: #d4af6a; color: #1a1508; }
 .hd-arrow-r:hover { background: #f0d9a8; }
 
-.hd-footer { text-align: center; padding: 12px 14px 16px; }
+.hd-footer { text-align: center; padding: 6px 14px 14px; }
 .hd-dots { display: inline-flex; gap: 5px; align-items: center; }
 .hd-dot {
     width: 5px; height: 5px;
@@ -2761,6 +2598,109 @@ body { background: #0d0b08; }
 }
 .hd-dot.active { width: 14px; border-radius: 3px; background: #d4af6a; }
 .hd-caption { font-size: 11px; color: #8f897d; margin-top: 7px; font-family: Georgia, serif; font-style: italic; }
+
+/* ============ HOME CARD ROWS — DESKTOP (>= 641px): HANGING GALLERY ============
+   Same admin cards, shown in one row hanging from gold threads.
+   Cards swing with pendulum physics (mouse brush / page scroll). */
+.home-deck.is-hang { overflow: visible; padding: 30px 0 6px; }
+.home-deck.is-hang .hd-section-head { max-width: 1200px; padding: 0 24px; }
+
+.hg-wrap { position: relative; max-width: 1200px; margin: 0 auto; }
+.hg-row { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+.hg-row::-webkit-scrollbar { display: none; }
+.hg-track {
+    --thread: 58px;
+    --hg-w: clamp(170px, 17vw, 225px);
+    position: relative;
+    display: flex;
+    gap: 22px;
+    width: max-content;
+    min-width: 100%;
+    justify-content: center;
+    padding: calc(var(--thread) + 22px) 36px 48px;
+    box-sizing: border-box;
+}
+.hg-track::before {                      /* gold rail */
+    content: "";
+    position: absolute;
+    top: 14px; left: 10px; right: 10px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, transparent, #6b5733 6%, #8a7348 50%, #6b5733 94%, transparent);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+.hg-pend {
+    position: relative;
+    flex: 0 0 auto;
+    width: var(--hg-w);
+    transform-origin: 50% calc(var(--thread) * -1);
+    will-change: transform;
+}
+.hg-pend::before {                       /* thread */
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: calc(var(--thread) * -1);
+    width: 1px;
+    height: var(--thread);
+    background: linear-gradient(#8a7348, #d4af6a);
+}
+.hg-pend::after {                        /* gold pin */
+    content: "";
+    position: absolute;
+    left: calc(50% - 5px);
+    top: calc(var(--thread) * -1 - 5px);
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #d4af6a;
+    box-shadow: 0 0 10px rgba(212,175,106,0.6);
+}
+.hg-pend .hd-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 800 / 1300;
+    border-radius: 16px;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(212,175,106,0.2);
+    box-shadow: 0 16px 34px rgba(0,0,0,0.55);
+    transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.hg-pend .hd-card.hd-link { cursor: pointer; }
+.hg-pend .hd-card:hover { border-color: rgba(212,175,106,0.6); box-shadow: 0 22px 44px rgba(0,0,0,0.65), 0 0 0 1px rgba(212,175,106,0.35); }
+/* slightly smaller text so it fits the narrower row cards */
+.hg-pend .hd-num { font-size: 20px; }
+.hg-pend .hd-head { font-size: 16px; }
+.hg-pend .hd-body { font-size: 11.5px; line-height: 1.5; }
+.hg-pend .hd-photo .hd-body { -webkit-line-clamp: 2; }
+.hg-pend .hd-card-pad { padding: 14px; }
+.hg-pend .hd-btn { font-size: 10.5px; padding: 7px 12px; }
+
+/* arrows — only when the row is wider than the screen */
+.hg-arrow {
+    position: absolute;
+    top: 55%;
+    transform: translateY(-50%);
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: none;
+    align-items: center; justify-content: center;
+    border: 1px solid rgba(212,175,106,0.5);
+    background: rgba(21,17,9,0.92);
+    color: #d4af6a;
+    cursor: pointer;
+    z-index: 5;
+    transition: background 0.25s ease, color 0.25s ease, opacity 0.25s ease;
+}
+.hg-wrap.hg-overflow .hg-arrow { display: flex; }
+.hg-arrow:hover { background: #d4af6a; color: #1a1508; }
+.hg-arrow[disabled] { opacity: 0; pointer-events: none; }
+.hg-arrow-l { left: 4px; }
+.hg-arrow-r { right: 4px; }
+@media (prefers-reduced-motion: reduce) { .hg-pend { transform: none !important; } }
+
 </style>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
@@ -2850,54 +2790,67 @@ body { background: #0d0b08; }
 .drawer-link:hover::after, .drawer-link.active::after { transform: translateX(5px); color: #f0d9a8; }
 .drawer-link.active { color: #f0d9a8 !important; }
 .drawer-link .drawer-icon { display: none !important; }
+/* WhatsApp button sits right AFTER the category links, not pinned
+   to the drawer bottom */
+.drawer-nav { flex: 0 0 auto !important; }
 .drawer-wa {
-    padding: 14px 18px calc(18px + env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(212,175,106,0.25);
+    padding: 10px 18px 18px;
+    border-top: none;
     display: flex;
 }
 .drawer-wa .wa-aurora { flex: 1; }
 .drawer-wa .wa-aurora-inner { justify-content: center; }
 
-/* Aurora WhatsApp capsule (shared) */
+/* GREEN + SHINE SWEEP WhatsApp capsule — same as the products page */
 .wa-aurora {
     position: relative;
     display: inline-block;
-    padding: 2.5px;
     border-radius: 999px;
     overflow: hidden;
     text-decoration: none;
     max-width: 100%;
 }
 .wa-aurora-spin {
-    position: absolute; inset: -150%;
-    background: conic-gradient(from 0deg,
-        #25D366, #d4af6a, #0b3d24, #f0d9a8, #128C4B, #25D366);
-    animation: waAuroraSpin 4s linear infinite;
-    filter: blur(6px);
+    position: absolute;
+    top: -40%;
+    bottom: -40%;
+    left: 0;
+    width: 38%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: waAuroraShine 3.5s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform;
 }
-@keyframes waAuroraSpin { to { transform: rotate(360deg); } }
+@keyframes waAuroraShine {
+    0%, 55% { transform: translateX(-160%) skewX(-18deg); }
+    90%, 100% { transform: translateX(420%) skewX(-18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .wa-aurora-spin { animation: none; opacity: 0; }
+}
 .wa-aurora-inner {
     position: relative;
     display: flex; align-items: center; gap: 9px;
-    background: #0d0b08;
+    background: linear-gradient(135deg, #22c15e, #128c46);
     border-radius: 999px;
     padding: 10px 20px;
     white-space: nowrap;
 }
 .wa-aurora-ic {
     width: 20px; height: 20px; border-radius: 50%;
-    background: #25D366;
+    background: rgba(255,255,255,0.18);
     display: inline-flex; align-items: center; justify-content: center;
     flex-shrink: 0;
     animation: waAuroraPulse 2s infinite;
 }
 @keyframes waAuroraPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.55); }
-    70% { box-shadow: 0 0 0 8px rgba(37,211,102,0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.45); }
+    70% { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
 }
 .wa-aurora-ic svg { width: 12px; height: 12px; fill: #fff; }
-.wa-aurora-text { font-size: 11px; letter-spacing: 2px; color: #f2ecdf; }
-.wa-aurora-text b { color: #25D366; font-weight: 700; }
+.wa-aurora-text { font-size: 11px; letter-spacing: 2px; color: #ffffff; }
+.wa-aurora-text b { color: #ffffff; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -2953,17 +2906,8 @@ body { background: #0d0b08; }
      each floats center-stage with its real fragrance notes
      orbiting around it. Built at runtime from the catalog.
      ========================================================= -->
-<!-- HOME CARD DECK — fanned 8x10 cards, managed from the admin panel -->
-<section class="home-deck" id="homeDeck" style="display:none;" aria-label="Why 3rd Party">
-    <div class="home-deck-stage" id="homeDeckStage">
-        <button type="button" class="hd-arrow hd-arrow-l" id="hdPrev" aria-label="Previous card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <button type="button" class="hd-arrow hd-arrow-r" id="hdNext" aria-label="Next card"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>
-    </div>
-    <div class="hd-footer">
-        <div class="hd-dots" id="hdDots"></div>
-        <div class="hd-caption" id="hdCaption"></div>
-    </div>
-</section>
+<!-- HOME CARDS — mobile: fanned deck / desktop: hanging gallery row, one per section, managed from the admin panel -->
+<div class="home-decks" id="homeDecks" style="display:none;" aria-label="Shop by category"></div>
 
 <section class="showcase-section" id="showcaseSection">
     <div class="showcase-stage" id="showcaseStage">
@@ -2986,14 +2930,6 @@ body { background: #0d0b08; }
     </div>
 </section>
 
-<!-- DECK PEEL — scroll through the products card by card -->
-<section class="dpeel" id="deckPeel" style="display:none;" aria-label="Featured picks">
-    <div class="dpeel-stage">
-        <div class="dpeel-kicker">HAND-PICKED FOR YOU</div>
-        <div class="dpeel-deck" id="dpeelDeck"></div>
-        <div class="dpeel-hint">SCROLL TO PEEL</div>
-    </div>
-</section>
 
 <section class="hero-slider" id="heroSlider" aria-label="Featured fragrances">
     <div class="hero-slides" id="heroSlides">
@@ -3014,24 +2950,7 @@ body { background: #0d0b08; }
     <div class="hero-dots" id="heroDots"></div>
 </section>
 
-<!-- =========================================================
-     PROMO VIDEO SECTION
-     Loaded from the admin panel's Promo Video tab via
-     get_promo_video.php (video file + click-through link).
-     Hidden until the API confirms a video exists.
-     ========================================================= -->
-<section class="promo-video-section" id="promoVideoSection" style="display:none;">
-    <video class="promo-video" id="promoVideo"
-        muted loop playsinline preload="metadata">
-    </video>
-    <button type="button" class="promo-mute-btn" id="promoMuteBtn" aria-label="Unmute video">
-        <svg class="ic-muted" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
-        <svg class="ic-sound" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-    </button>
-</section>
 
-<div class="category-icon-row" id="categoryIconRow"></div>
-<div class="category-sections" id="categoryRow"></div>
 
 <footer class="site-footer">
     <div class="footer-brand-banner">
@@ -3395,8 +3314,8 @@ document.addEventListener('click', (e) => {
 loadHeroSlider();
 
 /* =========================================================
-   HOME PAGE — category icon row + per-category product sections
-   Only runs on pages with #categoryRow but NO #productGrid
+   HOME PAGE — loads categories for the showcase + drawer menu
+   Only runs on pages WITHOUT #productGrid
    (i.e. index.html) — products.html keeps its own circle-row
    category filtering in products.js untouched.
    ========================================================= */
@@ -3455,11 +3374,10 @@ function shuffleArray(arr) {
 
 /* Random hero slides removed — homepage is fully admin-controlled. */
 
-const VIEW_ALL_ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
 
 async function loadHomeCategories() {
-    const categoryRow = document.getElementById('categoryRow');
-    if (!categoryRow || document.getElementById('productGrid')) return;
+    // Home only: categories feed the showcase + drawer menu
+    if (document.getElementById('productGrid')) return;
 
     // 5-minute session cache: back-navigation & repeat visits render
     // instantly, with a silent refresh running behind.
@@ -3502,255 +3420,21 @@ async function loadHomeCategories() {
     }
 }
 
-async function buildBrandWall(mount) {
-    if (mount.dataset.wallBuilt) return;
-    mount.dataset.wallBuilt = '1';
-
-    let brands = [];
-    try {
-        const c = JSON.parse(sessionStorage.getItem('brandWallV1'));
-        if (c && Date.now() - c.t < 5 * 60 * 1000) brands = c.data;
-    } catch (e) {}
-    if (!brands.length) {
-        try {
-            const res = await fetch(`${API_BASE}/get_brands.php`);
-            const data = await res.json();
-            if (data.success && Array.isArray(data.brands)) {
-                brands = data.brands.map(b => b.brand).filter(Boolean);
-                try { sessionStorage.setItem('brandWallV1', JSON.stringify({ t: Date.now(), data: brands })); } catch (e) {}
-            }
-        } catch (e) {}
-    }
-    if (!brands.length) { mount.style.display = 'none'; return; }
-
-    const items = brands.map((b, i) => `
-        <a class="brand-wall-item${i % 2 ? '' : ' is-gold'}"
-           href="products.html?brand=${encodeURIComponent(b)}">${escapeHtml(b)}</a>
-    `).join('');
-
-    mount.className = 'brand-wall';
-    mount.innerHTML = `<div class="brand-track">${items}${items}</div>`; // doubled = seamless loop
-
-    // JS-driven drift: runs every frame, so it can never be left frozen
-    // by back-navigation, tab switches, or touch quirks.
-    const track = mount.querySelector('.brand-track');
-    const durationS = Math.max(24, brands.length * 4);
-    let paused = false;
-    let pauseTimer = null;
-    let x = 0;
-    let lastTs = 0;
-
-    mount.addEventListener('touchstart', () => {
-        paused = true;
-        clearTimeout(pauseTimer);
-    }, { passive: true });
-    const unpause = () => {
-        clearTimeout(pauseTimer);
-        pauseTimer = setTimeout(() => { paused = false; }, 800);
-    };
-    mount.addEventListener('touchend', unpause, { passive: true });
-    mount.addEventListener('touchcancel', unpause, { passive: true });
-    mount.addEventListener('mouseenter', () => { paused = true; });
-    mount.addEventListener('mouseleave', () => { paused = false; });
-
-    function drift(ts) {
-        if (!lastTs) lastTs = ts;
-        let dt = (ts - lastTs) / 1000;
-        lastTs = ts;
-        if (dt > 0.2) dt = 0; // returning from background — no jump
-        const half = track.scrollWidth / 2;
-        if (half > 0 && !paused) {
-            x -= (half / durationS) * dt;
-            if (-x >= half) x += half;
-            track.style.transform = `translateX(${x}px)`;
-        }
-        requestAnimationFrame(drift);
-    }
-    requestAnimationFrame(drift);
-    // Safety: any return to the page clears a stuck pause
-    window.addEventListener('pageshow', () => { paused = false; });
-}
-
-function buildDeckPeel(withProducts) {
-    const sec = document.getElementById('deckPeel');
-    const deck = document.getElementById('dpeelDeck');
-    if (!sec || !deck || sec.dataset.built) return;
-
-    // One card per category (up to 4) — shows the CATEGORY's own photo
-    // (admin -> Category icons). Falls back to the first product photo
-    // only if a category has no photo uploaded.
-    const picks = withProducts.slice(0, 4)
-        .map(e => ({
-            cat: e.category.category,
-            img: e.category.thumb || (e.products[0] && e.products[0].image) || ''
-        }))
-        .filter(s => s.img);
-    if (picks.length < 2) return;
-
-    sec.dataset.built = '1';
-    sec.style.display = '';
-
-    deck.innerHTML = picks.map((s, i) => `
-        <a class="dpeel-card" href="products.html?category=${encodeURIComponent(s.cat)}" style="z-index:${picks.length - i};">
-            <img src="${escapeHtml(s.img)}" alt="${escapeHtml(s.cat)}" loading="lazy">
-            <div class="dpeel-card-foot">
-                <div class="dpeel-card-cat">EXPLORE →</div>
-                <div class="dpeel-card-name">${escapeHtml(s.cat)}</div>
-            </div>
-        </a>
-    `).join('');
-
-    const cards = Array.from(deck.children);
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduced) return; // static stack, top card tappable — done
-
-    // Section height = one screen per card + release space
-    const per = 55; // vh of scroll per card
-    sec.style.height = (picks.length * per + 100) + 'vh';
-
-    let ticking = false;
-    function update() {
-        ticking = false;
-        const rect = sec.getBoundingClientRect();
-        const vh = window.innerHeight;
-        const total = rect.height - vh;
-        const passed = Math.max(0, Math.min(total, -rect.top));
-        // Progress across the deck: 0 .. picks.length-1
-        const P = (passed / total) * (picks.length - 1);
-        cards.forEach((el, i) => {
-            const local = P - i;
-            if (local <= 0) {
-                const depth = Math.min(3, -local);
-                el.style.transform = `translateY(${depth * 14}px) scale(${1 - depth * 0.05})`;
-                el.style.opacity = String(1 - depth * 0.18);
-            } else {
-                const t = Math.min(1, local);
-                el.style.transform = `translateY(${-130 * t}%) rotate(${-9 * t}deg)`;
-                el.style.opacity = String(1 - t);
-            }
-        });
-    }
-    function onScroll() {
-        if (!ticking) { ticking = true; requestAnimationFrame(update); }
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    update();
-}
-
 function renderHomeSections(withProducts) {
-    const iconRow = document.getElementById('categoryIconRow');
-    const categoryRow = document.getElementById('categoryRow');
-    {
-        if (typeof initShowcaseFromCatalog === 'function') initShowcaseFromCatalog(withProducts);
+    if (typeof initShowcaseFromCatalog === 'function') initShowcaseFromCatalog(withProducts);
 
-        if (iconRow) buildBrandWall(iconRow);
-        buildDeckPeel(withProducts);
-
-        if (drawerNav) {
-            drawerNav.innerHTML = withProducts.map(e => `
-                <a class="drawer-link" href="products.html?category=${encodeURIComponent(e.category.category)}">
-                    <span class="drawer-icon">${e.category.thumb ? `<img src="${escapeHtml(e.category.thumb)}" alt="${escapeHtml(e.category.category)}">` : ''}</span>
-                    ${escapeHtml(e.category.category)}
-                </a>
-            `).join('');
-        }
-
-        categoryRow.innerHTML = withProducts.map(e => {
-            const productsHtml = e.products.map(p => `
-                <a class="cat-product-card" href="product.html?id=${p.id}">
-                    <img src="${p.image ? escapeHtml(p.image) : ''}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.opacity=0">
-                    <div class="cat-product-body">
-                        <span class="cat-product-brand">${escapeHtml(p.brand || '')}</span>
-                        <div class="cat-product-name">${escapeHtml(p.name)}</div>
-                        <div class="cat-product-price">${formatPrice(p.price)}</div>
-                    </div>
-                </a>
-            `).join('');
-
-            return `
-                <div class="cat-section">
-                    <div class="cat-section-head">
-                        <span class="cat-section-title">${escapeHtml(e.category.category)}</span>
-                        <a class="cat-section-viewall" href="products.html?category=${encodeURIComponent(e.category.category)}">
-                            View All ${VIEW_ALL_ARROW}
-                        </a>
-                    </div>
-                    <div class="cat-product-row">${productsHtml}</div>
-                </div>
-            `;
-        }).join('');
+    if (drawerNav) {
+        drawerNav.innerHTML = withProducts.map(e => `
+            <a class="drawer-link" href="products.html?category=${encodeURIComponent(e.category.category)}">
+                <span class="drawer-icon">${e.category.thumb ? `<img src="${escapeHtml(e.category.thumb)}" alt="${escapeHtml(e.category.category)}">` : ''}</span>
+                ${escapeHtml(e.category.category)}
+            </a>
+        `).join('');
     }
 }
 
 loadHomeCategories();
 
-/* =========================================================
-   PROMO VIDEO
-   - Video + click-through link come from the admin panel
-     (get_promo_video.php). Section stays hidden if none.
-   - Pauses when scrolled off-screen, resumes in view.
-   - Mute/unmute toggle button.
-   ========================================================= */
-(async function () {
-    const section = document.getElementById('promoVideoSection');
-    const video = document.getElementById('promoVideo');
-    const muteBtn = document.getElementById('promoMuteBtn');
-    if (!section || !video) return;
-
-    // The video shows whenever one is uploaded and marked Active —
-    // there is no hero/video switch anymore. It sits after the
-    // showcase and before/alongside the manual hero slides.
-    let info = null;
-    const data = await promoSettingsPromise;
-    if (data && data.video) info = data.video;
-    if (!info || info.active == 0) return;
-
-    video.src = info.url + '?v=' + info.version;
-    if (info.mobile_height)  section.style.setProperty('--pv-h-mobile',  info.mobile_height + 'px');
-    if (info.desktop_height) section.style.setProperty('--pv-h-desktop', info.desktop_height + 'px');
-    section.style.display = '';
-
-    // If the file 404s/breaks: hide video, bring the hero slider back
-    video.addEventListener('error', () => {
-        section.style.display = 'none';
-    });
-
-    // Autoplay once visible; pause off-screen (saves data/battery)
-    if ('IntersectionObserver' in window) {
-        const io = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    video.play().catch(() => {});
-                } else {
-                    video.pause();
-                }
-            });
-        }, { threshold: 0.25 });
-        io.observe(section);
-    } else {
-        video.play().catch(() => {});
-    }
-
-    // Mute / unmute
-    if (muteBtn) {
-        const icMuted = muteBtn.querySelector('.ic-muted');
-        const icSound = muteBtn.querySelector('.ic-sound');
-        muteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            video.muted = !video.muted;
-            icMuted.style.display = video.muted ? '' : 'none';
-            icSound.style.display = video.muted ? 'none' : '';
-            muteBtn.setAttribute('aria-label', video.muted ? 'Unmute video' : 'Mute video');
-        });
-    }
-
-    // Optional click-through (set in the admin panel)
-    if (info.link) {
-        section.classList.add('is-clickable');
-        section.addEventListener('click', () => { window.location.href = info.link; });
-    }
-})();
 
 </script>
 
@@ -4088,7 +3772,7 @@ window.addEventListener('resize', shxUpdate);
     }, { threshold: 0.1 }) : null;
 
     function mark() {
-        document.querySelectorAll('.cat-section, .category-icon-row, .promo-video-section, .site-footer').forEach(el => {
+        document.querySelectorAll('.site-footer').forEach(el => {
             if (el.classList.contains('lux-reveal')) return;
             el.classList.add('lux-reveal');
             if (io) io.observe(el); else el.classList.add('in');
@@ -4154,18 +3838,14 @@ document.addEventListener('click', (e) => {
 </script>
 <script>
 /* =========================================================
-   HOME CARD DECK — fanned 8x10 cards, fed by get_home_cards.php
+   HOME CARD DECKS / ROWS — fed by get_home_cards.php { sections, cards }
+   MOBILE  (< 641px): fanned deck per section (original)
+   DESKTOP (>= 641px): hanging gallery row per section
+   Switches automatically when the screen crosses 641px.
    ========================================================= */
 (function () {
-    const deck = document.getElementById('homeDeck');
-    const stage = document.getElementById('homeDeckStage');
-    const dotsEl = document.getElementById('hdDots');
-    const capEl = document.getElementById('hdCaption');
-    if (!deck || !stage) return;
-
-    let cards = [];
-    let cur = 0;
-    let timer = null;
+    const wrap = document.getElementById('homeDecks');
+    if (!wrap) return;
 
     const POS = [
         { dx: 0, rot: 0, scale: 1, op: 1, z: 10 },
@@ -4181,136 +3861,447 @@ document.addEventListener('click', (e) => {
         { dx: -92, rot: -7, scale: 0.9, op: 0.55, z: 6 },
         { dx: -160, rot: -13, scale: 0.82, op: 0.28, z: 3 }
     ];
+    const ARROW_L = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>';
+    const ARROW_R = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>';
+    const HEX = /^#[0-9a-fA-F]{3,8}$/;
 
     function esc(s) {
         const d = document.createElement('div');
         d.textContent = s == null ? '' : String(s);
         return d.innerHTML;
     }
-
-    function offsetOf(i) {
-        const n = cards.length;
-        let d = (i - cur) % n;
-        if (d > n / 2) d -= n;
-        if (d < -n / 2) d += n;
-        return d; /* -2..2 relevant */
+    function hexLuma(hex) {
+        const h = hex.replace('#', '');
+        const f = h.length === 3 ? h.split('').map(x => x + x).join('') : h;
+        const r = parseInt(f.substr(0, 2), 16) || 0;
+        const g = parseInt(f.substr(2, 2), 16) || 0;
+        const b = parseInt(f.substr(4, 2), 16) || 0;
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     }
 
-    function layout() {
-        const posSet = window.innerWidth < 641 ? MOB : POS;
-        stage.querySelectorAll('.hd-card').forEach((el) => {
-            const i = Number(el.dataset.hdIndex);
-            const off = offsetOf(i);
-            let p;
-            if (off === 0) p = posSet[0];
-            else if (off === 1) p = posSet[1];
-            else if (off >= 2) p = posSet[2];
-            else if (off === -1) p = posSet[3];
-            else p = posSet[4];
+    let sizes = { wD: 0, hD: 0, wM: 0, hM: 0 };
+    const stages = [];
+    let cleanups = [];   /* timers/listeners of the current layout, cleared on rebuild */
 
-            el.classList.toggle('hd-center', off === 0);
-            if (off === 0) {
-                el.style.transform = '';
-                el.style.opacity = 1;
-            } else {
-                el.style.transform = `translate(-50%,-50%) translateX(${p.dx}px) rotate(${p.rot}deg) scale(${p.scale})`;
-                el.style.opacity = Math.abs(off) > 2 ? 0 : p.op;
-            }
-            el.style.zIndex = p.z;
-            el.style.pointerEvents = Math.abs(off) > 2 ? 'none' : '';
-        });
-
-        dotsEl.querySelectorAll('.hd-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
-        const c = cards[cur];
-        capEl.textContent = (String(cur + 1).padStart(2, '0')) + ' / ' + (String(cards.length).padStart(2, '0')) + (c.caption ? ' — ' + c.caption : '');
+    function sizeStages() {
+        const mob = window.innerWidth < 641;
+        const w = mob ? (sizes.wM || 225) : (sizes.wD || 300);
+        const h = (mob ? sizes.hM : sizes.hD) || Math.round(w * 1300 / 800);
+        stages.forEach(st => { st.style.height = (h + 60) + 'px'; });
     }
 
-    function go(i) {
-        cur = (i + cards.length) % cards.length;
-        layout();
-        restart();
-    }
+    /* Builds ONE independent deck inside `root` */
+    function createDeck(root, section, cards) {
+        let cur = 0;
+        let timer = null;
 
-    function restart() {
-        clearInterval(timer);
-        if (cards.length > 1) timer = setInterval(() => { cur = (cur + 1) % cards.length; layout(); }, 5000);
-    }
+        const title = section.title || section.name || '';
+        const accentWord = section.accent_word ? ` <em>${esc(section.accent_word)}</em>` : '';
+        const viewAll = section.view_all_link
+            ? `<a class="hd-viewall" href="${esc(section.view_all_link)}">${esc(section.view_all_text || 'View all')} &rarr;</a>`
+            : '';
+        const head = (title || accentWord || viewAll || section.eyebrow) ? `
+            <div class="hd-section-head">
+                <div>
+                    ${section.eyebrow ? `<div class="hd-eyebrow">${esc(section.eyebrow)}</div>` : ''}
+                    <h2 class="hd-title">${esc(title)}${accentWord}</h2>
+                </div>
+                ${viewAll}
+            </div>` : '';
 
-    function build() {
-        stage.querySelectorAll('.hd-card').forEach(el => el.remove());
+        root.innerHTML = `
+            ${head}
+            <div class="home-deck-stage">
+                <button type="button" class="hd-arrow hd-arrow-l" aria-label="Previous card">${ARROW_L}</button>
+                <button type="button" class="hd-arrow hd-arrow-r" aria-label="Next card">${ARROW_R}</button>
+            </div>
+            <div class="hd-footer">
+                <div class="hd-dots"></div>
+                <div class="hd-caption"></div>
+            </div>`;
+
+        const stage = root.querySelector('.home-deck-stage');
+        const dotsEl = root.querySelector('.hd-dots');
+        const capEl = root.querySelector('.hd-caption');
+        stages.push(stage);
+
         cards.forEach((c, i) => {
             const el = document.createElement('div');
-            el.className = 'hd-card hd-skin-' + (['cream','green','clay'].includes(c.skin) ? c.skin : 'cream');
+            el.className = 'hd-card hd-skin-' + (['cream', 'green', 'clay'].includes(c.skin) ? c.skin : 'cream');
             el.dataset.hdIndex = i;
-            el.innerHTML = `<div class="hd-card-pad">
-                <div class="hd-num">${i + 1}.</div>
-                <div class="hd-head">${esc(c.heading)}</div>
-                <div class="hd-body">${esc(c.body)}</div>
-                ${c.highlight ? `<div class="hd-highlight">${esc(c.highlight)}</div>` : ''}
-            </div>`;
-            el.addEventListener('click', () => { if (!el.classList.contains('hd-center')) go(i); });
+
+            const bg = String(c.card_bg || '').trim();
+            if (HEX.test(bg)) {
+                el.style.background = bg;
+                el.classList.add(hexLuma(bg) > 0.55 ? 'hd-txt-dark' : 'hd-txt-light');
+            }
+            const ac = String(c.accent || '').trim();
+            const hasAccent = HEX.test(ac);
+            if (hasAccent) el.style.setProperty('--hd-accent', ac);
+
+            const img = String(c.image || '').trim();
+            el.classList.add(img ? 'hd-photo' : 'hd-noimg');
+            if (img && HEX.test(bg)) {                /* photo covers the card; don't force dark/light text */
+                el.style.background = '';
+                el.classList.remove('hd-txt-dark', 'hd-txt-light');
+            }
+
+            const num = `<div class="hd-num">${i + 1}.</div>`;
+            const btn = c.btn_text
+                ? `<a class="hd-btn" href="${esc(c.btn_link || '#')}">${esc(c.btn_text)} &rarr;</a>`
+                : '';
+
+            el.innerHTML = `
+                ${img ? `<div class="hd-img"><img src="${esc(img)}" alt="${esc(c.heading)}" loading="lazy" onerror="this.style.opacity=0">${num}</div>` : ''}
+                <div class="hd-card-pad">
+                    ${img ? '' : num}
+                    <div class="hd-head">${esc(c.heading)}</div>
+                    ${c.body ? `<div class="hd-body">${esc(c.body)}</div>` : ''}
+                    ${c.highlight ? `<div class="hd-highlight"${hasAccent ? ` style="color:${esc(ac)};"` : ''}>${esc(c.highlight)}</div>` : ''}
+                    ${btn}
+                </div>`;
+
+            el.addEventListener('click', (e) => {
+                if (!el.classList.contains('hd-center')) {
+                    e.preventDefault(); /* side card tap = bring to center, not follow button */
+                    go(i);
+                }
+            });
             stage.appendChild(el);
         });
 
         dotsEl.innerHTML = cards.map((_, i) => `<button type="button" class="hd-dot" aria-label="Card ${i + 1}"></button>`).join('');
         dotsEl.querySelectorAll('.hd-dot').forEach((d, i) => d.addEventListener('click', () => go(i)));
+
+        function offsetOf(i) {
+            const n = cards.length;
+            let d = (i - cur) % n;
+            if (d > n / 2) d -= n;
+            if (d < -n / 2) d += n;
+            return d;
+        }
+
+        function layout() {
+            const posSet = window.innerWidth < 641 ? MOB : POS;
+            stage.querySelectorAll('.hd-card').forEach((el) => {
+                const off = offsetOf(Number(el.dataset.hdIndex));
+                let p;
+                if (off === 0) p = posSet[0];
+                else if (off === 1) p = posSet[1];
+                else if (off >= 2) p = posSet[2];
+                else if (off === -1) p = posSet[3];
+                else p = posSet[4];
+
+                el.classList.toggle('hd-center', off === 0);
+                if (off === 0) {
+                    el.style.transform = 'translate(-50%,-50%) translateX(0px) rotate(0deg) scale(1)';
+                    el.style.opacity = 1;
+                } else {
+                    el.style.transform = `translate(-50%,-50%) translateX(${p.dx}px) rotate(${p.rot}deg) scale(${p.scale})`;
+                    el.style.opacity = Math.abs(off) > 2 ? 0 : p.op;
+                }
+                el.style.zIndex = p.z;
+                el.style.pointerEvents = Math.abs(off) > 2 ? 'none' : '';
+            });
+
+            dotsEl.querySelectorAll('.hd-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+            const c = cards[cur];
+            capEl.textContent = (cur + 1) + ' / ' + cards.length + (c && c.caption ? ' — ' + c.caption : '');
+        }
+
+        function restart() {
+            clearInterval(timer);
+            if (cards.length > 1) timer = setInterval(() => { cur = (cur + 1) % cards.length; layout(); }, 5000);
+        }
+
+        function go(i) {
+            cur = (i + cards.length) % cards.length;
+            layout();
+            restart();
+        }
+
+        root.querySelector('.hd-arrow-l').addEventListener('click', () => go(cur - 1));
+        root.querySelector('.hd-arrow-r').addEventListener('click', () => go(cur + 1));
+
+        if (cards.length < 2) {
+            root.querySelectorAll('.hd-arrow').forEach(a => a.style.display = 'none');
+        }
+
+        let tx = null;
+        stage.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; clearInterval(timer); }, { passive: true });
+        stage.addEventListener('touchend', (e) => {
+            if (tx !== null) {
+                const dx = e.changedTouches[0].clientX - tx;
+                if (Math.abs(dx) > 40) go(cur + (dx < 0 ? 1 : -1)); else restart();
+            }
+            tx = null;
+        }, { passive: true });
+
+        window.addEventListener('resize', layout);
+        layout();
+        restart();
+        cleanups.push(() => { clearInterval(timer); window.removeEventListener('resize', layout); });
     }
 
-    document.getElementById('hdPrev').addEventListener('click', () => go(cur - 1));
-    document.getElementById('hdNext').addEventListener('click', () => go(cur + 1));
 
-    let tx = null;
-    stage.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; clearInterval(timer); }, { passive: true });
-    stage.addEventListener('touchend', (e) => {
-        if (tx !== null) {
-            const dx = e.changedTouches[0].clientX - tx;
-            if (Math.abs(dx) > 40) go(cur + (dx < 0 ? 1 : -1)); else restart();
+    /* =====================================================
+       DESKTOP — HANGING GALLERY
+       ===================================================== */
+    const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const STIFF = 0.035;   /* pull back to centre */
+    const DAMP = 0.965;    /* friction — lower = settles faster */
+    const MAX_ANGLE = 24;  /* widest swing, degrees */
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+    let pends = [];        /* { el, a, v, row } */
+    let running = false;
+
+    function tick() {
+        let moving = false;
+        for (const p of pends) {
+            if (p.a === 0 && p.v === 0) continue;
+            p.v += -p.a * STIFF;
+            p.v *= DAMP;
+            p.a += p.v;
+            if (p.a > MAX_ANGLE) { p.a = MAX_ANGLE; p.v *= -0.5; }
+            if (p.a < -MAX_ANGLE) { p.a = -MAX_ANGLE; p.v *= -0.5; }
+            if (Math.abs(p.a) < 0.02 && Math.abs(p.v) < 0.02) {
+                p.a = 0; p.v = 0; p.el.style.transform = '';
+            } else {
+                moving = true;
+                p.el.style.transform = `rotate(${p.a.toFixed(3)}deg)`;
+            }
         }
-        tx = null;
+        if (moving) requestAnimationFrame(tick); else running = false;
+    }
+    function push(p, amount) {
+        if (REDUCE || !amount) return;
+        p.v += amount;
+        if (!running) { running = true; requestAnimationFrame(tick); }
+    }
+
+    /* Page scroll sways the rows that are on screen */
+    let lastY = window.scrollY;
+    window.addEventListener('scroll', () => {
+        const dy = window.scrollY - lastY;
+        lastY = window.scrollY;
+        if (!dy || !pends.length) return;
+        pends.forEach((p, i) => {
+            if (p.row.visible) push(p, clamp(dy * 0.012, -0.8, 0.8) * (i % 2 ? 1 : 0.8));
+        });
     }, { passive: true });
 
-    window.addEventListener('resize', layout);
+    function buildHangCard(c, i) {
+        const el = document.createElement('div');
+        el.className = 'hd-card hd-skin-' + (['cream', 'green', 'clay'].includes(c.skin) ? c.skin : 'cream');
+
+        const bg = String(c.card_bg || '').trim();
+        if (HEX.test(bg)) {
+            el.style.background = bg;
+            el.classList.add(hexLuma(bg) > 0.55 ? 'hd-txt-dark' : 'hd-txt-light');
+        }
+        const ac = String(c.accent || '').trim();
+        const hasAccent = HEX.test(ac);
+        if (hasAccent) el.style.setProperty('--hd-accent', ac);
+
+        const img = String(c.image || '').trim();
+        el.classList.add(img ? 'hd-photo' : 'hd-noimg');
+        if (img && HEX.test(bg)) {
+            el.style.background = '';
+            el.classList.remove('hd-txt-dark', 'hd-txt-light');
+        }
+
+        const num = `<div class="hd-num">${i + 1}.</div>`;
+        const btn = c.btn_text
+            ? `<a class="hd-btn" href="${esc(c.btn_link || '#')}">${esc(c.btn_text)} &rarr;</a>`
+            : '';
+
+        el.innerHTML = `
+            ${img ? `<div class="hd-img"><img src="${esc(img)}" alt="${esc(c.heading)}" loading="lazy" draggable="false" onerror="this.style.opacity=0">${num}</div>` : ''}
+            <div class="hd-card-pad">
+                ${img ? '' : num}
+                <div class="hd-head">${esc(c.heading)}</div>
+                ${c.body ? `<div class="hd-body">${esc(c.body)}</div>` : ''}
+                ${c.highlight ? `<div class="hd-highlight"${hasAccent ? ` style="color:${esc(ac)};"` : ''}>${esc(c.highlight)}</div>` : ''}
+                ${btn}
+            </div>`;
+
+        if (c.btn_link) {
+            el.classList.add('hd-link');
+            el.addEventListener('click', (e) => {
+                if (e.target.closest('.hd-btn')) return;
+                window.location.href = c.btn_link;
+            });
+        }
+        return el;
+    }
+
+    function createRow(root, section, cards) {
+        root.classList.add('is-hang');
+        const title = section.title || section.name || '';
+        const accentWord = section.accent_word ? ` <em>${esc(section.accent_word)}</em>` : '';
+        const viewAll = section.view_all_link
+            ? `<a class="hd-viewall" href="${esc(section.view_all_link)}">${esc(section.view_all_text || 'View all')} &rarr;</a>`
+            : '';
+        const head = (title || accentWord || viewAll || section.eyebrow) ? `
+            <div class="hd-section-head">
+                <div>
+                    ${section.eyebrow ? `<div class="hd-eyebrow">${esc(section.eyebrow)}</div>` : ''}
+                    <h2 class="hd-title">${esc(title)}${accentWord}</h2>
+                </div>
+                ${viewAll}
+            </div>` : '';
+
+        root.innerHTML = `
+            ${head}
+            <div class="hg-wrap">
+                <button type="button" class="hg-arrow hg-arrow-l" aria-label="Scroll left">${ARROW_L}</button>
+                <div class="hg-row"><div class="hg-track"></div></div>
+                <button type="button" class="hg-arrow hg-arrow-r" aria-label="Scroll right">${ARROW_R}</button>
+            </div>`;
+
+        const hgWrap = root.querySelector('.hg-wrap');
+        const rowEl = root.querySelector('.hg-row');
+        const track = root.querySelector('.hg-track');
+        const btnL = root.querySelector('.hg-arrow-l');
+        const btnR = root.querySelector('.hg-arrow-r');
+        const row = { visible: false };
+        const mine = [];
+
+        cards.forEach((c, i) => {
+            const pend = document.createElement('div');
+            pend.className = 'hg-pend';
+            pend.appendChild(buildHangCard(c, i));
+            track.appendChild(pend);
+            const p = { el: pend, a: 0, v: 0, row };
+            pends.push(p);
+            mine.push(p);
+        });
+
+        /* Brushing the mouse across a card pushes it */
+        let lastX = null;
+        track.addEventListener('mousemove', (e) => {
+            const dx = lastX === null ? 0 : e.clientX - lastX;
+            lastX = e.clientX;
+            const pend = e.target.closest('.hg-pend');
+            if (!pend) return;
+            const p = mine.find(x => x.el === pend);
+            if (p) push(p, clamp(dx * 0.09, -2.5, 2.5));
+        });
+        track.addEventListener('mouseleave', () => { lastX = null; });
+
+        /* Arrow scrolling also sways the cards */
+        let lastLeft = 0;
+        rowEl.addEventListener('scroll', () => {
+            const dx = rowEl.scrollLeft - lastLeft;
+            lastLeft = rowEl.scrollLeft;
+            mine.forEach((p, i) => push(p, clamp(-dx * 0.02, -1, 1) * (i % 2 ? 1 : 0.85)));
+            syncArrows();
+        }, { passive: true });
+
+        function syncArrows() {
+            hgWrap.classList.toggle('hg-overflow', rowEl.scrollWidth > rowEl.clientWidth + 4);
+            btnL.disabled = rowEl.scrollLeft < 4;
+            btnR.disabled = rowEl.scrollLeft + rowEl.clientWidth >= rowEl.scrollWidth - 4;
+        }
+        const step = () => {
+            const first = track.querySelector('.hg-pend');
+            return first ? (first.offsetWidth + 22) * 2 : 300;
+        };
+        btnL.addEventListener('click', () => rowEl.scrollBy({ left: -step(), behavior: 'smooth' }));
+        btnR.addEventListener('click', () => rowEl.scrollBy({ left: step(), behavior: 'smooth' }));
+        window.addEventListener('resize', syncArrows);
+        requestAnimationFrame(syncArrows);
+
+        /* Row on screen? + a gentle staggered swing the first time it appears */
+        let io = null;
+        if ('IntersectionObserver' in window) {
+            let greeted = false;
+            io = new IntersectionObserver((entries) => {
+                entries.forEach(en => {
+                    row.visible = en.isIntersecting;
+                    if (en.isIntersecting && !greeted) {
+                        greeted = true;
+                        mine.forEach((p, i) => setTimeout(() => push(p, (i % 2 ? 1 : -1) * 1.4), i * 90));
+                    }
+                });
+            }, { threshold: 0.2 });
+            io.observe(hgWrap);
+        } else {
+            row.visible = true;
+        }
+
+        cleanups.push(() => { window.removeEventListener('resize', syncArrows); if (io) io.disconnect(); });
+    }
+
+    /* =====================================================
+       RENDER — picks deck (mobile) or hanging row (desktop)
+       ===================================================== */
+    const MOBILE_MQ = window.matchMedia('(max-width: 640px)');
+    let groups = [];
+
+    function render() {
+        cleanups.forEach(fn => fn());
+        cleanups = [];
+        stages.length = 0;
+        pends = [];
+
+        const mobile = MOBILE_MQ.matches;
+        wrap.innerHTML = '';
+        groups.forEach(g => {
+            const sec = document.createElement('section');
+            sec.className = 'home-deck';
+            if (g.section.name) sec.setAttribute('aria-label', g.section.name);
+            wrap.appendChild(sec);
+            if (mobile) createDeck(sec, g.section, g.cards);
+            else createRow(sec, g.section, g.cards);
+        });
+        if (mobile) sizeStages();
+        wrap.style.display = 'block';
+    }
+
+    window.addEventListener('resize', () => { if (MOBILE_MQ.matches) sizeStages(); });
+    if (MOBILE_MQ.addEventListener) MOBILE_MQ.addEventListener('change', () => { if (groups.length) render(); });
+    else if (MOBILE_MQ.addListener) MOBILE_MQ.addListener(() => { if (groups.length) render(); });
 
     fetch('https://fourpirates.tmfragrance.com/visitor/product-api/get_home_cards.php')
         .then(r => r.json())
         .then(data => {
             if (!data.success || !Array.isArray(data.cards) || !data.cards.length) return;
-            cards = data.cards;
 
-            /* Manual deck sizes from admin (stored on every row, same values) */
+            const sections = Array.isArray(data.sections) ? data.sections : [];
+            const cards = data.cards;
+
+            /* Deck-wide sizes from admin (used by the MOBILE deck only) */
             const c0 = cards[0];
-            const wD = parseInt(c0.card_w_desktop, 10) || 0;
-            const hD = parseInt(c0.card_h_desktop, 10) || 0;
-            const wM = parseInt(c0.card_w_mobile, 10) || 0;
-            const hM = parseInt(c0.card_h_mobile, 10) || 0;
-            if (wD > 0) deck.style.setProperty('--hd-w', wD + 'px');
-            if (hD > 0) { deck.style.setProperty('--hd-h', hD + 'px'); deck.classList.add('hd-fix-h'); }
-            if (wM > 0) deck.style.setProperty('--hd-w-m', wM + 'px');
-            if (hM > 0) { deck.style.setProperty('--hd-h-m', hM + 'px'); deck.classList.add('hd-fix-h-m'); }
+            sizes = {
+                wD: parseInt(c0.card_w_desktop, 10) || 0,
+                hD: parseInt(c0.card_h_desktop, 10) || 0,
+                wM: parseInt(c0.card_w_mobile, 10) || 0,
+                hM: parseInt(c0.card_h_mobile, 10) || 0
+            };
+            if (sizes.wD > 0) wrap.style.setProperty('--hd-w', sizes.wD + 'px');
+            if (sizes.hD > 0) { wrap.style.setProperty('--hd-h', sizes.hD + 'px'); wrap.classList.add('hd-fix-h'); }
+            if (sizes.wM > 0) wrap.style.setProperty('--hd-w-m', sizes.wM + 'px');
+            if (sizes.hM > 0) { wrap.style.setProperty('--hd-h-m', sizes.hM + 'px'); wrap.classList.add('hd-fix-h-m'); }
 
-            function sizeStage() {
-                const mob = window.innerWidth < 641;
-                const w = mob ? (wM || 225) : (wD || 300);
-                const h = (mob ? hM : hD) || Math.round(w * 1300 / 800);
-                stage.style.height = (h + 60) + 'px';
-            }
-            sizeStage();
-            window.addEventListener('resize', sizeStage);
-
-            build();
-            deck.style.display = 'block';
-            layout();
-            restart();
+            /* Group: each active section gets its own deck/row, in section order.
+               Cards not in any section (old cards) show first without a heading. */
+            const list = [];
+            const sectionIds = new Set(sections.map(s => String(s.id)));
+            const loose = cards.filter(c => !sectionIds.has(String(c.section_id)) && !(Number(c.section_id) > 0));
+            if (loose.length) list.push({ section: {}, cards: loose });
+            sections.forEach(s => {
+                const own = cards.filter(c => String(c.section_id) === String(s.id));
+                if (own.length) list.push({ section: s, cards: own });
+            });
+            if (!list.length) return;
+                
+            groups = list;
+            render();
         })
-        .catch(() => { /* deck stays hidden */ });
+        .catch(() => { /* decks stay hidden */ });
 })();
 </script>
 </body>
-</html>
-
-
-
-
-
-
-
+</html> 
