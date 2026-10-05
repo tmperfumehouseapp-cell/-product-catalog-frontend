@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Product Catalog</title>
+<link rel="preconnect" href="https://fourpirates.tmfragrance.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
@@ -2931,7 +2932,7 @@ body { background: #0d0b08; }
 </section>
 
 
-<section class="hero-slider" id="heroSlider" aria-label="Featured fragrances">
+<section class="hero-slider" id="heroSlider" aria-label="Featured fragrances" style="display:none;">
     <div class="hero-slides" id="heroSlides">
         <div class="hero-slide is-active">
             <div class="hero-text-col">
@@ -3023,6 +3024,7 @@ function renderHeroSlides(slides) {
 
     heroItems = slides;
     if (!heroItems.length) return;
+    heroSlider.style.display = ''; // admin slides are ready -> show the slider
 
     heroSlides.innerHTML = heroItems.map((s, i) => {
         const image = s.image ? escapeHtml(s.image) : '';
@@ -3379,6 +3381,17 @@ async function loadHomeCategories() {
     // Home only: categories feed the showcase + drawer menu
     if (document.getElementById('productGrid')) return;
 
+    // The showcase only needs the admin-picked product list, NOT the
+    // categories. Start it independently so a failed / empty / slow
+    // categories request can never leave the "Notes that speak." intro
+    // stuck on screen (initShowcaseFromCatalog runs only once).
+    const startShowcase = () => { if (typeof initShowcaseFromCatalog === 'function') initShowcaseFromCatalog([]); };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startShowcase, { once: true });
+    } else {
+        startShowcase();
+    }
+
     // 5-minute session cache: back-navigation & repeat visits render
     // instantly, with a silent refresh running behind.
     const HOME_CACHE_KEY = 'homePayloadV1';
@@ -3529,6 +3542,8 @@ async function initShowcaseFromCatalog(withProducts) {
     // (Hero Slider tab -> Homepage showcase products). No random
     // products anywhere — an empty list hides the showcase entirely.
     let pool = [];
+    const notesById = {};
+    const fullById = {};
     let adminIds = [];
     let adminSizes = [];
     let adminSizesM = [];
@@ -3541,11 +3556,17 @@ async function initShowcaseFromCatalog(withProducts) {
 
     if (adminIds.length) {
         const fetched = await Promise.all(adminIds.slice(0, SHX_MAX_PRODUCTS).map(async (id, idx) => {
+            /* notes load at the same time as the product (not after it) */
+            const notesReq = fetch(`${API_BASE}/get_product_notes.php?product_id=${encodeURIComponent(id)}`)
+                .then(r => r.json()).catch(() => null);
             try {
                 const res = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(id)}`);
                 const data = await res.json();
                 if (data.success && data.product) {
                     const fp = data.product;
+                    fullById[fp.id] = fp;
+                    const nd = await notesReq;
+                    notesById[fp.id] = (nd && nd.success && nd.notes) ? nd.notes.slice(0, 4) : [];
                     return {
                         id: fp.id, name: fp.name, price: fp.price, brand: fp.brand,
                         gender: fp.gender, longevity: fp.longevity,
@@ -3568,22 +3589,8 @@ async function initShowcaseFromCatalog(withProducts) {
         return;
     }
 
-    // Fetch every product's full details AND notes in parallel —
-    // notes power perfume slides, details power watch/shoe spec slides.
-    const notesById = {};
-    const fullById = {};
-    await Promise.all(pool.map(async p => {
-        try {
-            const res = await fetch(`${API_BASE}/get_product_notes.php?product_id=${encodeURIComponent(p.id)}`);
-            const data = await res.json();
-            notesById[p.id] = (data.success && data.notes) ? data.notes.slice(0, 4) : [];
-        } catch (e) { notesById[p.id] = []; }
-        try {
-            const res = await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(p.id)}`);
-            const data = await res.json();
-            fullById[p.id] = (data.success && data.product) ? data.product : null;
-        } catch (e) { fullById[p.id] = null; }
-    }));
+    // Product details + notes were already fetched together above
+    // (notes power perfume slides, details power watch/shoe spec slides).
 
     const frag = document.createDocumentFragment();
 
@@ -3879,6 +3886,16 @@ document.addEventListener('click', (e) => {
         return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
     }
 
+    /* Per-section colours set in admin (Title + Accent word). Empty/invalid = default white / gold */
+    function sectionColorStyles(section) {
+        const t = section && section.title_color && HEX.test(section.title_color) ? section.title_color : '';
+        const a = section && section.accent_color && HEX.test(section.accent_color) ? section.accent_color : '';
+        return {
+            title: t ? ` style="color:${esc(t)};"` : '',
+            accent: a ? ` style="color:${esc(a)};"` : ''
+        };
+    }
+
     let sizes = { wD: 0, hD: 0, wM: 0, hM: 0 };
     const stages = [];
     let cleanups = [];   /* timers/listeners of the current layout, cleared on rebuild */
@@ -3896,7 +3913,8 @@ document.addEventListener('click', (e) => {
         let timer = null;
 
         const title = section.title || section.name || '';
-        const accentWord = section.accent_word ? ` <em>${esc(section.accent_word)}</em>` : '';
+        const secCol = sectionColorStyles(section);
+        const accentWord = section.accent_word ? ` <em${secCol.accent}>${esc(section.accent_word)}</em>` : '';
         const viewAll = section.view_all_link
             ? `<a class="hd-viewall" href="${esc(section.view_all_link)}">${esc(section.view_all_text || 'View all')} &rarr;</a>`
             : '';
@@ -3904,7 +3922,7 @@ document.addEventListener('click', (e) => {
             <div class="hd-section-head">
                 <div>
                     ${section.eyebrow ? `<div class="hd-eyebrow">${esc(section.eyebrow)}</div>` : ''}
-                    <h2 class="hd-title">${esc(title)}${accentWord}</h2>
+                    <h2 class="hd-title"${secCol.title}>${esc(title)}${accentWord}</h2>
                 </div>
                 ${viewAll}
             </div>` : '';
@@ -4139,7 +4157,8 @@ document.addEventListener('click', (e) => {
     function createRow(root, section, cards) {
         root.classList.add('is-hang');
         const title = section.title || section.name || '';
-        const accentWord = section.accent_word ? ` <em>${esc(section.accent_word)}</em>` : '';
+        const secCol = sectionColorStyles(section);
+        const accentWord = section.accent_word ? ` <em${secCol.accent}>${esc(section.accent_word)}</em>` : '';
         const viewAll = section.view_all_link
             ? `<a class="hd-viewall" href="${esc(section.view_all_link)}">${esc(section.view_all_text || 'View all')} &rarr;</a>`
             : '';
@@ -4147,7 +4166,7 @@ document.addEventListener('click', (e) => {
             <div class="hd-section-head">
                 <div>
                     ${section.eyebrow ? `<div class="hd-eyebrow">${esc(section.eyebrow)}</div>` : ''}
-                    <h2 class="hd-title">${esc(title)}${accentWord}</h2>
+                    <h2 class="hd-title"${secCol.title}>${esc(title)}${accentWord}</h2>
                 </div>
                 ${viewAll}
             </div>` : '';
@@ -4304,4 +4323,4 @@ document.addEventListener('click', (e) => {
 })();
 </script>
 </body>
-</html> 
+</html>

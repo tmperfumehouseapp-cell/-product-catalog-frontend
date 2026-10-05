@@ -766,15 +766,25 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
 
                 <div style="display:flex; gap:12px;">
                     <div style="flex:1;">
-                        <label for="hsTitle">Title (white)</label>
+                        <label for="hsTitle">Title</label>
                         <input type="text" id="hsTitle" placeholder="e.g. Luxury">
+                        <label for="hsTitleColor" style="margin-top:8px;">Title colour (hex code)</label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="color" id="hsTitleColorPick" value="#f5efe2" style="width:44px; height:38px; padding:2px; margin:0; cursor:pointer;">
+                            <input type="text" id="hsTitleColor" placeholder="#c8252b (empty = white)" maxlength="9" style="flex:1; margin:0;">
+                        </div>
                     </div>
                     <div style="flex:1;">
-                        <label for="hsAccentWord">Accent word (gold italic)</label>
+                        <label for="hsAccentWord">Accent word (italic)</label>
                         <input type="text" id="hsAccentWord" placeholder="e.g. Watches">
+                        <label for="hsAccentColor" style="margin-top:8px;">Accent word colour (hex code)</label>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <input type="color" id="hsAccentColorPick" value="#d4af6a" style="width:44px; height:38px; padding:2px; margin:0; cursor:pointer;">
+                            <input type="text" id="hsAccentColor" placeholder="#d4af6a (empty = gold)" maxlength="9" style="flex:1; margin:0;">
+                        </div>
                     </div>
                 </div>
-                <div style="font-size:11px; color:#999; margin:4px 0 10px;">Shows as: <b>Luxury</b> <i style="color:#b8933f;">Watches</i>. Leave Title empty to use the Section Name.</div>
+                <div style="font-size:11px; color:#999; margin:4px 0 10px;">Shows as: <b id="hsPreviewTitle" style="color:#222;">Luxury</b> <i id="hsPreviewAccent" style="color:#b8933f;">Watches</i>. Pick a colour or type a hex code like <b>#c8252b</b>; leave a colour empty for the default (white title / gold accent). Leave Title empty to use the Section Name.</div>
 
                 <div style="display:flex; gap:12px;">
                     <div style="flex:1;">
@@ -3231,6 +3241,46 @@ const hsName = document.getElementById('hsName');
 const hsEyebrow = document.getElementById('hsEyebrow');
 const hsTitle = document.getElementById('hsTitle');
 const hsAccentWord = document.getElementById('hsAccentWord');
+const hsTitleColor = document.getElementById('hsTitleColor');
+const hsTitleColorPick = document.getElementById('hsTitleColorPick');
+const hsAccentColor = document.getElementById('hsAccentColor');
+const hsAccentColorPick = document.getElementById('hsAccentColorPick');
+const hsPreviewTitle = document.getElementById('hsPreviewTitle');
+const hsPreviewAccent = document.getElementById('hsPreviewAccent');
+const HS_HEX = /^#[0-9a-fA-F]{3,8}$/;
+
+/* Section colour fields: picker <-> hex box stay in sync, preview updates live */
+function hsExpandHex(v) {
+    /* <input type="color"> only accepts #rrggbb */
+    if (/^#[0-9a-fA-F]{3}$/.test(v)) return '#' + v.slice(1).split('').map(x => x + x).join('');
+    if (/^#[0-9a-fA-F]{6}/.test(v)) return v.slice(0, 7);
+    return '';
+}
+function hsUpdateColorPreview() {
+    const t = hsTitleColor.value.trim();
+    const a = hsAccentColor.value.trim();
+    if (hsPreviewTitle) hsPreviewTitle.style.color = HS_HEX.test(t) ? t : '#222';
+    if (hsPreviewAccent) hsPreviewAccent.style.color = HS_HEX.test(a) ? a : '#b8933f';
+}
+function hsBindColor(textEl, pickEl, fallback) {
+    if (!textEl || !pickEl) return;
+    pickEl.addEventListener('input', () => { textEl.value = pickEl.value; hsUpdateColorPreview(); });
+    textEl.addEventListener('input', () => {
+        const v = textEl.value.trim();
+        const full = hsExpandHex(v);
+        if (full) pickEl.value = full;
+        hsUpdateColorPreview();
+    });
+}
+function hsSetColors(t, a) {
+    hsTitleColor.value = t || '';
+    hsAccentColor.value = a || '';
+    hsTitleColorPick.value = hsExpandHex(t || '') || '#f5efe2';
+    hsAccentColorPick.value = hsExpandHex(a || '') || '#d4af6a';
+    hsUpdateColorPreview();
+}
+hsBindColor(hsTitleColor, hsTitleColorPick);
+hsBindColor(hsAccentColor, hsAccentColorPick);
 const hsViewAllText = document.getElementById('hsViewAllText');
 const hsViewAllLink = document.getElementById('hsViewAllLink');
 const hsSortOrder = document.getElementById('hsSortOrder');
@@ -3299,6 +3349,7 @@ function resetHsForm() {
     hsEyebrow.value = '';
     hsTitle.value = '';
     hsAccentWord.value = '';
+    hsSetColors('', '');
     hsViewAllText.value = '';
     hsViewAllLink.value = '';
     hsSortOrder.value = '0';
@@ -3360,6 +3411,7 @@ function renderHsList() {
             hsEyebrow.value = s.eyebrow || '';
             hsTitle.value = s.title || '';
             hsAccentWord.value = s.accent_word || '';
+            hsSetColors(s.title_color, s.accent_color);
             hsViewAllText.value = s.view_all_text || '';
             hsViewAllLink.value = s.view_all_link || '';
             hsSortOrder.value = s.sort_order != null ? s.sort_order : 0;
@@ -3417,6 +3469,14 @@ if (hsSaveBtn) {
             return;
         }
 
+        const titleColor = hsTitleColor.value.trim();
+        const accentColor = hsAccentColor.value.trim();
+        if ((titleColor && !HS_HEX.test(titleColor)) || (accentColor && !HS_HEX.test(accentColor))) {
+            hsMsg.textContent = 'Colours must be a hex code like #c8252b (or leave empty for default).';
+            hsMsg.className = 'error';
+            return;
+        }
+
         hsSaveBtn.disabled = true;
         hsMsg.textContent = 'Saving...';
         hsMsg.className = '';
@@ -3440,9 +3500,28 @@ if (hsSaveBtn) {
             if (res.status === 403) { hcHandleForbidden(hsMsg); return; }
 
             if (res.ok && data.success) {
+                /* Save the two colours (separate endpoint) using the section id */
+                const secId = isEdit ? hsEditId.value : data.id;
+                let colorErr = '';
+                if (secId) {
+                    try {
+                        const cf = new FormData();
+                        cf.append('admin_password', adminPassword);
+                        cf.append('section_id', secId);
+                        cf.append('title_color', titleColor);
+                        cf.append('accent_color', accentColor);
+                        const cr = await fetch(`${API_BASE}/section_colors.php`, { method: 'POST', body: cf });
+                        const cd = await cr.json();
+                        if (!(cr.ok && cd.success)) colorErr = cd.error || 'Colours could not be saved.';
+                    } catch (e) {
+                        colorErr = 'Colours could not be saved (is section_colors.php uploaded?).';
+                    }
+                }
                 resetHsForm();
-                hsMsg.textContent = isEdit ? 'Section saved!' : 'Section added! Now add cards to it below.';
-                hsMsg.className = 'success';
+                hsMsg.textContent = colorErr
+                    ? 'Section saved, but: ' + colorErr
+                    : (isEdit ? 'Section saved!' : 'Section added! Now add cards to it below.');
+                hsMsg.className = colorErr ? 'error' : 'success';
                 await loadHcList();
                 if (!isEdit && data.id) hcSection.value = String(data.id);
             } else {
