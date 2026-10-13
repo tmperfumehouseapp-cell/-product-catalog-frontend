@@ -452,6 +452,11 @@ html, body, .page-layout, .grid, .container { overflow-anchor: none !important; 
 .filter-drawer-footer { background: #0f0d09 !important; border-top: 1px solid rgba(212,175,106,0.16) !important; }
 .filter-drawer-footer button { background: #e0342e !important; color: #fff !important; }
 
+/* Metafield (category details) filter sections */
+.fd-meta-body { max-height: 1600px; }
+.fd-meta-loading { font-size: 12px; color: #8f897d; margin: 2px 0 6px; }
+.fd-option .fd-count { margin-left: auto; }
+
 /* Load more + footer */
 .load-more-btn {
     background: transparent !important;
@@ -602,6 +607,8 @@ html, body, .page-layout, .grid, .container { overflow-anchor: none !important; 
         max-height: calc(100vh - 72px) !important;
     }
     .fd-section-body { max-height: none !important; }
+    /* ...but a collapsed section must still fold shut (the rule above used to win and the arrows did nothing) */
+    .fd-section-body.collapsed { max-height: 0 !important; margin-top: 0 !important; }
 
     /* Toolbar row lives inside the grid column on desktop (moved by
        products.js): count + WhatsApp capsule sit beside the filter */
@@ -750,6 +757,9 @@ html, body, .page-layout, .grid, .container { overflow-anchor: none !important; 
                 </button>
                 <div class="fd-section-body" id="fdBrand"></div>
             </div>
+
+            <!-- Category metafields (built by products.js for the selected category only) -->
+            <div id="fdMetaWrap"></div>
         </div>
 
         <div class="filter-drawer-footer">
@@ -785,7 +795,7 @@ document.querySelectorAll('.footer-heading').forEach(function (btn) {
 </script>
 
 <script src="common.js"></script>
-<script src="products.js?v=20260909h"></script>
+<script src="products.js?v=20261013a"></script>
 
 <script>
 /* Name the tapped product image just before navigation so the

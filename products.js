@@ -76,6 +76,236 @@ let currentProducts = [];
 let selectedCategory = '';
 let debounceTimer;
 
+/* =========================================================
+   METAFIELD (CATEGORY DETAILS) FILTERS
+   Each category has its own custom fields (Admin -> Categories),
+   e.g. Sunglasses: Frame, Lens Colour; Watches: Movement, Case Size.
+   Only the SELECTED category's fields are offered as filters.
+   metaFilter = { fieldKey: [normalised value, ...] }
+     - values inside one field are OR   (Round OR Square)
+     - different fields are AND         (Round AND Black)
+   metaData   = the selected category's fields + every product's values
+   ========================================================= */
+let metaFilter = {};
+let metaData = null;
+const metaCache = new Map();          /* category key -> metaData */
+const META_TTL = 30 * 60 * 1000;      /* cached product values live 30 min in this browser */
+
+/* Categories that use the built-in details (not Admin -> Categories fields):
+   same keys/labels the product page shows under "Specifications". */
+const LEGACY_META = {
+    watch: [['movement','Movement'],['case_diameter','Case Size'],['case_material','Case Material'],['dial_color','Dial Color'],
+            ['glass_type','Glass'],['strap_material','Strap'],['water_resistance','Water Resistance'],['clasp_type','Clasp'],['warranty','Warranty']],
+    perfume: [['fragrance','Fragrance'],['family','Family'],['formulation','Formulation'],['bottle_size','Bottle Size']],
+    shoes: [['colour','Colour'],['material','Upper Material'],['shoe_type','Shoe Type'],['sole','Sole'],['closure','Closure'],
+            ['quality','Quality'],['fit','Fit'],['occasion','Occasion'],['in_box','In the Box']],
+    sunglasses: [['size','Size'],['model','Millimeter'],['frame_colour','Lens Colour'],['frame_shape','Frame']]
+};
+
+function legacyMetaKind(name) {
+    const c = String(name || '').trim().toLowerCase();
+    if (c.includes('watch')) return 'watch';
+    if (c.includes('perfume') || c.includes('fragrance') || c.includes('attar')) return 'perfume';
+    if (c.includes('shoe') || c.includes('sneaker') || c.includes('footwear')) return 'shoes';
+    if (c.includes('sunglass') || c.includes('goggle') || c.includes('eyewear')) return 'sunglasses';
+    return null;
+}
+
+/* one product's metafield values: custom fields first, else the built-in details */
+async function fetchProductMeta(id, kind) {
+    if (!kind) {
+        const d = await (await fetch(`${API_BASE}/product_meta.php?product_id=${encodeURIComponent(id)}`)).json();
+        if (!d || !d.success) throw new Error('meta');
+        return d.values || {};
+    }
+    const d = await (await fetch(`${API_BASE}/get_product.php?id=${encodeURIComponent(id)}`)).json();
+    if (!d || !d.success || !d.product) throw new Error('product');
+    const p = d.product;
+    if (kind === 'sunglasses' && p.details_kind !== 'sunglasses') {
+        try {
+            const s = await (await fetch(`${API_BASE}/get_sunglasses_details.php?product_id=${encodeURIComponent(id)}`)).json();
+            if (s && s.success && s.details) return s.details;
+        } catch (e) { /* fall through to whatever get_product gave */ }
+    }
+    return p.details || {};
+}
+
+function hasMetaSelection() {
+    return Object.keys(metaFilter).some(k => Array.isArray(metaFilter[k]) && metaFilter[k].length);
+}
+
+/* filters are only applied once the category's values are loaded */
+function metaActive() {
+    return !!(metaData && metaData.ready && metaData.ck === sameNameKey(selectedCategory) && hasMetaSelection());
+}
+
+/* skipKey: ignore that field (used for per-field counts) */
+function metaMatches(p, skipKey) {
+    for (const key of Object.keys(metaFilter)) {
+        const sel = metaFilter[key];
+        if (key === skipKey || !Array.isArray(sel) || !sel.length) continue;
+        const v = p.vals[key];
+        if (!v || !sel.includes(v)) return false;
+    }
+    return true;
+}
+
+function metaMatchingIds() {
+    return new Set(metaData.products.filter(p => metaMatches(p)).map(p => p.id));
+}
+
+function metaNotify(md) {
+    if (metaData === md && window.__renderMeta) window.__renderMeta();
+}
+
+/* Drop selections that no longer exist (field removed / value gone) */
+function pruneMeta(md) {
+    if (metaData !== md || !md.ready) return;
+    const keys = md.fields.map(f => f.key);
+    Object.keys(metaFilter).forEach(k => {
+        if (!keys.includes(k)) { delete metaFilter[k]; return; }
+        const have = md.display[k] || {};
+        const kept = (metaFilter[k] || []).filter(v => have[v]);
+        if (kept.length) metaFilter[k] = kept; else delete metaFilter[k];
+    });
+}
+
+function loadMetaForCategory(category) {
+    const ck = sameNameKey(category);
+    if (!ck) { metaData = null; metaFilter = {}; return Promise.resolve(); }
+    if (metaCache.has(ck)) { metaData = metaCache.get(ck); return metaData.promise; }
+
+    const md = { ck, fields: [], products: [], display: {}, ready: false, promise: null, kind: null, done: 0, total: 0 };
+    metaCache.set(ck, md);
+    metaData = md;
+
+    md.promise = (async () => {
+        /* 1. which fields does this category have? */
+        try {
+            const r = await (await fetch(`${API_BASE}/manage_categories.php`)).json();
+            const cat = r && r.success && Array.isArray(r.categories)
+                ? r.categories.find(c => sameNameKey(c.name) === ck) : null;
+            md.fields = cat && Array.isArray(cat.fields) ? cat.fields.filter(f => f && f.key && f.label) : [];
+        } catch (e) { md.fields = []; }
+
+        /* no custom fields -> the built-in details of Perfume / Watches / Shoes / Sunglasses */
+        if (!md.fields.length) {
+            md.kind = legacyMetaKind(category);
+            if (md.kind) md.fields = LEGACY_META[md.kind].map(([key, label]) => ({ key, label }));
+        }
+
+        if (!md.fields.length) { md.ready = true; pruneMeta(md); metaNotify(md); return; }
+        metaNotify(md);   /* show the sections with "Loading..." */
+
+        /* 2. every product of the category */
+        const prods = [];
+        try {
+            let page = 1, more = true;
+            while (more && page <= 30) {
+                const params = new URLSearchParams();
+                params.set('category', category);
+                params.set('page', page);
+                const d = await (await fetch(`${API_BASE}/get_products.php?${params.toString()}`)).json();
+                if (!d.success) break;
+                (d.products || []).forEach(p => prods.push({
+                    id: String(p.id), brand: p.brand || '', gender: String(p.gender || '').toLowerCase(), vals: {}
+                }));
+                more = !!d.hasMore;
+                page++;
+            }
+        } catch (e) { /* keep what we have */ }
+
+        /* 3. each product's metafield values (cached per tab for 10 min) */
+        const SKEY = 'catalogMeta2:' + ck + ':' + (md.kind || 'custom');
+        let vals = {};
+        try {
+            const c = JSON.parse(localStorage.getItem(SKEY));
+            if (c && c.t && Date.now() - c.t < META_TTL && c.v) vals = c.v;
+        } catch (e) { vals = {}; }
+
+        const need = prods.filter(p => !(p.id in vals));
+        md.total = need.length;
+        md.done = 0;
+        let idx = 0, failed = false;
+        async function worker() {
+            while (idx < need.length) {
+                const p = need[idx++];
+                try {
+                    vals[p.id] = await fetchProductMeta(p.id, md.kind);
+                } catch (e) { failed = true; }
+                md.done++;
+                if (md.done % 25 === 0) metaNotify(md);   /* progress text */
+            }
+        }
+        await Promise.all(Array.from({ length: Math.min(10, need.length) }, worker));
+        if (!failed) {
+            try { localStorage.setItem(SKEY, JSON.stringify({ t: Date.now(), v: vals })); } catch (e) {}
+        }
+
+        /* 4. normalise: "Black" / "black " / "BLACK" become ONE option */
+        const spell = {};   /* field -> normKey -> { raw: count } */
+        prods.forEach(p => {
+            const pv = vals[p.id] || {};
+            md.fields.forEach(f => {
+                const raw = pv[f.key];
+                const s = String(raw == null ? '' : raw).trim().replace(/\s+/g, ' ');
+                if (!s) return;
+                const k = sameNameKey(s);
+                p.vals[f.key] = k;
+                const m = (spell[f.key] = spell[f.key] || {});
+                const o = (m[k] = m[k] || {});
+                o[s] = (o[s] || 0) + 1;
+            });
+        });
+        md.fields = md.fields.filter(f => {
+            const m = spell[f.key] || {};
+            const distinct = Object.keys(m).length;
+            const withValue = prods.filter(p => p.vals[f.key]).length;
+            /* a field where almost every product has its own value (e.g. Fragrance = the perfume's own name)
+               would be a 400-item list, not a filter */
+            return distinct > 0 && !(withValue >= 12 && distinct > withValue * 0.7);
+        });
+        md.fields.forEach(f => {
+            md.display[f.key] = {};
+            const m = spell[f.key] || {};
+            Object.keys(m).forEach(k => {
+                md.display[f.key][k] = Object.keys(m[k]).sort((a, b) => m[k][b] - m[k][a])[0];
+            });
+        });
+        md.products = prods;
+        md.ready = true;
+        pruneMeta(md);
+        metaNotify(md);
+    })();
+    return md.promise;
+}
+
+/* ONE request chain for "everything in the current scope"
+   (category + brand(s) + gender + search), used by stories and metafield filters */
+async function fetchAllScoped() {
+    const brandsSel = brandFilter.value ? brandFilter.value.split(',').filter(Boolean) : [];
+    const brandRuns = brandsSel.length > 1 ? brandsSel : [null];
+    const out = [];
+    const seen = new Set();
+    for (const b of brandRuns) {
+        let p = 1, more = true;
+        while (more && p <= 30) {
+            const params = buildParams(p);
+            if (b) params.set('brand', b);
+            const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
+            const d = await res.json();
+            if (!d.success) throw new Error(d.error || 'Failed to load');
+            (d.products || []).forEach(pr => {
+                const id = String(pr.id);
+                if (!seen.has(id)) { seen.add(id); out.push(pr); }
+            });
+            more = !!d.hasMore;
+            p++;
+        }
+    }
+    return out;
+}
+
 /*
  * Set by the filter-drawer IIFE further down.
  * Called whenever selected category changes.
@@ -92,7 +322,8 @@ function saveFilterState() {
         search: searchInput.value,
         category: selectedCategory,
         brand: brandFilter.value,
-        gender: genderFilter.value
+        gender: genderFilter.value,
+        meta: hasMetaSelection() ? metaFilter : null
     }));
     updateUrlFromFilters();
 }
@@ -106,6 +337,7 @@ function updateUrlFromFilters() {
     if (selectedCategory) params.set('category', selectedCategory);
     if (brandFilter.value) params.set('brand', brandFilter.value);
     if (genderFilter.value) params.set('gender', genderFilter.value);
+    if (hasMetaSelection()) params.set('meta', JSON.stringify(metaFilter));
     if (searchInput.value.trim()) params.set('search', searchInput.value.trim());
     if (storyFilterId) params.set('story', storyFilterId);
 
@@ -309,6 +541,7 @@ async function loadCategories() {
         window.__applySegActive = applyActiveState;
 
         async function selectCategory(category) {
+            if (sameNameKey(category) !== sameNameKey(selectedCategory)) metaFilter = {};
             selectedCategory = category;
             if (window.__onCategoryChangedStories) window.__onCategoryChangedStories();
             searchInput.value = '';
@@ -407,26 +640,22 @@ async function loadProducts(page = 1, append = false) {
     }
 
     try {
-        /* Active story: fetch every page of the current scope once and
-           keep only the story's products (stories are small sets). */
-        if (storyFilterIds && storyFilterIds.length) {
-            const wanted = new Set(storyFilterIds.map(String));
-            let all = [];
-            let p = 1;
-            let more = true;
-            while (more && p <= 15) {
-                const params = buildParams(p);
-                const res = await fetch(`${API_BASE}/get_products.php?${params.toString()}`);
-                const d = await res.json();
-                if (!d.success) throw new Error(d.error || 'Failed to load');
-                all = all.concat(d.products || []);
-                more = !!d.hasMore;
-                p++;
+        /* Active story and/or metafield filters: fetch every page of the
+           current scope once and keep only the matching products. */
+        const storyOn = !!(storyFilterIds && storyFilterIds.length);
+        const metaOn = metaActive();
+        if (storyOn || metaOn) {
+            let wanted = null;
+            if (storyOn) wanted = new Set(storyFilterIds.map(String));
+            if (metaOn) {
+                const m = metaMatchingIds();
+                wanted = wanted ? new Set([...wanted].filter(id => m.has(id))) : m;
             }
+            const all = await fetchAllScoped();
             currentProducts = all.filter(pr => wanted.has(String(pr.id)));
             currentPage = 1;
             renderProducts(currentProducts);
-            resultsCount.textContent = `${currentProducts.length} product${currentProducts.length === 1 ? '' : 's'} in this story`;
+            resultsCount.textContent = `${currentProducts.length} product${currentProducts.length === 1 ? '' : 's'}` + (storyOn ? ' in this story' : '');
             loadMoreBtn.style.display = 'none';
             return;
         }
@@ -601,6 +830,18 @@ if (urlGender) {
     sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
 }
 
+const urlMeta = urlParams.get('meta');
+if (urlMeta) {
+    try {
+        const m = JSON.parse(urlMeta);
+        if (m && typeof m === 'object' && !Array.isArray(m)) {
+            const existing = loadFilterState() || {};
+            existing.meta = m;
+            sessionStorage.setItem(FILTER_KEY, JSON.stringify(existing));
+        }
+    } catch (e) { /* bad meta param — ignore */ }
+}
+
 /* =========================================================
    RESTORE SAVED FILTERS
    ========================================================= */
@@ -638,13 +879,14 @@ async function loadStoryIcons() {
 }
 
 function clearStoryFilter(reload) {
-    const had = !!storyFilterId || brandFilter.value || genderFilter.value || searchInput.value.trim();
+    const had = !!storyFilterId || brandFilter.value || genderFilter.value || searchInput.value.trim() || hasMetaSelection();
     storyFilterIds = null;
     storyFilterId = null;
     /* "All <Category>" = clean slate for that category */
     brandFilter.value = '';
     genderFilter.value = '';
     searchInput.value = '';
+    metaFilter = {};
     if (window.__applyBrandSelection) window.__applyBrandSelection('');
     renderStoryIconsRow();
     saveFilterState();
@@ -672,6 +914,7 @@ function applyStoryLink(icon) {
     brandFilter.value = p.get('brand') || '';
     genderFilter.value = p.get('gender') || '';
     searchInput.value = p.get('search') || '';
+    metaFilter = {};
     if (window.__applyBrandSelection) window.__applyBrandSelection(brandFilter.value);
 
     const cat = p.get('category');
@@ -973,6 +1216,9 @@ async function init() {
         if (savedFilters.gender) {
             genderFilter.value = savedFilters.gender;
         }
+        if (savedFilters.meta && typeof savedFilters.meta === 'object') {
+            metaFilter = savedFilters.meta;
+        }
     }
     if (window.__syncBrandCircles) window.__syncBrandCircles();
 
@@ -1052,6 +1298,7 @@ init();
     const genderBody = document.getElementById('fdGender');
     const brandBody = document.getElementById('fdBrand');
     const clearBtn = document.getElementById('fdClearBtn');
+    const metaWrap = document.getElementById('fdMetaWrap');
 
     if (!openBtn || !drawer) return;
 
@@ -1065,12 +1312,14 @@ init();
     ];
 
     const BRAND_VISIBLE = 8;
+    const META_VISIBLE = 8;
 
     function openDrawerPanel() {
         drawer.classList.add('open');
         overlay.classList.add('open');
         renderGender();
         renderBrand();
+        renderMeta();
     }
 
     function closeDrawerPanel() {
@@ -1084,17 +1333,24 @@ init();
         renderGender();
         renderBrand();
         openDrawerPanel();
+        loadMetaForCategory(selectedCategory);   /* no-op if already loaded */
+        renderMeta();
     });
     closeBtn.addEventListener('click', closeDrawerPanel);
     overlay.addEventListener('click', closeDrawerPanel);
 
-    document.querySelectorAll('.fd-section-head').forEach(head => {
-        head.addEventListener('click', () => {
+    /* One delegated handler: Gender, Brand AND the metafield sections
+       (which are built later) all collapse/expand with their arrow. */
+    const drawerBody = document.querySelector('.filter-drawer-body');
+    if (drawerBody) {
+        drawerBody.addEventListener('click', (e) => {
+            const head = e.target.closest('.fd-section-head');
+            if (!head || !drawerBody.contains(head)) return;
             const body = document.getElementById(head.dataset.target);
             head.classList.toggle('collapsed');
             if (body) body.classList.toggle('collapsed');
         });
-    });
+    }
 
     async function fetchGenderCounts() {
         if (genderCounts) return genderCounts;
@@ -1196,6 +1452,7 @@ init();
         bindExclusiveGroup(genderBody, 'fdGenderOpt', (val) => {
             genderFilter.value = val;
             refreshForCategory(selectedCategory);
+            renderMeta();
             resetAndReload();
         });
 
@@ -1254,6 +1511,7 @@ init();
             genderCounts = null;
             renderGender();
             if (window.__syncBrandCircles) window.__syncBrandCircles(values);
+            renderMeta();
             resetAndReload();
         });
 
@@ -1267,6 +1525,99 @@ init();
             });
         }
     }
+
+    /* Desktop shows the sidebar all the time, so load the metafield values right
+       away. On phones the drawer is closed - wait until the Filter button is tapped. */
+    const wideMq = window.matchMedia('(min-width: 900px)');
+    function metaLoadAllowed() {
+        return wideMq.matches || drawer.classList.contains('open') || hasMetaSelection();
+    }
+
+    /* ---------- METAFIELD SECTIONS (selected category only) ---------- */
+    function renderMeta() {
+        if (!metaWrap) return;
+        const md = metaData;
+        if (!md || !md.fields.length || md.ck !== sameNameKey(selectedCategory)) {
+            metaWrap.innerHTML = '';
+            return;
+        }
+
+        /* remember what the visitor had folded / expanded across re-renders */
+        const folded = new Set(Array.from(metaWrap.querySelectorAll('.fd-section-head.collapsed')).map(h => h.dataset.key));
+        const opened = new Set(Array.from(metaWrap.querySelectorAll('.fd-show-more.is-open')).map(b => b.dataset.key));
+
+        const brands = selectedBrands().map(sameNameKey);
+        const gender = genderFilter.value;
+        const sections = [];
+
+        md.fields.forEach((f, i) => {
+            const bodyId = 'fdMeta_' + i;
+            const sel = metaFilter[f.key] || [];
+            let inner;
+
+            if (!md.ready) {
+                inner = '<p class="fd-meta-loading">Loading' + (md.total ? ` (${md.done}/${md.total})` : '') + '...</p>';
+            } else {
+                /* faceted counts: respect brand, gender and the OTHER metafields */
+                const counts = {};
+                md.products.forEach(p => {
+                    if (brands.length && !brands.includes(sameNameKey(p.brand))) return;
+                    if (gender && p.gender !== gender) return;
+                    if (!metaMatches(p, f.key)) return;
+                    const v = p.vals[f.key];
+                    if (v) counts[v] = (counts[v] || 0) + 1;
+                });
+                const disp = md.display[f.key] || {};
+                const keys = Object.keys(disp)
+                    .filter(k => counts[k] || sel.includes(k))
+                    .sort((a, b) => disp[a].localeCompare(disp[b], undefined, { sensitivity: 'base', numeric: true }));
+                if (!keys.length) return;   /* nothing to filter by here -> no section */
+
+                const isOpen = opened.has(f.key);
+                inner = keys.map((k, j) =>
+                    optionRow('fdMetaOpt_' + i, k, disp[k], counts[k] || 0, sel.includes(k),
+                        j >= META_VISIBLE ? 'hidden-extra' + (isOpen ? ' shown' : '') : '')
+                ).join('');
+                if (keys.length > META_VISIBLE) {
+                    inner += `<button type="button" class="fd-show-more${isOpen ? ' is-open' : ''}" data-key="${escapeHtml(f.key)}" data-body="${bodyId}">${isOpen ? '- Show less' : '+ Show more'}</button>`;
+                }
+            }
+
+            const isFolded = folded.has(f.key);
+            sections.push(`
+            <div class="fd-section" data-meta-key="${escapeHtml(f.key)}">
+                <button type="button" class="fd-section-head${isFolded ? ' collapsed' : ''}" data-target="${bodyId}" data-key="${escapeHtml(f.key)}">
+                    ${escapeHtml(f.label)}
+                    <svg class="fd-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <div class="fd-section-body fd-meta-body${isFolded ? ' collapsed' : ''}" id="${bodyId}">${inner}</div>
+            </div>`);
+        });
+
+        metaWrap.innerHTML = sections.join('');
+
+        md.fields.forEach((f, i) => {
+            const body = document.getElementById('fdMeta_' + i);
+            if (!body) return;
+            bindMultiGroup(body, 'fdMetaOpt_' + i, (values) => {
+                if (values.length) metaFilter[f.key] = values; else delete metaFilter[f.key];
+                renderMeta();
+                resetAndReload();
+            });
+        });
+
+        metaWrap.querySelectorAll('.fd-show-more').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const body = document.getElementById(btn.dataset.body);
+                if (!body) return;
+                const open = !btn.classList.contains('is-open');
+                btn.classList.toggle('is-open', open);
+                body.querySelectorAll('.fd-option.hidden-extra').forEach(el => el.classList.toggle('shown', open));
+                btn.textContent = open ? '- Show less' : '+ Show more';
+            });
+        });
+    }
+    window.__renderMeta = renderMeta;
 
     function bindExclusiveGroup(container, name, onChange) {
         container.querySelectorAll(`input[name="${name}"]`).forEach(input => {
@@ -1295,19 +1646,32 @@ init();
     clearBtn.addEventListener('click', () => {
         genderFilter.value = '';
         brandFilter.value = '';
+        metaFilter = {};
         renderGender();
         renderBrand();
+        renderMeta();
         if (window.__syncBrandCircles) window.__syncBrandCircles([]);
         resetAndReload();
     });
 
     async function refreshForCategory(category) {
         genderCounts = null;
+        /* metafields load in the background (many small requests, cached) so
+           the product grid never waits for them - unless a saved/URL metafield
+           filter has to be applied to the first load. */
+        const metaP = metaLoadAllowed() ? loadMetaForCategory(category) : Promise.resolve();
         await fetchBrandList(category);
         if (window.__rebuildBrandCircles) window.__rebuildBrandCircles(brandList);
         pruneInvalidBrandSelection();
         renderGender();
         renderBrand();
+        renderMeta();
+        if (hasMetaSelection()) {
+            await loadMetaForCategory(category);   /* a saved/URL metafield filter must be applied to the first load */
+            renderMeta();
+        } else {
+            await metaP;
+        }
     }
 
     window.__applyBrandSelection = function (csv) {
@@ -1315,6 +1679,7 @@ init();
         genderCounts = null;
         renderGender();
         renderBrand();
+        renderMeta();
     };
 
     refreshFilterDrawerForCategory = refreshForCategory;
