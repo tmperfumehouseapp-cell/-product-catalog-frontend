@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/bill/api.php",
+      "destination": "https://fourpirates.tmfragrance.com/visitor/product-api/bill/api.php"
+    },
+    {
+      "source": "/get_products.php",
+      "destination": "https://fourpirates.tmfragrance.com/visitor/product-api/get_products.php"
+    },
+    {
+      "source": "/bill/uploads/:path*",
+      "destination": "https://fourpirates.tmfragrance.com/visitor/product-api/bill/uploads/:path*"
+    }
+  ]
+}
