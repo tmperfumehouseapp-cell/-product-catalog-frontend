@@ -89,7 +89,7 @@ let debounceTimer;
 let metaFilter = {};
 let metaData = null;
 const metaCache = new Map();          /* category key -> metaData */
-const META_TTL = 30 * 60 * 1000;      /* cached product values live 30 min in this browser */
+const META_TTL = 6 * 60 * 60 * 1000;  /* cached product values live 6 h in this browser (fewer requests to the host) */
 
 /* Categories that use the built-in details (not Admin -> Categories fields):
    same keys/labels the product page shows under "Specifications". */
@@ -180,13 +180,24 @@ function loadMetaForCategory(category) {
     metaData = md;
 
     md.promise = (async () => {
-        /* 1. which fields does this category have? */
-        try {
-            const r = await (await fetch(`${API_BASE}/manage_categories.php`)).json();
-            const cat = r && r.success && Array.isArray(r.categories)
-                ? r.categories.find(c => sameNameKey(c.name) === ck) : null;
-            md.fields = cat && Array.isArray(cat.fields) ? cat.fields.filter(f => f && f.key && f.label) : [];
-        } catch (e) { md.fields = []; }
+        /* 1. which fields does this category have?
+              (retried once - a single failed request used to drop a category
+              onto the built-in fallback, which is empty for Watches/Shoes) */
+        md.fields = [];
+        let catsOk = false;
+        for (let attempt = 0; attempt < 2 && !catsOk; attempt++) {
+            try {
+                const r = await (await fetch(`${API_BASE}/manage_categories.php`)).json();
+                if (!r || !r.success || !Array.isArray(r.categories)) throw new Error('categories');
+                const cat = r.categories.find(c => sameNameKey(c.name) === ck);
+                md.fields = cat && Array.isArray(cat.fields) ? cat.fields.filter(f => f && f.key && f.label) : [];
+                catsOk = true;
+            } catch (e) {
+                md.fields = [];
+                if (attempt === 0) await new Promise(res => setTimeout(res, 800));
+            }
+        }
+        if (!catsOk) metaCache.delete(ck);   /* server did not answer: try again next time instead of remembering "no fields" */
 
         /* no custom fields -> the built-in details of Perfume / Watches / Shoes / Sunglasses */
         if (!md.fields.length) {
@@ -215,32 +226,68 @@ function loadMetaForCategory(category) {
             }
         } catch (e) { /* keep what we have */ }
 
-        /* 3. each product's metafield values (cached per tab for 10 min) */
-        const SKEY = 'catalogMeta2:' + ck + ':' + (md.kind || 'custom');
+        /* 3. each product's metafield values (cached in this browser).
+              A product with NO values yet is never trusted from the cache:
+              it is re-fetched, so values filled in Admin show up straight
+              away instead of the filter staying empty until the cache expires.
+              (key v3 = old caches that stored empty values are dropped) */
+        const SKEY = 'catalogMeta3:' + ck + ':' + (md.kind || 'custom');
+        const hasVals = (o) => !!o && typeof o === 'object' && Object.keys(o).length > 0;
+        const sleep = (ms) => new Promise(res => setTimeout(res, ms));
         let vals = {};
+        let cacheT = 0;   /* when the cache was first filled - kept, so it really expires */
         try {
             const c = JSON.parse(localStorage.getItem(SKEY));
-            if (c && c.t && Date.now() - c.t < META_TTL && c.v) vals = c.v;
+            if (c && c.t && Date.now() - c.t < META_TTL && c.v) { vals = c.v; cacheT = c.t; }
         } catch (e) { vals = {}; }
+        Object.keys(vals).forEach(id => { if (!hasVals(vals[id])) delete vals[id]; });
+
+        /* saves only products that really have values; also called while loading,
+           so if the server stops answering, the next visit continues from here */
+        function persist() {
+            const keep = {};
+            Object.keys(vals).forEach(id => { if (hasVals(vals[id])) keep[id] = vals[id]; });
+            if (!Object.keys(keep).length) return;
+            try { localStorage.setItem(SKEY, JSON.stringify({ t: cacheT || (cacheT = Date.now()), v: keep })); } catch (e) {}
+        }
 
         const need = prods.filter(p => !(p.id in vals));
         md.total = need.length;
         md.done = 0;
-        let idx = 0, failed = false;
+        let idx = 0, failedCount = 0, strikes = 0, aborted = false;
+        /* GENTLE loader: only 3 requests at a time. 10 at once (plus the product
+           grid, brands and gender counts) exceeded the host's limit - requests then
+           fail with "Failed to fetch" and the grid / metafield filters disappear. */
         async function worker() {
-            while (idx < need.length) {
+            while (idx < need.length && !aborted) {
                 const p = need[idx++];
-                try {
-                    vals[p.id] = await fetchProductMeta(p.id, md.kind);
-                } catch (e) { failed = true; }
+                let v = null;
+                for (let attempt = 0; attempt < 3 && v === null && !aborted; attempt++) {
+                    try {
+                        v = await fetchProductMeta(p.id, md.kind);
+                    } catch (e) {
+                        if (attempt < 2) await sleep(800 * Math.pow(2, attempt));   /* 0.8s, 1.6s */
+                    }
+                }
+                if (v === null) {
+                    failedCount++;
+                    /* 4 products in a row failed even after retries -> the server is
+                       refusing us: STOP (no hammering) and keep what we already have */
+                    if (++strikes >= 4) aborted = true;
+                } else {
+                    strikes = 0;
+                    vals[p.id] = v;
+                }
                 md.done++;
-                if (md.done % 25 === 0) metaNotify(md);   /* progress text */
+                if (md.done % 20 === 0) { persist(); metaNotify(md); }   /* progress text + partial save */
             }
         }
-        await Promise.all(Array.from({ length: Math.min(10, need.length) }, worker));
-        if (!failed) {
-            try { localStorage.setItem(SKEY, JSON.stringify({ t: Date.now(), v: vals })); } catch (e) {}
-        }
+        await Promise.all(Array.from({ length: Math.min(3, need.length) }, worker));
+        persist();
+        md.partial = aborted || failedCount > 0;
+        /* an incomplete run is forgotten, so reopening the Filter / re-selecting the
+           category tries again - and continues from the saved values */
+        if (md.partial) metaCache.delete(ck);
 
         /* 4. normalise: "Black" / "black " / "BLACK" become ONE option */
         const spell = {};   /* field -> normKey -> { raw: count } */
@@ -1594,6 +1641,9 @@ init();
             </div>`);
         });
 
+        if (md.ready && md.partial && sections.length) {
+            sections.unshift('<p class="fd-meta-loading" style="padding:8px 0 0;">Some details could not load. Close and reopen Filter to retry.</p>');
+        }
         metaWrap.innerHTML = sections.join('');
 
         md.fields.forEach((f, i) => {
@@ -1660,6 +1710,7 @@ init();
            the product grid never waits for them - unless a saved/URL metafield
            filter has to be applied to the first load. */
         const metaP = metaLoadAllowed() ? loadMetaForCategory(category) : Promise.resolve();
+        metaP.catch(() => {});   /* background job: never let it break the page */
         await fetchBrandList(category);
         if (window.__rebuildBrandCircles) window.__rebuildBrandCircles(brandList);
         pruneInvalidBrandSelection();
@@ -1669,9 +1720,9 @@ init();
         if (hasMetaSelection()) {
             await loadMetaForCategory(category);   /* a saved/URL metafield filter must be applied to the first load */
             renderMeta();
-        } else {
-            await metaP;
         }
+        /* otherwise: do NOT wait for the metafields - the product grid loads right
+           away and the filter sections fill in by themselves (metaNotify -> renderMeta) */
     }
 
     window.__applyBrandSelection = function (csv) {
