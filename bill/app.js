@@ -783,19 +783,32 @@
     } catch (e) { return []; } finally { clearTimeout(timer); }
   }
 
-  /** Buying price of one catalog product (products.cost_price, typed on the catalog's Add/Edit product page), in paise; 0 when not set. */
-  App.catalogCost = async function (id) {
-    if (!App.catalogApi || !(id > 0)) return 0;
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), 6000);
-    try {
-      const u = new URL('get_product.php', new URL(App.catalogApi, App.API_URL));
-      u.searchParams.set('id', String(id));
-      const d = await (await fetch(u, { credentials: 'omit', signal: ctl.signal })).json();
-      return Math.round(Number(d && d.product ? d.product.cost_price || 0 : 0) * 100);
-    } catch (e) { return 0; } finally { clearTimeout(timer); }
-  };
-
+  /** Buying price of one catalog product (products.cost_price, typed on the catalog's Add/Edit product page), in paise; 0 when not set. */
+
+  App.catalogCost = async function (id) {
+
+    if (!App.catalogApi || !(id > 0)) return 0;
+
+    const ctl = new AbortController();
+
+    const timer = setTimeout(() => ctl.abort(), 6000);
+
+    try {
+
+      const u = new URL('get_product.php', new URL(App.catalogApi, App.API_URL));
+
+      u.searchParams.set('id', String(id));
+
+      const d = await (await fetch(u, { credentials: 'omit', signal: ctl.signal })).json();
+
+      return Math.round(Number(d && d.product ? d.product.cost_price || 0 : 0) * 100);
+
+    } catch (e) { return 0; } finally { clearTimeout(timer); }
+
+  };
+
+
+
   /** Products already saved in this ledger (earlier manual additions). */
   async function searchLedger(q) {
     try {
@@ -1497,10 +1510,9 @@
         r.name.value = it.name;
         r.setPerfume(isPerfume(it));
         if (r.perfume) {
-          // No amount until the type is chosen: the type sets both prices. One piece per line.
-          r.rate.value = ''; r.cost.value = ''; r.type.value = ''; r.qty.value = '1';
+          // No amount until the type is chosen: the type fills both prices (you can still change them).
+          r.rate.value = ''; r.cost.value = ''; r.type.value = '';
         } else {
-          r.qty.value = '1';
           r.rate.value = it.price_paise > 0 ? App.fromPaise(it.price_paise) : '';
           r.cost.value = it.cost_paise > 0 ? App.fromPaise(it.cost_paise) : '';
           // Catalog product whose buying price did not come with the search: fetch it from the catalog.
@@ -1515,16 +1527,13 @@
         r.picked = true;
         r.paint();
         recalc();
-        if (r.perfume) r.type.focus();
+        if (r.perfume) r.type.focus(); else { r.qty.focus(); r.qty.select(); }
       };
       r.qty = App.input({ inputmode: 'numeric', value: item ? String(item.qty) : '1', 'aria-label': 'Quantity' });
       // Purchase price: empty means "not entered", 0 means it cost nothing.
       r.cost = App.moneyInput(item && item.cost_paise ? item.cost_paise : 0, { placeholder: 'Purchase', 'aria-label': 'Purchase price' });
       if (item && item.cost_paise === 0) r.cost.value = '0';
       r.rate = App.moneyInput(item ? item.rate_paise : 0, { placeholder: 'Selling', 'aria-label': 'Selling price' });
-      // Quantity and both prices are never typed here: 1 piece per line, prices come from the catalog
-      // (buying and selling price on the product) or, for perfumes, from the Item types page.
-      [r.qty, r.cost, r.rate].forEach((n) => { n.readOnly = true; n.tabIndex = -1; n.classList.add('input-static'); });
       r.setPerfume(r.perfume);
       r.amt = el('td', { class: 'col-amt', 'data-label': 'Amount' });
       r.profit = el('td', { class: 'col-profit', 'data-label': 'Profit' });
