@@ -93,16 +93,23 @@
   }
 
   /** App.api('api/x.php', {params: {...}})  for GET,  App.api('api/x.php', {body: {...}})  for POST. */
+  /* ---- the only setting: where api.php lives (on Hostinger). The page itself can be anywhere:
+     Live Server on your computer, this same site, or a subdomain. Nothing else to change. ---- */
+  App.API_URL = 'https://fourpirates.tmfragrance.com/visitor/product-api/bill/api.php';
+  App.API_DIR = App.API_URL.replace(/[^/]+$/, '');
+
   App.api = async function (url, opts) {
     opts = opts || {};
-    const init = { method: opts.body ? 'POST' : 'GET', credentials: 'same-origin', headers: { Accept: 'application/json' } };
+    const init = { method: opts.body ? 'POST' : 'GET', credentials: 'omit', headers: { Accept: 'application/json' } };
+    const sid = store.get('sid');
+    if (sid) init.headers['X-Ledger-Session'] = sid;
     if (opts.body) {
       init.headers['Content-Type'] = 'application/json';
       init.headers['X-CSRF-Token'] = App.csrf;
       init.body = JSON.stringify(opts.body);
     }
     const m = /^api\/(\w+)\.php$/.exec(url);
-    const base = m ? 'api.php?r=' + m[1] : url;
+    const base = m ? App.API_URL + '?r=' + m[1] : url;
     let query = '';
     if (opts.params) {
       const usp = new URLSearchParams();
@@ -122,9 +129,10 @@
     const text = await res.text();
     let json = null;
     try { json = JSON.parse(text); } catch (e) { /* handled below */ }
-    if (!json && /^\s*<\?php/.test(text)) throw apiError('This server cannot run PHP, so it is showing the code of api.php instead. Live Server in VS Code does not run PHP. Start the project with XAMPP or open a terminal in this folder and run: php -S localhost:8000   then open http://localhost:8000', 0);
+    if (!json && /^\s*<\?php/.test(text)) throw apiError('The server is showing the code of api.php instead of running it. PHP is not working at ' + App.API_URL, 0);
     if (!json) throw apiError('The server sent an unexpected reply (' + res.status + ').', res.status);
     if (!res.ok || !json.ok) throw apiError(json.error || 'Request failed.', res.status);
+    if (json.data && typeof json.data === 'object' && typeof json.data.sid === 'string' && json.data.sid) store.set('sid', json.data.sid);
     return json.data;
   };
 
@@ -255,7 +263,9 @@
     const usp = new URLSearchParams({ type });
     if (from) usp.set('from', from);
     if (to) usp.set('to', to);
-    return 'api.php?r=export&' + usp.toString();
+    const sid = store.get('sid');
+    if (sid) usp.set('sid', sid);
+    return App.API_URL + '?r=export&' + usp.toString();
   };
 
   
@@ -352,6 +362,9 @@
     el('input', Object.assign({ class: 'input mono', type: 'text', inputmode: 'decimal', autocomplete: 'off', value: paise ? App.fromPaise(paise) : '' }, attrs || {}));
 
   /** options: [[value, label], ...]  */
+  /** "Dior Sauvage · OG box": item name with its type, for the order page, invoice and WhatsApp. */
+  App.itemLabel = (i) => i.name + (i.item_type_name ? ' · ' + i.item_type_name : '');
+
   App.select = (options, value, attrs) =>
     el('select', Object.assign({ class: 'input', value }, attrs || {}),
       options.map((o) => el('option', { value: o[0], text: o[1] })));
@@ -643,7 +656,7 @@
   /* ------------------------------------------------------------------ */
 
   /** Address of a photo: uploaded here (uploads/..) or an https link from the catalog. */
-  App.imgSrc = (u) => (u && (/^uploads\//.test(u) || /^https:\/\//i.test(u)) ? u : '');
+  App.imgSrc = (u) => (u && /^uploads\//.test(u) ? App.API_DIR + u : (u && /^https:\/\//i.test(u) ? u : ''));
 
   /** A small square photo, or the first letters of the name when there is no photo. */
   App.thumb = function (name, url, cls) {
@@ -702,13 +715,61 @@
     });
   };
 
+  /** City (district) for an Indian pincode from the India Post lookup; '' when unknown or offline. Answers are remembered. */
+  const pinCache = {};
+  App.cityForPin = async function (code) {
+    if (pinCache[code] !== undefined) return pinCache[code];
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 6000);
+    let city = '';
+    try {
+      // Straight from the browser first (fastest) ...
+      const res = await fetch('https://api.postalpincode.in/pincode/' + encodeURIComponent(code), { signal: ctl.signal });
+      const d = await res.json();
+      const po = Array.isArray(d) && d[0] && d[0].Status === 'Success' && Array.isArray(d[0].PostOffice) ? d[0].PostOffice[0] : null;
+      city = po ? String(po.District || po.Division || '').trim() : '';
+    } catch (e) {
+      // ... and through api.php when the browser is not allowed to call that site.
+      try { city = String((await App.api('api/pincode.php', { params: { pin: code } })).city || ''); } catch (e2) { city = ''; }
+    } finally { clearTimeout(timer); }
+    pinCache[code] = city;
+    return city;
+  };
+
+  /** Lets a box take digits only, at most `max` of them (letters, spaces, + and - are dropped as you type or paste). */
+  App.digitsOnly = function (input, max) {
+    input.addEventListener('input', () => {
+      let d = input.value.replace(/\D+/g, '');
+      // Pasted with the country code or a leading 0 (+91 98765 43210, 098765 43210): keep the 10-digit number.
+      if (d.length > max && d.startsWith('91')) d = d.slice(2);
+      else if (d.length > max && d.startsWith('0')) d = d.slice(1);
+      d = d.slice(0, max);
+      if (d !== input.value) input.value = d;
+    });
+  };
+
+  /** Type a 6-digit pincode in `pin` and the city box fills in. A city typed by hand is left alone. */
+  App.autoCity = function (pin, city) {
+    let auto = false;
+    let seq = 0;
+    city.addEventListener('input', () => { auto = false; });
+    pin.addEventListener('input', async () => {
+      const code = pin.value.trim();
+      if (!/^\d{6}$/.test(code)) return;
+      const mine = ++seq;
+      const place = await App.cityForPin(code);
+      if (mine !== seq || !place) return;
+      if (city.value.trim() === '' || auto) { city.value = place; auto = true; }
+    });
+  };
+
   /** Catalog products matching a word (your catalog's own product search). */
   async function searchCatalog(q) {
     if (!App.catalogApi) return [];
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 6000);
     try {
-      const u = new URL(App.catalogApi, location.href);
+      const u = new URL(App.catalogApi, App.API_URL);
       u.searchParams.set('search', q);
       u.searchParams.set('page', '1');
       const res = await fetch(u, { credentials: 'omit', signal: ctl.signal });
@@ -716,10 +777,37 @@
       return (Array.isArray(d.products) ? d.products : []).slice(0, 8).map((p) => {
         let img = '';
         try { img = p.image ? new URL(String(p.image), u).href : ''; } catch (e) { img = ''; }
-        return { src: 'catalog', name: String(p.name || '').trim(), price_paise: Math.round(Number(p.price || 0) * 100), image: /^https:\/\//i.test(img) ? img : '' };
+        return { src: 'catalog', catalog_id: parseInt(p.id, 10) || 0, name: String(p.name || '').trim(), category: String(p.category || '').trim(),
+          price_paise: Math.round(Number(p.price || 0) * 100), cost_paise: Math.round(Number(p.cost_price || 0) * 100), image: /^https:\/\//i.test(img) ? img : '' };
       }).filter((p) => p.name);
     } catch (e) { return []; } finally { clearTimeout(timer); }
   }
+
+  /** Buying price of one catalog product (products.cost_price, typed on the catalog's Add/Edit product page), in paise; 0 when not set. */
+
+  App.catalogCost = async function (id) {
+
+    if (!App.catalogApi || !(id > 0)) return 0;
+
+    const ctl = new AbortController();
+
+    const timer = setTimeout(() => ctl.abort(), 6000);
+
+    try {
+
+      const u = new URL('get_product.php', new URL(App.catalogApi, App.API_URL));
+
+      u.searchParams.set('id', String(id));
+
+      const d = await (await fetch(u, { credentials: 'omit', signal: ctl.signal })).json();
+
+      return Math.round(Number(d && d.product ? d.product.cost_price || 0 : 0) * 100);
+
+    } catch (e) { return 0; } finally { clearTimeout(timer); }
+
+  };
+
+
 
   /** Products already saved in this ledger (earlier manual additions). */
   async function searchLedger(q) {
@@ -730,8 +818,7 @@
   }
 
   /**
-   * Suggestion list under an item-name box: catalog + ledger products with photos,
-   * and a last line to add the product by hand. hooks: {onPick(item), onManual(text)}.
+   * Suggestion list under an item-name box: catalog + ledger products with photos. hooks: {onPick(item)}.
    */
   App.itemSuggest = function (input, hooks) {
     let pop = null;
@@ -752,9 +839,8 @@
     };
     const pick = (i) => {
       const it = list[i];
-      const q = input.value.trim();
       close();
-      if (it && it.manual) hooks.onManual(q); else if (it) hooks.onPick(it);
+      if (it) hooks.onPick(it);
     };
     const mark = () => {
       if (!pop) return;
@@ -762,19 +848,15 @@
       const cur = pop.children[idx];
       if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest' });
     };
-    const show = (items, q) => {
+    const show = (items) => {
       close();
-      list = items.concat([{ manual: true }]);
+      list = items;
+      if (!list.length) return;
       pop = el('div', { class: 'suggest', role: 'listbox' }, list.map((it, i) => {
-        const row = el('div', { class: 'suggest-opt' + (it.manual ? ' suggest-manual' : ''), role: 'option' });
-        if (it.manual) {
-          row.appendChild(el('span', { class: 'thumb thumb-add', text: '+' }));
-          row.appendChild(el('div', { class: 'suggest-txt' }, el('b', { text: 'Not in the list? Add "' + q + '" manually' }), el('span', { text: 'Type the rate and add a photo' })));
-        } else {
-          row.appendChild(App.thumb(it.name, it.image));
-          row.appendChild(el('div', { class: 'suggest-txt' }, el('b', { text: it.name }), el('span', { text: it.src === 'catalog' ? 'Catalog' : 'Added manually earlier' })));
-          if (it.price_paise > 0) row.appendChild(el('em', { class: 'mono', text: App.inr(it.price_paise) }));
-        }
+        const row = el('div', { class: 'suggest-opt', role: 'option' });
+        row.appendChild(App.thumb(it.name, it.image));
+        row.appendChild(el('div', { class: 'suggest-txt' }, el('b', { text: it.name }), el('span', { text: it.src === 'catalog' ? 'Catalog' : 'Added earlier' })));
+        if (it.price_paise > 0) row.appendChild(el('em', { class: 'mono', text: App.inr(it.price_paise) }));
         row.addEventListener('mousedown', (e) => { e.preventDefault(); pick(i); });
         return row;
       }));
@@ -790,7 +872,7 @@
       if (mine !== seq || document.activeElement !== input || input.value.trim() !== q) return;
       const seen = new Set();
       const merged = cat.concat(led).filter((p) => { const k = p.name.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 8);
-      show(merged, q);
+      show(merged);
     };
 
     input.setAttribute('autocomplete', 'off');
@@ -810,62 +892,6 @@
     input.addEventListener('blur', () => { seq++; clearTimeout(timer); close(); });
     window.addEventListener('resize', place);
     window.addEventListener('scroll', (e) => { if (pop && !pop.contains(e.target)) place(); }, true);
-  };
-
-  /** Add a product that is not in the list: name, rate and a photo. opts: {name, onDone({id, name, rate_paise, image})} */
-  App.manualItemModal = function (opts) {
-    const err = el('div', { class: 'form-error', role: 'alert' });
-    const name = App.input({ value: opts.name || '', maxlength: 160, placeholder: 'Product name' });
-    const cost = App.moneyInput(0, { placeholder: 'Purchase price (₹)', 'aria-label': 'Purchase price' });
-    const rate = App.moneyInput(0, { placeholder: 'Selling price (₹)', 'aria-label': 'Selling price' });
-    let image = '';
-    const photoBtn = el('button', { type: 'button', class: 'photo-drop', 'aria-label': 'Add photo' });
-    const paint = () => {
-      photoBtn.textContent = '';
-      if (image) photoBtn.appendChild(el('img', { src: App.imgSrc(image), alt: '' }));
-      else photoBtn.appendChild(el('span', { text: 'Add photo' }));
-    };
-    paint();
-    photoBtn.addEventListener('click', async () => {
-      photoBtn.disabled = true;
-      photoBtn.classList.add('busy');
-      try { const u = await App.pickPhoto(); if (u) { image = u; paint(); } } catch (e) { err.textContent = e.message; }
-      photoBtn.disabled = false;
-      photoBtn.classList.remove('busy');
-    });
-    const modal = App.modal({
-      title: 'Add a product for this order',
-      body: el('div', { class: 'form-grid' },
-        el('div', { class: 'span-2' }, App.field('Product name', name)),
-        App.field('Purchase price (₹)', cost), App.field('Selling price (₹)', rate),
-        el('div', { class: 'field span-2' }, el('span', { class: 'field-label', text: 'Photo' }), el('div', { class: 'photo-row' }, photoBtn,
-          el('span', { class: 'muted small', text: 'Take a photo or choose one from your gallery. It is saved in your ledger, so this product shows up in the list next time.' }))),
-        el('div', { class: 'span-2' }, err)),
-      buttons: [
-        { label: 'Cancel', onClick: (close) => close() },
-        {
-          label: 'Use in this order', kind: 'primary',
-          onClick: async (close, btn) => {
-            err.textContent = '';
-            const nm = name.value.trim();
-            const rp = App.toPaise(rate.value);
-            const cp = cost.value.trim() === '' ? null : App.toPaise(cost.value);
-            if (!nm) { err.textContent = 'Enter the product name.'; return; }
-            if (rp === null || rp < 0) { err.textContent = 'The selling price is not a valid amount.'; return; }
-            if (cost.value.trim() !== '' && (cp === null || cp < 0)) { err.textContent = 'The purchase price is not a valid amount.'; return; }
-            btn.disabled = true;
-            try {
-              const same = (await searchLedger(nm)).find((p) => p.name.toLowerCase() === nm.toLowerCase());
-              const id = same ? same.id : (await App.api('api/products.php', { body: { action: 'save', name: nm, rate_paise: rp, cost_paise: cp || 0, image, is_active: true } })).id;
-              close();
-              opts.onDone({ id, name: nm, rate_paise: rp, cost_paise: cp, image: image || (same ? same.image : '') });
-            } catch (e) { err.textContent = e.message; btn.disabled = false; }
-          },
-        },
-      ],
-    });
-    name.focus();
-    return modal;
   };
 
   /** App.trackingModal({shipment: {id, courier, tracking_id, status}, title, onSaved}) */
@@ -915,9 +941,11 @@
     const c = opts.customer || {};
     const err = el('div', { class: 'form-error', role: 'alert' });
     const name = App.input({ value: c.name || '', maxlength: 120 });
-    const phone = App.input({ value: c.phone || '', inputmode: 'tel', maxlength: 20 });
+    const phone = App.input({ value: c.phone || '', inputmode: 'numeric', placeholder: '10-digit mobile number' });
+    App.digitsOnly(phone, 10);
     const city = App.input({ value: c.city || '', maxlength: 60 });
     const pin = App.input({ value: c.pincode || '', maxlength: 10, inputmode: 'numeric' });
+    App.autoCity(pin, city);
     const address = App.input({ value: c.address || '', maxlength: 255 });
     const notes = App.input({ value: c.notes || '', maxlength: 255 });
     const opening = App.input({ class: 'input mono', inputmode: 'decimal', value: c.opening_paise ? App.fromPaise(c.opening_paise) : '', placeholder: '0' });
@@ -935,6 +963,7 @@
         { label: 'Save', kind: 'primary', onClick: async (close, btn) => {
           err.textContent = '';
           const op = App.toPaise(opening.value);
+          if (!/^\d{10}$/.test(phone.value.trim())) { err.textContent = 'Enter the 10-digit mobile number.'; return; }
           if (op === null) { err.textContent = 'Opening balance is not a valid amount.'; return; }
           btn.disabled = true;
           try {
@@ -976,6 +1005,7 @@
     ['#/dashboard', 'Dashboard', 'dashboard'], ['#/orders', 'Orders', 'orders'], ['#/payments', 'Payments', 'payments'],
     ['#/customers', 'Customers', 'customers'], ['#/shipments', 'Shipments', 'shipments'],
     ['#/reports', 'Reports', 'reports'], ['#/salesmen', 'Salesmen', 'salesmen'], ['#/commission', 'Commission', 'commission'],
+    ['#/cashbook', 'Cash book', 'cashbook'], ['#/itemtypes', 'Item types', 'itemtypes'],
   ];
 
   /* The address looks like  index.html#/orders?status=cancelled  so Back, refresh and bookmarks work. */
@@ -1089,14 +1119,67 @@
     return 'Due ' + App.fmtDate(due, false);
   }
 
-  App.view('dashboard', { nav: 'dashboard', title: 'Dashboard' }, async (page) => {
-    const d = await App.api('api/dashboard.php');
-    const k = d.kpis;
+  /** First and last day of the month `offset` months away from `today` (0 = this month). */
+  function dashMonthRange(today, offset) {
+    const [y, m] = today.split('-').map(Number);
+    const first = new Date(Date.UTC(y, m - 1 + offset, 1));
+    const last = new Date(Date.UTC(y, m + offset, 0));
+    const f = (dt) => dt.getUTCFullYear() + '-' + String(dt.getUTCMonth() + 1).padStart(2, '0') + '-' + String(dt.getUTCDate()).padStart(2, '0');
+    return [f(first), f(last)];
+  }
 
-    const strip = el('div', { class: 'kpi-strip' },
-      kpi('Billed this month', inr(k.billed_month), App.plural(k.orders_month, 'order')),
-      kpi('Collected this month', inr(k.collected_month), 'after refunds'),
-      kpi('Outstanding', inr(k.outstanding), App.plural(k.owing_customers, 'customer') + ' owe you'),
+  App.view('dashboard', { nav: 'dashboard', title: 'Dashboard' }, async (page) => {
+    const p = App.getParams();
+    const [mFrom, mTo] = dashMonthRange(App.today, 0);
+    // Nothing chosen yet = this month.
+    const state = { from: p.get('from') || mFrom, to: p.get('to') || App.today };
+
+    const from = App.input({ type: 'date', value: state.from });
+    const to = App.input({ type: 'date', value: state.to });
+    const strip = el('div', { class: 'kpi-strip' });
+    const lanes = el('div', { class: 'lanes' });
+    const chart = el('section', { class: 'card chart-card' });
+    const sub = el('p', { class: 'page-sub' });
+
+    const presets = [
+      ['Today', () => [App.today, App.today]],
+      ['This month', () => dashMonthRange(App.today, 0)],
+      ['Last month', () => dashMonthRange(App.today, -1)],
+      ['Last 7 days', () => [App.addDays(App.today, -6), App.today]],
+      ['This year', () => [App.today.slice(0, 4) + '-01-01', App.today]],
+    ];
+
+    const bar = el('div', { class: 'toolbar' },
+      el('div', { class: 'filters' }, presets.map(([label, fn]) => el('button', { type: 'button', class: 'filter-chip', text: label, onclick: () => {
+        const [a, b] = fn(); from.value = a; to.value = b; apply();
+      } }))),
+      App.field('From', from), App.field('To', to));
+
+    const apply = () => { if (from.value && to.value) { state.from = from.value; state.to = to.value; load(); } };
+    from.addEventListener('change', apply);
+    to.addEventListener('change', apply);
+
+    let seq = 0;
+    async function load() {
+      App.setParams(state);
+      const mine = ++seq;
+      let d;
+      try { d = await App.api('api/dashboard.php', { params: state }); } catch (e) { App.mount(lanes, el('p', { class: 'alert alert-error', text: e.message })); return; }
+      if (mine !== seq) return;
+      paint(d);
+    }
+
+    function paint(d) {
+    const k = d.kpis;
+    const periodText = state.from === state.to
+      ? App.fmtDate(state.from)
+      : App.fmtDate(state.from) + ' to ' + App.fmtDate(state.to);
+    sub.textContent = 'Today ' + App.fmtDate(d.today) + ' · showing ' + periodText;
+
+    App.mount(strip,
+      kpi('Billed in this period', inr(k.billed_month), App.plural(k.orders_month, 'order')),
+      kpi('Collected in this period', inr(k.collected_month), 'after refunds'),
+      kpi('Outstanding', inr(k.outstanding), App.plural(k.owing_customers, 'customer') + ' owe you · all time'),
       kpi('Billed today', inr(k.billed_today), App.plural(k.orders_today, 'order')));
 
     const unpaid = d.unpaid.map((o) => el('a', { class: 'item', href: '#/order?id=' + o.id },
@@ -1119,29 +1202,45 @@
         el('span', { class: 'item-meta', text: (App.LABELS.purpose[p.purpose] || p.purpose) + ' · ' + p.account_name + ' · ' + App.fmtDate(p.received_on, false) })),
       el('span', { class: 'item-amount mono ' + (p.type === 'refund' ? 'owe' : 'item-in'), text: (p.type === 'refund' ? '-' : '+') + inr(p.amount_paise) })));
 
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const max = Math.max(1, ...d.days.map((x) => x.amount_paise));
-    const bars = el('div', { class: 'bars bars-tall' }, d.days.map((x) => {
+    // Long ranges get one bar per month; the labels and the amount above each bar are dropped when there are many bars.
+    const tight = d.days.length > 14;
+    const bars = el('div', { class: 'bars bars-tall' + (tight ? ' bars-tight' : '') }, d.days.map((x, i) => {
       const bar = el('div', { class: 'bar' });
       bar.style.height = Math.max(2, Math.round((x.amount_paise / max) * 130)) + 'px';
       const dt = new Date(x.date + 'T00:00:00');
+      // Many days: only the day number, with the month added on the 1st and on the first bar.
+      const tightDay = (i === 0 || dt.getDate() === 1) ? dt.getDate() + ' ' + MONTHS[dt.getMonth()] : String(dt.getDate());
+      const label = d.by_month
+        ? MONTHS[dt.getMonth()] + (d.days.length > 12 ? " '" + String(dt.getFullYear()).slice(2) : '')
+        : (tight ? tightDay : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dt.getDay()] + ' ' + dt.getDate());
+      bar.title = (d.by_month ? MONTHS[dt.getMonth()] + ' ' + dt.getFullYear() : App.fmtDate(x.date)) + ' · ' + inr(x.amount_paise);
       return el('div', { class: 'bar-col' },
-        el('span', { class: 'bar-label', text: x.amount_paise ? inr(x.amount_paise) : '' }),
+        tight ? null : el('span', { class: 'bar-label', text: x.amount_paise ? inr(x.amount_paise) : '' }),
         bar,
-        el('span', { class: 'bar-day', text: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dt.getDay()] + ' ' + dt.getDate() }));
+        el('span', { class: 'bar-day', text: label }));
     }));
+
+    App.mount(lanes,
+      lane('Awaiting payment', d.unpaid_count, 'warn', unpaid, 'Nothing is waiting for payment.', '#/orders?pay=unpaid', 'View unpaid orders'),
+      lane('Needs tracking ID', d.no_track_count, 'warn', noTrack, 'Every shipment has a tracking ID.', '#/shipments?needs_tracking=1', 'Open shipments'),
+      lane('Payments in this period', null, 'ok', pays, 'No payments in this period.', '#/payments?from=' + state.from + '&to=' + state.to, 'All payments'));
+
+    App.mount(chart,
+      el('h2', { text: d.by_month ? 'Billed per month' : 'Billed per day' }),
+      d.overdue_count ? el('p', { class: 'muted', text: App.plural(d.overdue_count, 'order') + ' past the due date.' }) : null,
+      bars);
+    }
 
     App.mount(page,
       el('div', { class: 'page-head' },
-        el('div', null, el('h1', { text: 'Dashboard' }), el('p', { class: 'page-sub', text: App.fmtDate(d.today) }))),
+        el('div', null, el('h1', { text: 'Dashboard' }), sub)),
+      el('section', { class: 'card' }, bar),
       strip,
-      el('div', { class: 'lanes' },
-        lane('Awaiting payment', d.unpaid_count, 'warn', unpaid, 'Nothing is waiting for payment.', '#/orders?pay=unpaid', 'View unpaid orders'),
-        lane('Needs tracking ID', d.no_track_count, 'warn', noTrack, 'Every shipment has a tracking ID.', '#/shipments?needs_tracking=1', 'Open shipments'),
-        lane('Latest payments', null, 'ok', pays, 'No payments recorded yet.', '#/payments', 'All payments')),
-      el('section', { class: 'card chart-card' },
-        el('h2', { text: 'Billed in the last 7 days' }),
-        d.overdue_count ? el('p', { class: 'muted', text: App.plural(d.overdue_count, 'order') + ' past the due date.' }) : null,
-        bars));
+      lanes,
+      chart);
+    await load();
   });
 }());
 
@@ -1260,6 +1359,9 @@
   async function showForm(page, order) {
     const editing = !!order;
     await loadProducts();
+    // Item types (white box, OG box, tester, gift set) with their fixed prices from the Item types page.
+    let itemTypes = { types: [] };
+    try { itemTypes = await App.api('api/item_types.php'); } catch (e) { /* page still works without types */ }
     const accounts = (await App.accounts()).filter((a) => a.is_active);
     let salesNames = [];
     try { salesNames = await App.api('api/orders.php', { params: { names: 1 } }); } catch (e) { salesNames = []; }
@@ -1277,10 +1379,12 @@
     /* customer */
     const custBox = el('section', { class: 'card' });
     const newName = App.input({ placeholder: 'Customer name', maxlength: 120 });
-    const newPhone = App.input({ placeholder: '10-digit mobile number', inputmode: 'tel', maxlength: 20 });
+    const newPhone = App.input({ placeholder: '10-digit mobile number', inputmode: 'numeric' });
+    App.digitsOnly(newPhone, 10);
     const address = App.input({ placeholder: 'House, street, area', maxlength: 255, value: editing ? order.ship_address : '' });
     const city = App.input({ placeholder: 'City', maxlength: 60, value: editing ? order.ship_city : '' });
     const pin = App.input({ placeholder: 'Pincode', maxlength: 10, inputmode: 'numeric', value: editing ? order.ship_pincode : '' });
+    App.autoCity(pin, city);
 
     if (customer && !editing) { address.value = customer.address || ''; city.value = customer.city || ''; pin.value = customer.pincode || ''; }
 
@@ -1311,20 +1415,24 @@
     /* items */
     const itemsBody = el('tbody');
     const itemRows = [];
+    const itemsTable = el('table', { class: 'items-tbl' },
+      el('thead', null, el('tr', null, ['Item', 'Type', 'Qty', 'Purchase (₹)', 'Selling (₹)', 'Amount', 'Profit', ''].map((h) => el('th', { class: h === 'Type' ? 'col-type' : '', text: h })))),
+      itemsBody);
+    // The Type column exists only for perfumes (catalog category "Perfume"). Hidden when no line needs it.
+    const paintTypeCol = () => itemsTable.classList.toggle('no-types', !itemRows.some((r) => r.perfume));
+    const isPerfume = (it) => it.src === 'catalog' && /perfume/i.test(it.category || '');
     const subtotalOut = el('span', { class: 'mono' });
     const totalOut = el('span', { class: 'mono' });
-    const profitBox = el('section', { class: 'card' });
     const discount = App.moneyInput(editing ? order.discount_paise : 0, { 'aria-label': 'Order discount' });
     const shipping = App.moneyInput(editing ? order.shipping_paise : 0, { 'aria-label': 'Shipping charge' });
     const payAmount = App.moneyInput(0, { 'aria-label': 'Payment amount' });
-    let payTouched = false;
 
     function lineAmount(r) {
       const qty = parseInt(r.qty.value, 10);
+      if (r.rate.value.trim() === '') return null;
       const rate = App.toPaise(r.rate.value);
-      const disc = App.toPaise(r.disc.value);
-      if (!(qty >= 1) || rate === null || rate < 0 || disc === null || disc < 0) return null;
-      return Math.max(0, qty * rate - disc);
+      if (!(qty >= 1) || rate === null || rate < 0) return null;
+      return qty * rate;
     }
 
     /** Purchase price of one line in paise; null when the box is empty or not a number. */
@@ -1336,10 +1444,6 @@
 
     function recalc() {
       let sub = 0;
-      let costSum = 0;
-      let soldSum = 0;
-      let lines = 0;
-      let complete = true;
       itemRows.forEach((r) => {
         const a = lineAmount(r);
         r.amt.textContent = a === null ? '' : inr(a);
@@ -1349,37 +1453,17 @@
         const qty = parseInt(r.qty.value, 10);
         App.clear(r.profit);
         if (c !== null && a !== null && qty >= 1) r.profit.appendChild(App.profitCell(a - qty * c, a > 0 ? Math.round(((a - qty * c) / a) * 1000) / 10 : null));
-        if (r.name.value.trim() !== '' || r.rate.value.trim() !== '') {
-          lines++;
-          if (c === null || a === null) complete = false; else { costSum += qty * c; soldSum += a; }
-        }
       });
       const disc = App.toPaise(discount.value) || 0;
       const ship = App.toPaise(shipping.value) || 0;
       const total = sub - disc + ship;
       subtotalOut.textContent = inr(sub);
       totalOut.textContent = inr(total);
-      paintProfit(lines > 0 && complete, costSum, soldSum - disc, lines);
-      if (!editing && plan.get() === 'prepaid' && !payTouched) payAmount.value = total > 0 ? App.fromPaise(total) : '';
-      if (!editing && plan.get() === 'advance') {
+      if (!editing) {
         const paid = App.toPaise(payAmount.value) || 0;
         leftOut.textContent = total > 0 ? 'Order total ' + inr(total) + ' · paid now ' + inr(paid) + ' · left to pay ' + inr(Math.max(total - paid, 0)) : '';
       }
       return { sub, disc, ship, total };
-    }
-
-    /** Internal profit card: never shown to the customer or printed on the invoice. */
-    function paintProfit(ok, cost, base, lines) {
-      const pr = base - cost;
-      App.mount(profitBox,
-        el('h2', { text: 'Profit' }),
-        ok
-          ? el('div', { class: 'profit-rows' },
-            el('div', { class: 'sum-row' }, el('span', { text: 'Sold for (after discount)' }), el('span', { class: 'mono', text: inr(base) })),
-            el('div', { class: 'sum-row' }, el('span', { text: 'Purchase cost' }), el('span', { class: 'mono', text: inr(cost) })),
-            el('div', { class: 'sum-row sum-total' }, el('span', { text: 'Profit' }), App.profitCell(pr, base > 0 ? Math.round((pr / base) * 1000) / 10 : null)))
-          : el('p', { class: 'muted small', text: lines ? 'Type the purchase price on every item to see the profit.' : 'Add items to see the profit.' }),
-        el('p', { class: 'muted small', text: 'Only you see this. Shipping is not counted. Profit % is profit divided by the selling amount.' }));
     }
 
     function addRow(item) {
@@ -1400,39 +1484,74 @@
         r.tag.textContent = r.src === 'catalog' ? 'Catalog' : r.src === 'manual' ? 'Added manually' : '';
         r.tag.classList.toggle('cat', r.src === 'catalog');
       };
-      r.clearPick = () => { r.picked = false; r.image = ''; r.src = ''; r.product_id = null; r.paint(); };
+      // Perfume lines must have a type; the type decides the prices. Other products have no type and use their own price.
+      r.perfume = !!(item && item.item_type);
+      r.typeTd = el('td', { class: 'col-type', 'data-label': 'Type' });
+      r.setPerfume = (on) => {
+        r.perfume = on;
+        r.typeTd.classList.toggle('type-off', !on);
+        if (!on) r.type.value = '';
+        paintTypeCol();
+      };
+      r.clearPick = () => { r.picked = false; r.image = ''; r.src = ''; r.product_id = null; r.paint(); r.setPerfume(false); };
+      // Type decides the prices: pick a type and its purchase and selling price are filled in (you can still change them).
+      const typeOpts = [['', 'Type']].concat(itemTypes.types.map((t) => [t.name, t.name]));
+      // An older order may carry a type that was renamed or deleted since: keep it selectable.
+      if (item && item.item_type && !itemTypes.types.some((t) => t.name === item.item_type)) typeOpts.push([item.item_type, item.item_type]);
+      r.type = App.select(typeOpts, item ? (item.item_type || '') : '', { 'aria-label': 'Item type' });
+      r.typeTd.appendChild(r.type);
+      r.applyType = () => {
+        const t = itemTypes.types.find((x) => x.name === r.type.value);
+        if (!t) return;
+        if (t.rate_paise > 0) r.rate.value = App.fromPaise(t.rate_paise);
+        if (t.cost_paise > 0) r.cost.value = App.fromPaise(t.cost_paise);
+      };
       r.apply = (it, src) => {
         r.name.value = it.name;
-        if (it.price_paise > 0 && !r.rate.value.trim()) r.rate.value = App.fromPaise(it.price_paise);
-        if (it.cost_paise > 0 && !r.cost.value.trim()) r.cost.value = App.fromPaise(it.cost_paise);
+        r.setPerfume(isPerfume(it));
+        if (r.perfume) {
+          // No amount until the type is chosen: the type sets both prices. One piece per line.
+          r.rate.value = ''; r.cost.value = ''; r.type.value = ''; r.qty.value = '1';
+        } else {
+          r.qty.value = '1';
+          r.rate.value = it.price_paise > 0 ? App.fromPaise(it.price_paise) : '';
+          r.cost.value = it.cost_paise > 0 ? App.fromPaise(it.cost_paise) : '';
+          // Catalog product whose buying price did not come with the search: fetch it from the catalog.
+          if (src === 'catalog' && !r.cost.value.trim() && it.catalog_id) {
+            const want = it.name;
+            App.catalogCost(it.catalog_id).then((c) => { if (c > 0 && r.name.value === want && !r.cost.value.trim()) { r.cost.value = App.fromPaise(c); recalc(); } });
+          }
+        }
         r.product_id = it.id || null;
         r.image = it.image || '';
         r.src = src;
         r.picked = true;
         r.paint();
         recalc();
-        r.qty.focus();
-        r.qty.select();
+        if (r.perfume) r.type.focus();
       };
       r.qty = App.input({ inputmode: 'numeric', value: item ? String(item.qty) : '1', 'aria-label': 'Quantity' });
       // Purchase price: empty means "not entered", 0 means it cost nothing.
       r.cost = App.moneyInput(item && item.cost_paise ? item.cost_paise : 0, { placeholder: 'Purchase', 'aria-label': 'Purchase price' });
       if (item && item.cost_paise === 0) r.cost.value = '0';
       r.rate = App.moneyInput(item ? item.rate_paise : 0, { placeholder: 'Selling', 'aria-label': 'Selling price' });
-      r.disc = App.moneyInput(item ? item.discount_paise : 0, { placeholder: '0', 'aria-label': 'Item discount' });
+      // Quantity and both prices are never typed here: 1 piece per line, prices come from the catalog
+      // (buying and selling price on the product) or, for perfumes, from the Item types page.
+      [r.qty, r.cost, r.rate].forEach((n) => { n.readOnly = true; n.tabIndex = -1; n.classList.add('input-static'); });
+      r.setPerfume(r.perfume);
       r.amt = el('td', { class: 'col-amt', 'data-label': 'Amount' });
       r.profit = el('td', { class: 'col-profit', 'data-label': 'Profit' });
       r.tr = el('tr', null,
         el('td', { class: 'col-name' }, el('div', { class: 'item-name' }, r.thumb, el('div', { class: 'item-main' }, r.name, r.tag))),
+        r.typeTd,
         el('td', { class: 'col-qty', 'data-label': 'Qty' }, r.qty),
         el('td', { class: 'col-cost', 'data-label': 'Purchase' }, r.cost),
         el('td', { class: 'col-rate', 'data-label': 'Selling' }, r.rate),
-        el('td', { class: 'col-disc', 'data-label': 'Discount' }, r.disc),
         r.amt,
         r.profit,
         el('td', { class: 'col-x' }, el('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Remove item', text: '×', onclick: () => {
-          if (itemRows.length === 1) { r.name.value = ''; r.cost.value = ''; r.rate.value = ''; r.disc.value = ''; r.qty.value = '1'; r.clearPick(); recalc(); return; }
-          itemRows.splice(itemRows.indexOf(r), 1); r.tr.remove(); recalc();
+          if (itemRows.length === 1) { r.name.value = ''; r.type.value = ''; r.cost.value = ''; r.rate.value = ''; r.qty.value = '1'; r.clearPick(); recalc(); return; }
+          itemRows.splice(itemRows.indexOf(r), 1); r.tr.remove(); paintTypeCol(); recalc();
         } })));
       r.name.addEventListener('input', () => { if (r.picked) r.clearPick(); });
       r.name.addEventListener('change', () => {
@@ -1441,29 +1560,30 @@
         if (hit) { r.product_id = hit.id; if (!r.rate.value) r.rate.value = App.fromPaise(hit.rate_paise); if (!r.cost.value.trim() && hit.cost_paise > 0) r.cost.value = App.fromPaise(hit.cost_paise); if (!r.image && hit.image) { r.image = hit.image; r.src = 'manual'; r.paint(); } } else { r.product_id = null; }
         recalc();
       });
+      r.type.addEventListener('change', () => { if (r.type.value) r.applyType(); else { r.rate.value = ''; r.cost.value = ''; } recalc(); });
       r.thumb.addEventListener('click', async () => {
         r.thumb.disabled = true;
         try { const u = await App.pickPhoto(); if (u) { r.image = u; r.src = 'manual'; r.paint(); } } catch (e) { App.toast(e.message, 'error'); }
         r.thumb.disabled = false;
       });
-      App.itemSuggest(r.name, {
-        onPick: (it) => r.apply(it, it.src === 'catalog' ? 'catalog' : 'manual'),
-        onManual: (q) => App.manualItemModal({ name: q, onDone: (p) => { if (!products.some((x) => x.id === p.id)) products.push({ id: p.id, name: p.name, rate_paise: p.rate_paise, cost_paise: p.cost_paise || 0, image: p.image }); r.apply({ id: p.id, name: p.name, price_paise: p.rate_paise, cost_paise: p.cost_paise || 0, image: p.image }, 'manual'); } }),
-      });
+      App.itemSuggest(r.name, { onPick: (it) => r.apply(it, it.src === 'catalog' ? 'catalog' : 'manual') });
       r.paint();
-      [r.qty, r.cost, r.rate, r.disc].forEach((n) => n.addEventListener('input', recalc));
+      [r.qty, r.cost, r.rate].forEach((n) => n.addEventListener('input', recalc));
       itemRows.push(r);
       itemsBody.appendChild(r.tr);
+      paintTypeCol();
       return r;
     }
 
     if (editing) order.items.forEach(addRow); else addRow();
     discount.addEventListener('input', recalc);
     shipping.addEventListener('input', recalc);
-    payAmount.addEventListener('input', () => { payTouched = true; paintLeft(); });
+    payAmount.addEventListener('input', recalc);
 
     /* order details */
-    const orderDate = App.input({ type: 'date', value: editing ? order.order_date : App.today });
+    // Order date is fixed: today for a new order, the saved date when editing. Nobody can change it.
+    const orderDateVal = editing ? order.order_date : App.today;
+    const orderDate = el('div', { class: 'input input-static', text: App.fmtDate(orderDateVal) });
     // Salesman dropdown. "+ Add new salesman" saves a name to the list without leaving the order.
     const NEW_SALESMAN = '__new__';
     if (editing && order.salesperson && !salesNames.includes(order.salesperson)) salesNames.push(order.salesperson);
@@ -1494,40 +1614,29 @@
     });
     const notes = el('textarea', { class: 'input', maxlength: 500, placeholder: 'Notes (optional)' });
     if (editing) notes.value = order.notes || '';
-    // Payment type: UPI (paid in full), COD, or Partial paid (any amount now, the rest later). An older "on credit" order keeps its own type.
-    const planOptions = [['prepaid', 'UPI'], ['cod', 'COD'], ['advance', 'Partial paid']];
-    if (editing && !planOptions.some((x) => x[0] === order.pay_plan)) planOptions.push([order.pay_plan, App.LABELS.plan[order.pay_plan] || order.pay_plan]);
-    const plan = App.segmented(planOptions, editing ? order.pay_plan : 'prepaid', () => { payTouched = false; if (plan.get() === 'advance') payAmount.value = ''; paintPay(); recalc(); }, 'Payment type');
-
-    /* payment taken with a new order */
-    const payBox = el('section', { class: 'card' });
+    /* payment taken with a new order. The payment type is worked out from the amount:
+       full amount = UPI (prepaid), part of it = Partial paid, nothing = COD. */
     const account = App.input({ list: 'account-list', placeholder: 'Type the account name', maxlength: 60, autocomplete: 'off', value: App.store.get('account_name') || '' });
     const payDate = App.input({ type: 'date', value: App.today });
     const leftOut = el('p', { class: 'muted small' });
-    function paintLeft() { recalc(); }
-    function paintPay() {
-      const pl = plan.get();
-      payBox.hidden = editing || !(pl === 'prepaid' || pl === 'advance');
-      App.mount(payBox,
-        el('h2', { text: pl === 'prepaid' ? 'Payment received' : 'Partial payment received' }),
-        el('div', { class: 'form-grid' },
-          App.field(pl === 'prepaid' ? 'Amount (₹)' : 'Amount paid now (₹)', payAmount), App.field('Date', payDate),
-          el('div', { class: 'span-2' }, App.field('Received in account', account), App.datalist('account-list', accounts.map((a) => a.name)))),
-        pl === 'advance' ? leftOut : el('p', { class: 'muted small', text: 'Leave the amount empty if the money has not arrived yet. You can record it later from the order.' }));
-      paintLeft();
-    }
+    const fullBtn = el('button', { type: 'button', class: 'btn btn-small', text: 'Full amount', onclick: () => { const t = recalc().total; payAmount.value = t > 0 ? App.fromPaise(t) : ''; recalc(); } });
+    const payBox = el('section', { class: 'card' },
+      el('h2', { text: 'Payment received' }),
+      el('div', { class: 'form-grid' },
+        App.field('Amount (₹)', payAmount), App.field('Date', payDate),
+        el('div', { class: 'span-2' }, App.field('Received in account', account), App.datalist('account-list', accounts.map((a) => a.name)))),
+      el('div', { class: 'row-gap' }, fullBtn, el('span', { class: 'muted small', text: 'Leave empty for COD. Part of the total is saved as partial paid.' })),
+      leftOut);
+    payBox.hidden = editing;
 
     /* first shipment */
     const courier = App.input({ list: 'courier-list', placeholder: 'Courier', maxlength: 40, value: '' });
     const tracking = App.input({ class: 'input mono', placeholder: 'Tracking ID (add later if you do not have it)', maxlength: 60 });
     const shipStatus = App.select(Object.keys(App.LABELS.ship).map((k) => [k, App.LABELS.ship[k]]), 'pending');
-    const parcel = App.parcelFields();
     const shipBox = el('section', { class: 'card' },
       el('h2', { text: 'Shipment' }), App.datalist('courier-list', App.COURIERS),
       el('div', { class: 'form-grid form-grid-3' }, App.field('Courier', courier), App.field('Tracking ID', tracking), App.field('Status', shipStatus)));
-    const parcelBox = el('section', { class: 'card' }, el('h2', { text: 'Parcel size and weight' }), parcel.el);
     shipBox.hidden = editing;
-    parcelBox.hidden = editing;
 
     const saveBtn = el('button', { type: 'button', class: 'btn btn-primary', text: editing ? 'Save changes' : 'Create order' });
     const cancelLink = el('a', { class: 'btn', href: editing ? '#/order?id=' + order.id : '#/orders', text: 'Cancel' });
@@ -1541,15 +1650,15 @@
         const name = r.name.value.trim();
         if (name === '' && r.rate.value.trim() === '') continue;
         if (name === '') return fail('Enter a name for every item.');
+        if (r.perfume && !r.type.value) return fail('Choose the type (white box, OG box ...) for "' + name + '".');
+        if (r.rate.value.trim() === '') return fail('Enter the selling price for "' + name + '".');
         const qty = parseInt(r.qty.value, 10);
         const rate = App.toPaise(r.rate.value);
-        const disc = App.toPaise(r.disc.value);
         const costP = r.cost.value.trim() === '' ? null : App.toPaise(r.cost.value);
         if (!(qty >= 1) || String(qty) !== r.qty.value.trim()) return fail('Quantity for "' + name + '" must be a whole number, 1 or more.');
         if (rate === null || rate < 0) return fail('Selling price for "' + name + '" is not a valid amount.');
         if (r.cost.value.trim() !== '' && (costP === null || costP < 0)) return fail('Purchase price for "' + name + '" is not a valid amount.');
-        if (disc === null || disc < 0) return fail('Discount for "' + name + '" is not a valid amount.');
-        items.push({ product_id: r.product_id, name, qty, rate_paise: rate, cost_paise: costP, discount_paise: disc, image: r.image || '' });
+        items.push({ product_id: r.product_id, name, qty, rate_paise: rate, cost_paise: costP, discount_paise: 0, image: r.image || '', item_type: r.type.value });
       }
       if (!items.length) return fail('Add at least one item.');
       const discP = App.toPaise(discount.value);
@@ -1560,22 +1669,25 @@
       const cust = customer
         ? { id: customer.id, address: address.value, city: city.value, pincode: pin.value }
         : { name: newName.value, phone: newPhone.value, address: address.value, city: city.value, pincode: pin.value };
-      if (!customer && (!newName.value.trim() || !newPhone.value.trim())) return fail('Choose a customer, or enter the name and phone of a new one.');
+      if (!customer && !newName.value.trim()) return fail('Enter the customer name.');
+      if (!customer && !/^\d{10}$/.test(newPhone.value.trim())) return fail('Enter the 10-digit mobile number.');
+      if (!address.value.trim()) return fail('Enter the delivery address.');
+      if (!city.value.trim()) return fail('Enter the city.');
+      if (!pin.value.trim()) return fail('Enter the pincode.');
+      if (salesperson.value === '' || salesperson.value === NEW_SALESMAN) return fail('Select the salesman.');
 
+      const total = recalc().total;
+      const amt = editing ? null : App.toPaise(payAmount.value);
+      if (!editing && amt === null) return fail('Payment amount is not valid.');
+      if (!editing && amt > total) return fail('The payment is more than the order total.');
+      const payPlan = editing ? order.pay_plan : (amt > 0 ? (amt >= total ? 'prepaid' : 'advance') : 'cod');
       const body = {
         action: 'save', id: editing ? order.id : null, customer: cust, items, discount_paise: discP, shipping_paise: shipP,
-        order_date: orderDate.value, due_date: editing ? (order.due_date || null) : null, pay_plan: plan.get(), source: editing ? (order.source || 'WhatsApp') : 'WhatsApp', salesperson: salesperson.value === NEW_SALESMAN ? '' : salesperson.value, notes: notes.value,
+        order_date: orderDateVal, due_date: editing ? (order.due_date || null) : null, pay_plan: payPlan, source: editing ? (order.source || 'WhatsApp') : 'WhatsApp', salesperson: salesperson.value === NEW_SALESMAN ? '' : salesperson.value, notes: notes.value,
       };
       if (!editing) {
-        body.shipment = Object.assign({ courier: courier.value, tracking_id: tracking.value, status: shipStatus.value }, parcel.values());
-        const pl = plan.get();
-        const amt = App.toPaise(payAmount.value);
-        if ((pl === 'prepaid' || pl === 'advance') && amt === null) return fail('Payment amount is not valid.');
-        if (pl === 'advance') {
-          if (!(amt > 0)) return fail('Partial paid: type the amount received so far.');
-          if (amt >= recalc().total) return fail('That is the full amount. Choose UPI for a fully paid order.');
-        }
-        if ((pl === 'prepaid' || pl === 'advance') && amt > 0) {
+        body.shipment = { courier: courier.value, tracking_id: tracking.value, status: shipStatus.value };
+        if (amt > 0) {
           if (!account.value.trim()) return fail('Type the account that received the money.');
           body.payment = { amount_paise: amt, account_name: account.value.trim(), received_on: payDate.value };
         }
@@ -1593,7 +1705,6 @@
     });
 
     paintCustomer();
-    paintPay();
     recalc();
 
     App.mount(page,
@@ -1606,26 +1717,21 @@
           custBox,
           el('section', { class: 'card' },
             el('h2', { text: 'Items' }),
-            el('div', { class: 'table-wrap' }, el('table', { class: 'items-tbl' },
-              el('thead', null, el('tr', null, ['Item', 'Qty', 'Purchase (₹)', 'Selling (₹)', 'Discount (₹)', 'Amount', 'Profit', ''].map((h) => el('th', { text: h })))),
-              itemsBody)),
+            el('div', { class: 'table-wrap' }, itemsTable),
             el('div', null, el('button', { type: 'button', class: 'btn btn-small', text: 'Add item', onclick: () => { const r = addRow(); r.name.focus(); } }))),
           el('section', { class: 'card' }, el('h2', { text: 'Notes' }), notes),
-          parcelBox,
           shipBox),
         el('div', { class: 'order-side' },
           el('section', { class: 'card' },
             el('h2', { text: 'Order details' }),
             App.field('Order date', orderDate),
-            App.field('Salesman', salesperson),
-            el('div', { class: 'field' }, el('span', { class: 'field-label', text: 'Payment type' }), plan.el)),
+            App.field('Salesman', salesperson)),
           el('section', { class: 'card' },
             el('h2', { text: 'Summary' }),
             el('div', { class: 'sum-row' }, el('span', { text: 'Items total' }), subtotalOut),
             el('div', { class: 'sum-row' }, el('span', { text: 'Discount (₹)' }), discount),
             el('div', { class: 'sum-row' }, el('span', { text: 'Shipping (₹)' }), shipping),
             el('div', { class: 'sum-row sum-total' }, el('span', { text: 'Total' }), totalOut)),
-          profitBox,
           payBox)));
     if (!customer) { /* picker already focused by user click */ }
   }
@@ -1644,7 +1750,7 @@
     let upi = '';
     try { upi = (await App.api('api/settings.php')).profile.upi_id || ''; } catch (e) { /* optional */ }
 
-    const lines = o.items.map((i) => '• ' + i.name + ' x ' + i.qty + ' = ' + inr(i.amount_paise)).join('\n');
+    const lines = o.items.map((i) => '• ' + App.itemLabel(i) + ' x ' + i.qty + ' = ' + inr(i.amount_paise)).join('\n');
     let msg = 'Hi ' + o.customer.name + ',\nYour order ' + o.order_no + ' is confirmed.\n\n' + lines + '\n';
     if (o.shipping_paise) msg += 'Shipping: ' + inr(o.shipping_paise) + '\n';
     if (o.discount_paise) msg += 'Discount: -' + inr(o.discount_paise) + '\n';
@@ -1675,11 +1781,10 @@
     }
 
     const itemsTable = App.table([
-      { label: 'Item', render: (i) => el('span', { class: 'item-cell' }, App.thumb(i.name, i.image, 'thumb-sm'), el('span', { text: i.name })) },
+      { label: 'Item', render: (i) => el('span', { class: 'item-cell' }, App.thumb(i.name, i.image, 'thumb-sm'), el('span', null, i.name, i.item_type_name ? el('span', { class: 'chip chip-muted type-chip', text: i.item_type_name }) : null)) },
       { label: 'Qty', class: 'right', render: (i) => String(i.qty) },
       { label: 'Purchase', class: 'right mono', render: (i) => (i.cost_paise === null ? el('span', { class: 'muted', text: '–' }) : inr(i.cost_paise)) },
       { label: 'Selling', class: 'right mono', render: (i) => inr(i.rate_paise) },
-      { label: 'Discount', class: 'right mono', render: (i) => (i.discount_paise ? '-' + inr(i.discount_paise) : '') },
       { label: 'Amount', class: 'right mono', render: (i) => inr(i.amount_paise) },
       { label: 'Profit', class: 'right', render: (i) => {
         if (i.cost_paise === null) return App.profitCell(null);
@@ -1785,14 +1890,14 @@
   App.view('payments', { nav: 'payments', title: 'Payments' }, async (page) => {
     const p = App.getParams();
     const state = {
-      q: p.get('q') || '', method: p.get('method') || '', type: p.get('type') || '',
+      q: p.get('q') || '', method: ['upi', 'partial'].includes(p.get('method')) ? p.get('method') : '', type: ['received', 'refund'].includes(p.get('type')) ? p.get('type') : '',
       from: p.get('from') || '', to: p.get('to') || '', include_void: p.get('include_void') || '',
       page: parseInt(p.get('page') || '1', 10) || 1, per: 25, total: 0,
     };
 
     const q = App.input({ type: 'search', value: state.q, placeholder: 'Customer, phone, order no or UTR' });
-    const method = App.select([['', 'Any'], ['upi', 'UPI'], ['cod', 'COD'], ['partial', 'Partial paid']], state.method);
-    const type = App.select([['', 'Any'], ['received', 'Received'], ['refund', 'Refunds']], state.type);
+    const method = App.select([['', 'Any'], ['upi', 'UPI'], ['partial', 'Partial paid']], state.method);
+    const type = App.select([['', 'Both'], ['received', 'Received'], ['refund', 'Refunds']], state.type);
     const from = App.input({ type: 'date', value: state.from });
     const to = App.input({ type: 'date', value: state.to });
     const voided = el('input', { type: 'checkbox', checked: state.include_void === '1' });
@@ -1815,8 +1920,10 @@
       state.total = d.total;
       state.page = d.page;
 
+      // One box per account, then a Total box with all accounts added up (same filters).
       App.mount(accountStrip, d.by_account.length
         ? d.by_account.map((a) => el('div', { class: 'kpi' }, el('span', { class: 'kpi-label', text: a.name }), el('span', { class: 'kpi-value', text: inr(a.net_paise) }), el('span', { class: 'kpi-sub', text: 'received in this account' })))
+            .concat([el('div', { class: 'kpi kpi-total' }, el('span', { class: 'kpi-label', text: 'Total' }), el('span', { class: 'kpi-value credit', text: inr(d.by_account.reduce((t, a) => t + a.net_paise, 0)) }), el('span', { class: 'kpi-sub', text: 'all accounts together' }))])
         : el('div', { class: 'kpi' }, el('span', { class: 'kpi-label', text: 'No payments in this view' })));
       App.mount(totals,
         el('span', null, 'Received ', el('strong', { text: inr(d.received_paise) })),
@@ -1858,7 +1965,7 @@
       el('section', { class: 'card' },
         el('div', { class: 'toolbar' },
           el('div', { class: 'field field-grow' }, el('span', { class: 'field-label', text: 'Search' }), q),
-          App.field('Method', method), App.field('Type', type), App.field('From', from), App.field('To', to)),
+          App.field('Payment type', method), App.field('Received / refund', type), App.field('From', from), App.field('To', to)),
         el('label', { class: 'check' }, voided, 'Show cancelled payments'),
         totals),
       out);
@@ -2317,22 +2424,58 @@
   const pctText = (n) => String(Number(n)) + '%';
 
   /** One table: a row per salesman plus a total row. */
+  /** Click on a salesman: his orders, profit, rate and commission for every day of the period. */
+  async function showDays(name, from, to) {
+    let d;
+    try { d = await App.api('api/commission.php', { params: { salesman: name, from, to } }); } catch (e) { App.toast(e.message, 'error'); return; }
+    const rules = d.rules;
+    const dayRows = d.days.map((x) => Object.assign({}, x, { _class: x.high ? 'day-high' : '' }));
+    const total = { date: 'Total', orders_n: d.orders_n, sales_paise: d.sales_paise, profit_paise: d.profit_paise, no_cost_n: d.no_cost_n, commission_paise: d.commission_paise, total: true, _class: 'total-row' };
+    const ordersLink = (x) => '#/orders?salesperson=' + encodeURIComponent(name) + '&from=' + x.date + '&to=' + x.date;
+    const body = el('div', { class: 'stack' },
+      el('p', { class: 'muted small', text: App.fmtDate(from) + ' to ' + App.fmtDate(to) + ' · ' + App.plural(d.days_high, 'day') + ' @ ' + pctText(rules.high_pct) + ', ' + App.plural(d.days_low, 'day') + ' @ ' + pctText(rules.low_pct) + ' · ' + rules.threshold + '+ orders in a day = ' + pctText(rules.high_pct) + ' of that day\'s profit' }),
+      App.table([
+        { label: 'Date', render: (x) => (x.total ? el('strong', { text: 'Total' }) : el('span', null, App.fmtDate(x.date),
+          x.no_cost_n > 0 ? el('span', { class: 'cell-sub owe', text: x.no_cost_n + ' order' + (x.no_cost_n === 1 ? '' : 's') + ' without purchase price' }) : null)) },
+        { label: 'Orders', class: 'right', render: (x) => (x.total ? el('strong', { text: String(x.orders_n) }) : el('a', { class: 'tbl-link', href: ordersLink(x), text: String(x.orders_n), title: 'Open these orders' })) },
+        { label: 'Sales', class: 'right mono', render: (x) => el('span', { class: 'muted', text: inr(x.sales_paise) }) },
+        { label: 'Profit', class: 'right mono', render: (x) => el('span', { class: x.profit_paise < 0 ? 'owe' : (x.total ? 'strong' : ''), text: inr(x.profit_paise) }) },
+        { label: 'Rate', class: 'right', render: (x) => (x.total ? '' : el('span', { class: 'small' }, App.chip(pctText(x.rate_pct), x.high ? 'ok' : 'muted'),
+          x.more_for_high > 0 ? el('span', { class: 'cell-sub', text: x.more_for_high + ' more for ' + pctText(rules.high_pct) }) : null)) },
+        { label: 'Commission', class: 'right mono', render: (x) => (x.total ? el('strong', { text: inr(x.commission_paise) }) : el('span', { class: x.commission_paise > 0 ? 'strong' : 'muted', text: inr(x.commission_paise) })) },
+      ], dayRows.length ? dayRows.concat([total]) : [], 'No orders for ' + name + ' in this period.'));
+    App.modal({ title: name + ' · day by day', wide: true, body, buttons: [{ label: 'Close', onClick: (close) => close() }] });
+  }
+
   function block(d, rules) {
     const rows = d.rows.map((r) => ({
-      salesman: r.salesman, orders_n: r.orders_n, sales_paise: r.sales_paise, rate_pct: r.rate_pct,
-      commission_paise: r.commission_paise, more: r.more_for_high,
+      salesman: r.salesman, orders_n: r.orders_n, sales_paise: r.sales_paise, profit_paise: r.profit_paise, no_cost: r.no_cost_n,
+      rate_pct: r.rate_pct, days_high: r.days_high, days_low: r.days_low, commission_paise: r.commission_paise, more: r.more_for_high,
     }));
-    const total = { salesman: 'Total', orders_n: d.orders_n, sales_paise: d.sales_paise, commission_paise: d.commission_paise, _class: 'total-row', total: true };
+    // One day: the rate that applied. Several days: how many days got each rate.
+    const rateText = (r) => {
+      if (d.single_day) return r.orders_n ? pctText(r.rate_pct) + ' of profit' : '';
+      const parts = [];
+      if (r.days_low) parts.push(r.days_low + (r.days_low === 1 ? ' day' : ' days') + ' @ ' + pctText(rules.low_pct));
+      if (r.days_high) parts.push(r.days_high + (r.days_high === 1 ? ' day' : ' days') + ' @ ' + pctText(rules.high_pct));
+      return parts.join(', ');
+    };
+    const total = { salesman: 'Total', orders_n: d.orders_n, sales_paise: d.sales_paise, profit_paise: d.profit_paise, no_cost: d.no_cost_n, commission_paise: d.commission_paise, _class: 'total-row', total: true };
+    const profitCell = (r) => el('span', { class: r.profit_paise < 0 ? 'owe' : (r.total ? 'strong' : ''), text: inr(r.profit_paise) });
     return el('div', { class: 'stack comm-tbl' },
       App.table([
-        { label: 'Salesman', render: (r) => (r.total ? el('strong', { text: r.salesman }) : el('span', null, r.salesman,
-          r.more > 0 && r.orders_n > 0 ? el('span', { class: 'cell-sub', text: r.more + ' more order' + (r.more === 1 ? '' : 's') + ' for ' + pctText(rules.high_pct) }) : null)) },
+        { label: 'Salesman', render: (r) => (r.total ? el('strong', { text: r.salesman }) : el('span', null,
+          el('a', { class: 'tbl-link', href: '#', text: r.salesman, title: 'Day by day', onclick: (e) => { e.preventDefault(); showDays(r.salesman, d.from, d.to); } }),
+          r.more > 0 && r.orders_n > 0 ? el('span', { class: 'cell-sub', text: r.more + ' more order' + (r.more === 1 ? '' : 's') + ' today for ' + pctText(rules.high_pct) }) : null,
+          r.no_cost > 0 ? el('span', { class: 'cell-sub owe', text: r.no_cost + ' order' + (r.no_cost === 1 ? '' : 's') + ' without purchase price, not counted' }) : null)) },
         { label: 'Orders', class: 'right', render: (r) => String(r.orders_n) },
-        { label: 'Sales', class: 'right mono', render: (r) => inr(r.sales_paise) },
-        { label: 'Rate', class: 'right nowrap', render: (r) => (r.total ? '' : pctText(r.rate_pct)) },
+        { label: 'Sales', class: 'right mono', render: (r) => el('span', { class: 'muted', text: inr(r.sales_paise) }) },
+        { label: 'Profit', class: 'right mono', render: profitCell },
+        { label: 'Rate', class: 'right', render: (r) => (r.total ? '' : el('span', { class: 'small', text: rateText(r) })) },
         { label: 'Commission', class: 'right mono', render: (r) => (r.total ? el('strong', { text: inr(r.commission_paise) }) : el('span', { class: r.commission_paise > 0 ? 'strong' : 'muted', text: inr(r.commission_paise) })) },
       ], rows.length ? rows.concat([total]) : [], 'No salesmen yet. Add them on the Salesmen page.'),
-      d.no_salesman ? el('p', { class: 'ledger-note', text: App.plural(d.no_salesman, 'order') + ' in this period ha' + (d.no_salesman === 1 ? 's' : 've') + ' no salesman and ' + (d.no_salesman === 1 ? 'is' : 'are') + ' not counted.' }) : null);
+      d.no_salesman ? el('p', { class: 'ledger-note', text: App.plural(d.no_salesman, 'order') + ' in this period ha' + (d.no_salesman === 1 ? 's' : 've') + ' no salesman and ' + (d.no_salesman === 1 ? 'is' : 'are') + ' not counted.' }) : null,
+      d.no_cost_n ? el('p', { class: 'ledger-note', text: App.plural(d.no_cost_n, 'order') + ' ha' + (d.no_cost_n === 1 ? 's' : 've') + ' an item without a purchase price, so the profit is unknown and no commission is counted for ' + (d.no_cost_n === 1 ? 'it' : 'them') + '. Open the order, add the purchase price, and it will count.' }) : null);
   }
 
   App.view('commission', { nav: 'commission', title: 'Commission' }, async (page) => {
@@ -2395,12 +2538,12 @@
       el('section', { class: 'card' },
         el('h2', { text: 'Rules' }),
         el('div', { class: 'form-grid form-grid-3' },
-          App.field('Orders needed for the higher rate', threshold),
-          App.field('Rate below that (%)', low),
-          App.field('Rate at or above that (%)', high)),
+          App.field('Orders in ONE DAY for the higher rate', threshold),
+          App.field('Rate when a day has fewer (%)', low),
+          App.field('Rate when a day has that many or more (%)', high)),
         el('div', { class: 'row-gap' }, saveRules),
         err,
-        el('p', { class: 'muted small', text: 'Commission is a percentage of each salesman\'s sales (items after discount, shipping left out). Cancelled orders do not count. The rate depends on how many orders that salesman has in the period shown.' })),
+        el('p', { class: 'muted small', text: 'Commission is a percentage of each salesman\'s PROFIT, not of sales. Profit of an order = selling price minus purchase price of every item, minus the order discount (shipping left out). Example: bought for ₹4,000, sold for ₹5,000, profit ₹1,000, so the rate applies to ₹1,000. The rate is decided day by day: on a day with fewer than the number of orders above, that day\'s profit earns the lower rate; on a day with that many or more, the higher rate. A month is the sum of its days. Cancelled orders do not count.' })),
       el('section', { class: 'card' }, el('h2', { text: 'Today' }), todayBox),
       el('section', { class: 'card' },
         el('div', { class: 'card-head' }, el('h2', { text: 'Monthly' }), App.field('Month', month)),
@@ -2593,7 +2736,7 @@
     head();
     o.items.forEach((it, i) => {
       g.font = '400 12px ' + SANS;
-      const ls = wrapText(g, it.name, cols.qty - 50 - cols.item);
+      const ls = wrapText(g, App.itemLabel(it), cols.qty - 50 - cols.item);
       const rowH = ls.length * 16 + 10;
       if (y + rowH > PH - 90) { page(); head(); }
       put(String(i + 1), cols.n, y + 2, { color: MUTED });
@@ -2684,7 +2827,7 @@
     const items = el('div', { class: 'table-wrap' }, el('table', { class: 'tbl' },
       el('thead', null, el('tr', null, ['#', 'Item', 'Qty', 'Rate', 'Discount', 'Amount'].map((h, i) => el('th', { class: i === 0 || i === 1 ? '' : 'right', text: h })))),
       el('tbody', null, o.items.map((i, n) => el('tr', null,
-        el('td', { text: String(n + 1) }), el('td', { text: i.name }),
+        el('td', { text: String(n + 1) }), el('td', { text: App.itemLabel(i) }),
         el('td', { class: 'right', text: String(i.qty) }), el('td', { class: 'right mono', text: inr(i.rate_paise) }),
         el('td', { class: 'right mono', text: i.discount_paise ? '-' + inr(i.discount_paise) : '' }),
         el('td', { class: 'right mono', text: inr(i.amount_paise) }))))));
@@ -2724,5 +2867,332 @@
         b.footer ? el('div', { class: 'inv-foot', text: b.footer }) : null));
   });
 }());
+
+/* Cash book: every rupee in and out of each account (Cash, UPI ...), who paid it and where it went.
+   Money in = customer payments (by themselves, from the Payments page) + anything you add here as
+   "Money in" (opening balance, owner deposit, loan, refund). Money out = expenses you add here. */
+(function () {
+  'use strict';
+  const App = window.App;
+  const { el, inr } = App;
+
+  function monthRange(today, offset) {
+    const [y, m] = today.split('-').map(Number);
+    const first = new Date(Date.UTC(y, m - 1 + offset, 1));
+    const last = new Date(Date.UTC(y, m + offset, 0));
+    const f = (d) => d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+    return [f(first), f(last)];
+  }
+
+  /** The add-entry form: money out (an expense) or money in that is not a customer payment. opts: {kind, accounts, purposes, who, onSaved} */
+  App.cashbookModal = function (opts) {
+    const err = el('div', { class: 'form-error', role: 'alert' });
+    const whoLabel = el('span', { class: 'field-label' });
+    const forLabel = el('span', { class: 'field-label' });
+    const accountLabel = el('span', { class: 'field-label' });
+    const kindSeg = App.segmented([['out', 'Money out (paid / spent)'], ['in', 'Money in (not an order)']], opts.kind || 'out', () => paint(), 'In or out');
+    const amount = App.moneyInput(0, { placeholder: '0', 'aria-label': 'Amount' });
+    const who = App.input({ maxlength: 120, autocomplete: 'off', list: 'cashbook-who' });
+    const purpose = App.input({ maxlength: 120, autocomplete: 'off', list: 'cashbook-purpose' });
+    const account = App.input({ list: 'account-list', placeholder: 'Type the account name', maxlength: 60, autocomplete: 'off', value: App.store.get('account_name') || (opts.accounts[0] ? opts.accounts[0].name : '') });
+    const date = App.input({ type: 'date', value: App.today });
+    const note = App.input({ placeholder: 'Note (optional)', maxlength: 200 });
+
+    function paint() {
+      const isIn = kindSeg.get() === 'in';
+      whoLabel.textContent = isIn ? 'Received from (person, bank, owner)' : 'Paid to (shop, courier, person)';
+      forLabel.textContent = isIn ? 'What for' : 'What for';
+      accountLabel.textContent = isIn ? 'Received into which account' : 'Paid from which account';
+      who.placeholder = isIn ? 'Owner deposit, Loan, Refund from courier ...' : 'Delhivery, Shree Packaging, Rudra ...';
+      purpose.placeholder = isIn ? 'Opening balance, Capital, Refund ...' : 'Courier, Packing, Salary, Ads ...';
+    }
+    paint();
+
+    const modal = App.modal({
+      title: 'Add cash book entry',
+      wide: true,
+      body: el('div', null,
+        el('div', { class: 'form-grid' },
+          el('div', { class: 'field span-2' }, el('span', { class: 'field-label', text: 'Entry' }), kindSeg.el),
+          App.field('Amount (₹)', amount),
+          App.field('Date', date),
+          el('label', { class: 'field' }, whoLabel, who, App.datalist('cashbook-who', opts.who || [])),
+          el('label', { class: 'field' }, forLabel, purpose, App.datalist('cashbook-purpose', opts.purposes || [])),
+          el('div', { class: 'span-2' }, el('label', { class: 'field' }, accountLabel, account, el('span', { class: 'field-hint', text: 'Cash, or the UPI / bank account the money moved through' })), App.datalist('account-list', opts.accounts.map((a) => a.name))),
+          el('div', { class: 'span-2' }, App.field('Note', note))),
+        err),
+      buttons: [
+        { label: 'Cancel', onClick: (close) => close() },
+        { label: 'Save entry', kind: 'primary', onClick: async (close, btn) => {
+          err.textContent = '';
+          const isIn = kindSeg.get() === 'in';
+          const paise = App.toPaise(amount.value);
+          if (paise === null || paise <= 0) { err.textContent = 'Enter the amount.'; amount.focus(); return; }
+          if (!who.value.trim()) { err.textContent = isIn ? 'Who did you receive it from?' : 'Who did you pay?'; who.focus(); return; }
+          if (!purpose.value.trim()) { err.textContent = 'What was it for?'; purpose.focus(); return; }
+          if (!account.value.trim()) { err.textContent = 'Which account?'; account.focus(); return; }
+          if (btn) btn.disabled = true;
+          try {
+            await App.api('api/cashbook.php', { body: {
+              action: 'add', kind: kindSeg.get(), amount_paise: paise, who: who.value.trim(), purpose: purpose.value.trim(),
+              entry_on: date.value, note: note.value.trim(), account_name: account.value.trim(),
+            } });
+            App.store.set('account_name', account.value.trim());
+            App.toast((isIn ? 'Received ' : 'Paid ') + inr(paise) + ' recorded.');
+            close();
+            if (opts.onSaved) opts.onSaved();
+          } catch (e) {
+            err.textContent = e.message;
+            if (btn) btn.disabled = false;
+          }
+        } },
+      ],
+    });
+    amount.focus();
+    return modal;
+  };
+
+  function shareList(rows, cls) {
+    if (!rows.length) return el('p', { class: 'muted small', text: 'Nothing in this period.' });
+    const total = rows.reduce((a, r) => a + r.paise, 0) || 1;
+    return el('ul', { class: 'cb-list' }, rows.slice(0, 12).map((r) => {
+      const bar = el('div', { class: 'meter ' + cls }, el('span'));
+      bar.firstChild.style.width = Math.max(3, Math.round((r.paise / total) * 100)) + '%';
+      return el('li', null,
+        el('div', { class: 'cb-line' },
+          el('span', { class: 'cb-name' }, r.name, el('small', { class: 'muted', text: ' ' + App.plural(r.n, 'entry').replace('entrys', 'entries') })),
+          el('span', { class: 'mono strong', text: inr(r.paise) })),
+        bar);
+    }));
+  }
+
+  App.view('cashbook', { nav: 'cashbook', title: 'Cash book' }, async (page) => {
+    const p = App.getParams();
+    // Opens on today; the presets switch to this month, last month or all time.
+    const state = {
+      from: p.has('from') ? p.get('from') : App.today, to: p.has('to') ? p.get('to') : App.today,
+      account_id: parseInt(p.get('account_id') || '0', 10) || 0, q: p.get('q') || '',
+    };
+
+    const from = App.input({ type: 'date', value: state.from });
+    const to = App.input({ type: 'date', value: state.to });
+    const q = App.input({ type: 'search', value: state.q, placeholder: 'Name, purpose, order no or note' });
+    const strip = el('div', { class: 'kpi-strip' });
+    const accountChips = el('div', { class: 'filters', role: 'group', 'aria-label': 'Account' });
+    const totals = el('div', { class: 'totals' });
+    const out = el('div', { class: 'stack' });
+    const byPurpose = el('div');
+    const byWho = el('div');
+    const exportLink = el('a', { class: 'btn', href: '#', text: 'Export Excel' });
+    let data = null;
+
+    const presets = [
+      ['Today', () => [App.today, App.today]],
+      ['This month', () => monthRange(App.today, 0)],
+      ['Last month', () => monthRange(App.today, -1)],
+      ['All time', () => ['', '']],
+    ];
+
+    const chip = (text, on, count, onclick) => el('button', {
+      type: 'button', class: 'filter-chip' + (on ? ' filter-on' : ''), 'aria-pressed': on ? 'true' : 'false', onclick,
+    }, text, count === null || count === undefined ? null : el('span', { class: 'filter-count', text: String(count) }));
+
+    function paintChips() {
+      const accounts = data ? data.accounts : [];
+      // One account only: nothing to choose between, so no chips.
+      if (accounts.length < 2) { state.account_id = 0; App.mount(accountChips); return; }
+      App.mount(accountChips,
+        chip('All accounts', state.account_id === 0, null, () => { state.account_id = 0; load(); }),
+        accounts.map((a) => chip(a.name, state.account_id === a.id, null, () => { state.account_id = a.id; load(); })));
+    }
+
+    let seq = 0;
+    async function load() {
+      App.setParams(state);
+      exportLink.href = App.exportUrl('cashbook', state.from, state.to);
+      const mine = ++seq;
+      try {
+        data = await App.api('api/cashbook.php', { params: { from: state.from, to: state.to, account_id: state.account_id || '', q: state.q } });
+      } catch (e) { App.mount(out, el('p', { class: 'alert alert-error', text: e.message })); return; }
+      if (mine !== seq) return;
+      const d = data;
+      const isToday = state.from === App.today && state.to === App.today;
+      const periodText = !state.from && !state.to ? 'all time' : isToday ? 'today' : state.from === state.to ? 'on ' + App.fmtDate(state.from) : 'in this period';
+      const amtLabel = (way) => (isToday ? 'Today amount ' : 'Amount ') + way;
+
+      // Boxes follow the filters: only the chosen account, and each box shows that account's in and out for the period.
+      const perAcc = {};
+      d.rows.forEach((x) => { const t = perAcc[x.account_id] || (perAcc[x.account_id] = { in: 0, out: 0 }); t[x.kind === 'in' ? 'in' : 'out'] += x.amount_paise; });
+      const shown = d.accounts.filter((a) => !state.account_id || a.id === state.account_id);
+      App.mount(strip,
+        shown.map((a) => { const t = perAcc[a.id] || { in: 0, out: 0 }; return el('div', { class: 'kpi' },
+          el('span', { class: 'kpi-label' }, a.name, ' ', App.chip(App.LABELS.accountType[a.type] || a.type, a.type === 'cash' ? 'warn' : 'info')),
+          el('span', { class: 'kpi-value', text: inr(a.balance_paise) }),
+          el('span', { class: 'kpi-sub' }, 'balance now · ', el('span', { class: 'credit', text: '+' + inr(t.in) }), ' ', el('span', { class: 'owe', text: '−' + inr(t.out) }), ' ' + periodText)); }),
+        el('div', { class: 'kpi' }, el('span', { class: 'kpi-label', text: amtLabel('in') }), el('span', { class: 'kpi-value credit', text: inr(d.in_paise) }), el('span', { class: 'kpi-sub', text: isToday ? App.fmtDate(App.today) : periodText })),
+        el('div', { class: 'kpi' }, el('span', { class: 'kpi-label', text: amtLabel('out') }), el('span', { class: 'kpi-value owe', text: inr(d.out_paise) }), el('span', { class: 'kpi-sub', text: 'net ' + inr(d.in_paise - d.out_paise) + ' ' + periodText })));
+
+      paintChips();
+
+      App.mount(totals,
+        el('span', null, 'In ', el('strong', { text: inr(d.in_paise) })),
+        el('span', null, 'Out ', el('strong', { text: inr(d.out_paise) })),
+        el('span', null, 'Net ', el('strong', { text: inr(d.in_paise - d.out_paise) })),
+        el('span', { class: 'muted', text: App.plural(d.rows.length, 'entry').replace('entrys', 'entries') + (d.running ? '' : ' (balance column hidden while searching)') }));
+
+      App.mount(out,
+        App.table([
+          { label: 'Date', class: 'nowrap', render: (x) => App.fmtDate(x.entry_on) },
+          { label: 'Account', render: (x) => App.chip(x.account_name, /cash/i.test(x.account_name) ? 'warn' : 'info') },
+          { label: 'Who', render: (x) => el('span', null,
+            x.customer_id ? el('a', { class: 'tbl-link', href: '#/customer?id=' + x.customer_id, text: x.who }) : x.who,
+            el('span', { class: 'cell-sub', text: x.kind === 'in' ? 'paid you' : 'you paid' })) },
+          { label: 'For', render: (x) => el('span', null,
+            x.purpose,
+            x.order_id ? [' ', el('a', { class: 'tbl-link mono', href: '#/order?id=' + x.order_id, text: x.order_no })] : null,
+            x.note ? el('span', { class: 'cell-sub', text: x.note }) : null) },
+          { label: 'In', class: 'right mono', render: (x) => (x.kind === 'in' ? el('span', { class: 'credit', text: '+' + inr(x.amount_paise) }) : '') },
+          { label: 'Out', class: 'right mono', render: (x) => (x.kind === 'out' ? el('span', { class: 'owe', text: '-' + inr(x.amount_paise) }) : '') },
+          { label: 'Balance', class: 'right mono', render: (x) => (x.balance_paise === null ? el('span', { class: 'muted', text: '–' }) : inr(x.balance_paise)) },
+          { label: '', class: 'right', render: (x) => (x.src === 'payment'
+            ? el('a', { class: 'btn btn-small', href: '#/payments?q=' + encodeURIComponent(x.order_no || x.who), text: 'Payments' })
+            : el('button', { type: 'button', class: 'btn btn-small', text: 'Cancel', onclick: async () => {
+              const reason = await App.askText({ title: 'Cancel this entry?', message: 'Use this for a wrong entry. It stops counting but stays in the log.', label: 'Reason', okLabel: 'Cancel entry', danger: true, required: true });
+              if (reason === null) return;
+              try { await App.api('api/cashbook.php', { body: { action: 'void', id: x.id, reason } }); App.toast('Entry cancelled.'); load(); } catch (e) { App.toast(e.message, 'error'); }
+            } })) },
+        ], d.rows, 'No entries in this period.'));
+
+      App.mount(byPurpose, shareList(d.by_purpose, 'meter-out'));
+      App.mount(byWho, shareList(d.by_who, 'meter-in'));
+    }
+
+    const addEntry = (kind) => App.cashbookModal({
+      kind, accounts: data ? data.accounts : [], purposes: data ? data.purposes : [],
+      who: data ? data.payees : [], onSaved: load,
+    });
+
+    const apply = () => { state.from = from.value; state.to = to.value; load(); };
+    from.addEventListener('change', apply);
+    to.addEventListener('change', apply);
+    q.addEventListener('input', App.debounce(() => { state.q = q.value.trim(); load(); }, 300));
+
+    App.mount(page,
+      el('div', { class: 'page-head' },
+        el('div', null, el('h1', { text: 'Cash book' }), el('p', { class: 'page-sub', text: 'Every rupee in and out: who paid, where it went, and what is left in each account.' })),
+        el('div', { class: 'row-gap' },
+          exportLink,
+          el('button', { type: 'button', class: 'btn', text: 'Money in', onclick: () => addEntry('in') }),
+          el('button', { type: 'button', class: 'btn btn-primary', text: 'Add expense', onclick: () => addEntry('out') }))),
+      el('section', { class: 'card' },
+        el('div', { class: 'toolbar' },
+          el('div', { class: 'filters' }, presets.map(([label, fn]) => el('button', { type: 'button', class: 'filter-chip', text: label, onclick: () => { const [a, b] = fn(); from.value = a; to.value = b; apply(); } }))),
+          App.field('From', from), App.field('To', to),
+          el('div', { class: 'field field-grow' }, el('span', { class: 'field-label', text: 'Search' }), q)),
+        el('div', { class: 'row-gap' }, accountChips),
+        totals),
+      strip,
+      el('div', { class: 'cb-split' },
+        out,
+        el('div', { class: 'stack' },
+          el('section', { class: 'card' }, el('div', { class: 'card-head' }, el('h2', { text: 'Where it went' }), el('span', { class: 'muted small', text: 'money out' })), byPurpose),
+          el('section', { class: 'card' }, el('div', { class: 'card-head' }, el('h2', { text: 'Who paid' }), el('span', { class: 'muted small', text: 'money in' })), byWho))));
+    await load();
+  });
+}());
+
+/* Item types: the kinds of perfume item (white box, OG box, tester, gift set ...) and the fixed
+   purchase and selling price of each. Add, rename, change prices or delete. */
+(function () {
+  const el = App.el;
+
+  App.view('itemtypes', { nav: 'itemtypes', title: 'Item types' }, async (page) => {
+    const err = el('div', { class: 'form-error', role: 'alert' });
+    const rowsEl = el('tbody');
+    let types = (await App.api('api/item_types.php')).types;
+
+    /** One editable line: name, purchase, selling, profit per piece, Save, Delete. */
+    function line(t) {
+      const name = App.input({ placeholder: 'Type name (e.g. OG box)', maxlength: 60, value: t.name || '', 'aria-label': 'Type name' });
+      const cost = App.moneyInput(t.cost_paise || 0, { placeholder: '0', 'aria-label': 'Purchase price' });
+      const rate = App.moneyInput(t.rate_paise || 0, { placeholder: '0', 'aria-label': 'Selling price' });
+      const profit = el('td', { class: 'col-profit', 'data-label': 'Profit per piece' });
+      const save = el('button', { type: 'button', class: 'btn btn-small btn-primary', text: t.id ? 'Save' : 'Add' });
+      const del = el('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Delete type', title: 'Delete', text: '×' });
+      const tr = el('tr', null,
+        el('td', { class: 'col-name' }, name),
+        el('td', { class: 'col-cost', 'data-label': 'Purchase' }, cost),
+        el('td', { class: 'col-rate', 'data-label': 'Selling' }, rate),
+        profit,
+        el('td', { class: 'col-act' }, save),
+        el('td', { class: 'col-x' }, del));
+      const paintProfit = () => {
+        const c = App.toPaise(cost.value) || 0;
+        const r = App.toPaise(rate.value) || 0;
+        App.clear(profit);
+        if (c || r) profit.appendChild(App.profitCell(r - c, r > 0 ? Math.round(((r - c) / r) * 1000) / 10 : null));
+      };
+      const dirty = () => { save.classList.add('btn-attention'); };
+      [cost, rate].forEach((n) => n.addEventListener('input', () => { paintProfit(); dirty(); }));
+      name.addEventListener('input', dirty);
+      paintProfit();
+
+      save.addEventListener('click', async () => {
+        err.textContent = '';
+        const c = App.toPaise(cost.value || '0');
+        const r = App.toPaise(rate.value || '0');
+        if (!name.value.trim()) { err.textContent = 'Type the name of the type.'; name.focus(); return; }
+        if (c === null || c < 0) { err.textContent = name.value.trim() + ': purchase price is not a valid amount.'; return; }
+        if (r === null || r < 0) { err.textContent = name.value.trim() + ': selling price is not a valid amount.'; return; }
+        save.disabled = true;
+        try {
+          const d = await App.api('api/item_types.php', { body: { action: 'save', id: t.id || 0, name: name.value.trim(), cost_paise: c, rate_paise: r } });
+          App.toast(t.id ? 'Type saved.' : 'Type added.');
+          types = d.types;
+          paintAll();
+        } catch (e) { err.textContent = e.message; save.disabled = false; }
+      });
+      del.addEventListener('click', async () => {
+        err.textContent = '';
+        if (!t.id) { tr.remove(); return; }
+        const ok = await App.confirm('Delete "' + t.name + '"? Orders already made keep it on their lines; it just stops showing in the dropdown.', 'Delete', true);
+        if (!ok) return;
+        try {
+          const d = await App.api('api/item_types.php', { body: { action: 'delete', id: t.id } });
+          App.toast('Type deleted.');
+          types = d.types;
+          paintAll();
+        } catch (e) { err.textContent = e.message; }
+      });
+      return tr;
+    }
+
+    function paintAll() {
+      App.clear(rowsEl);
+      types.forEach((t) => rowsEl.appendChild(line(t)));
+      if (!types.length) rowsEl.appendChild(el('tr', null, el('td', { class: 'muted small', colspan: 6, text: 'No types yet. Click "Add type".' })));
+    }
+    paintAll();
+
+    const addBtn = el('button', { type: 'button', class: 'btn', text: 'Add type', onclick: () => {
+      if (rowsEl.lastChild && rowsEl.lastChild.querySelector && !rowsEl.lastChild.querySelector('input')) rowsEl.lastChild.remove();
+      const tr = line({});
+      rowsEl.appendChild(tr);
+      tr.querySelector('input').focus();
+    } });
+
+    App.mount(page,
+      el('div', { class: 'page-head' }, el('div', null, el('h1', { text: 'Item types' }),
+        el('p', { class: 'page-sub', text: 'Set the purchase and selling price once per type. On a new order, pick the perfume and the type and both prices fill in by themselves.' })),
+        addBtn),
+      el('section', { class: 'card' },
+        el('h2', { text: 'Prices' }),
+        el('div', { class: 'table-wrap' }, el('table', { class: 'items-tbl types-tbl' },
+          el('thead', null, el('tr', null, ['Type', 'Purchase (₹)', 'Selling (₹)', 'Profit per piece', '', ''].map((h) => el('th', { text: h })))),
+          rowsEl)),
+        err,
+        el('p', { class: 'muted small', text: 'The same price applies to every perfume of that type. A price left at 0 is not filled in, so the catalog price is used instead. You can still change the price on one order line. Press Save on a line after changing it.' })));
+  });
+})();
 
 App.start();

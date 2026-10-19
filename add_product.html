@@ -392,6 +392,10 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                             <input type="number" id="price" name="price" step="0.01" min="0" required>
                         </div>
                         <div>
+                            <label for="cost_price">Buying price (₹)</label>
+                            <input type="number" id="cost_price" name="cost_price" step="0.01" min="0" placeholder="What it costs you">
+                        </div>
+                        <div>
                             <label for="gender">Gender</label>
                             <select id="gender" name="gender" required>
                                 <option value="">Select</option>
@@ -1218,6 +1222,10 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 <div>
                     <label for="editPrice">Price (₹)</label>
                     <input type="number" id="editPrice" step="0.01" min="0" required>
+                </div>
+                <div>
+                    <label for="editCostPrice">Buying price (₹)</label>
+                    <input type="number" id="editCostPrice" step="0.01" min="0" placeholder="What it costs you">
                 </div>
                 <div>
                     <label for="editGender">Gender</label>
@@ -2388,6 +2396,7 @@ form.addEventListener('submit', async (e) => {
     formData.append('admin_password', adminPassword);
     formData.append('name', document.getElementById('name').value);
     formData.append('price', document.getElementById('price').value);
+    formData.append('cost_price', document.getElementById('cost_price').value);
     formData.append('category', snapName('category', document.getElementById('category').value));
     formData.append('gender', document.getElementById('gender').value);
     formData.append('brand', snapName('brand', document.getElementById('brand').value));
@@ -4935,6 +4944,7 @@ async function openEditModal(id) {
         if (typeof svfLoad === 'function') svfLoad(p.id);
         document.getElementById('editName').value = p.name || '';
         document.getElementById('editPrice').value = p.price || '';
+        document.getElementById('editCostPrice').value = (p.cost_price !== null && p.cost_price !== undefined) ? p.cost_price : '';
         document.getElementById('editGender').value = p.gender || 'men';
         fillCategorySelect(document.getElementById('editCategory'), p.category || '');
         editCmetaValues = {};
@@ -5021,6 +5031,7 @@ editProductForm.addEventListener('submit', async (e) => {
     formData.append('id', document.getElementById('editId').value);
     formData.append('name', document.getElementById('editName').value);
     formData.append('price', document.getElementById('editPrice').value);
+    formData.append('cost_price', document.getElementById('editCostPrice').value);
     formData.append('category', snapName('category', document.getElementById('editCategory').value));
     formData.append('gender', document.getElementById('editGender').value);
     formData.append('brand', snapName('brand', document.getElementById('editBrand').value));

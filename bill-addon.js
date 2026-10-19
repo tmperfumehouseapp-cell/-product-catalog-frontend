@@ -3,8 +3,9 @@
    The public catalog (index.html) does not load this file and shows no Make Bill link.
    Add ONE line before </body> in add_product.html:
        <script src="bill-addon.js"></script>
-   BILL_URL points to the bill page hosted on VERCEL (same site as this file).
-   The bill page's API calls still go to Hostinger (api.php). */
+   BILL_URL points to the bill page hosted on HOSTINGER, in the same folder as api.php
+   (visitor/product-api/bill/). Page and api.php share one origin, so there is no proxy,
+   CORS or cookie problem. */
 (function () {
     'use strict';
 
