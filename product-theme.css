@@ -1,0 +1,82 @@
+/* =========================================================
+   3RD PARTY · product page theme (red · cream · white cards)
+   Loaded LAST on product.html together with shop-theme.css (header, menu, footer).
+   Colours and shapes only: gallery, variants and WhatsApp logic are untouched.
+   ========================================================= */
+body.pdp { --red:#C8232C; --cream:#FFFCF3; --ink:#1B1B1B; --muted:#6B6B6B; --line:#EFE9DA; }
+body.pdp .search-suggest { background: #fff !important; border: 1px solid var(--line) !important; box-shadow: 0 18px 40px rgba(0,0,0,.18); }
+body.pdp .search-suggest-name { color: var(--ink) !important; }
+
+/* ---------- main card ---------- */
+body.pdp .detail-card { background: #fff !important; border: 0 !important; border-radius: 28px !important; box-shadow: 0 2px 4px rgba(60,40,10,.05), 0 18px 40px rgba(60,40,10,.10) !important; overflow: hidden; }
+body.pdp .gallery-main, body.pdp #mainMedia { background: #F3EEE1 !important; }
+body.pdp .gallery-thumbs { background: #fff !important; border-top: 1px solid var(--line) !important; }
+body.pdp .gallery-thumbs img { border-color: var(--line) !important; border-radius: 10px; }
+body.pdp .gallery-thumbs img.active, body.pdp .gallery-thumb-video.active { border-color: var(--red) !important; }
+body.pdp .gallery-thumb-video { background-color: #1B1B1B !important; border-color: var(--line) !important; }
+body.pdp .back-icon-btn { background: #fff !important; border: 0 !important; color: var(--red) !important; box-shadow: 0 6px 16px rgba(0,0,0,.2); }
+body.pdp .back-icon-btn svg { stroke: var(--red) !important; color: var(--red) !important; }
+body.pdp .back-icon-btn:hover { background: var(--red) !important; }
+body.pdp .back-icon-btn:hover svg { stroke: #fff !important; color: #fff !important; }
+
+/* ---------- title block ---------- */
+body.pdp .detail-brand { color: var(--red) !important; font-weight: 800 !important; letter-spacing: .1em; }
+body.pdp .detail-info h1, body.pdp .detail-info h2 { color: var(--ink) !important; font-family: inherit !important; font-weight: 800 !important; letter-spacing: -.01em; line-height: 1.15; }
+body.pdp .badge-pill, body.pdp .badge-pill-longevity, body.pdp .trust-pill { background: #FFF1EC !important; color: var(--red) !important; border: 0 !important; font-weight: 700; }
+body.pdp .detail-longevity { color: var(--red) !important; }
+body.pdp .detail-longevity p, body.pdp .detail-longevity h3 { color: var(--ink) !important; font-family: inherit !important; font-weight: 800 !important; }
+body.pdp .variant-label { color: var(--muted) !important; font-weight: 800; letter-spacing: .08em; }
+body.pdp .variant-chip { background: #fff !important; border: 1.5px solid var(--line) !important; color: var(--ink) !important; font-weight: 700; border-radius: 999px !important; }
+body.pdp .variant-chip:hover { border-color: var(--red) !important; }
+body.pdp .variant-chip.active { background: var(--red) !important; border-color: var(--red) !important; color: #fff !important; }
+
+/* ---------- WhatsApp box: bright green pop-up ---------- */
+body.pdp .bundle-upsell { background: linear-gradient(135deg, #25D366, #0F9F4F) !important; border-radius: 22px !important; box-shadow: 0 14px 30px rgba(37,211,102,.35); }
+body.pdp .bundle-upsell-line { color: #fff !important; font-weight: 600; border-bottom-color: rgba(255,255,255,.3) !important; }
+body.pdp .bundle-upsell-btn { background: #fff !important; color: #0B7A3B !important; font-weight: 800 !important; box-shadow: 0 6px 16px rgba(0,0,0,.15); }
+body.pdp .bundle-upsell-btn:hover { background: #F0FFF6 !important; color: #075B2B !important; }
+
+/* ---------- description, specs, notes ---------- */
+body.pdp .description-accordion { background: #fff !important; border: 1px solid var(--line) !important; border-radius: 20px !important; }
+body.pdp .description-toggle { color: var(--ink) !important; font-family: inherit !important; font-weight: 800 !important; }
+body.pdp .description-chevron { color: var(--red) !important; stroke: var(--red) !important; }
+body.pdp .description-body { border-top: 1px solid var(--line) !important; }
+body.pdp .description-card-text { color: #4A4A4A !important; }
+body.pdp .pspec-item { background: #fff !important; border: 1px solid var(--line) !important; border-radius: 18px !important; box-shadow: 0 6px 16px rgba(60,40,10,.05); }
+body.pdp .pspec-item svg { stroke: var(--red) !important; }
+body.pdp .pspec-label { color: var(--muted) !important; }
+body.pdp .pspec-value { color: var(--ink) !important; font-family: inherit !important; font-weight: 800 !important; }
+body.pdp .product-specs h2, body.pdp .product-specs .pspec-heading { color: var(--ink) !important; font-family: inherit !important; font-weight: 800 !important; }
+body.pdp .product-notes { background: #fff !important; border: 1px solid var(--line) !important; border-radius: 20px !important; }
+body.pdp .product-notes-heading { color: var(--ink) !important; font-family: inherit !important; }
+body.pdp .product-note-img { border: 2px solid var(--red) !important; background: #fff !important; }
+body.pdp .product-note-name { color: var(--ink) !important; font-weight: 600; }
+body.pdp .pn-arrow { background: #fff !important; color: var(--red) !important; border: 1px solid var(--line) !important; box-shadow: 0 4px 10px rgba(0,0,0,.12); }
+body.pdp .pn-fade.left { background: linear-gradient(90deg, #fff, rgba(255,255,255,0)) !important; }
+body.pdp .pn-fade.right { background: linear-gradient(270deg, #fff, rgba(255,255,255,0)) !important; }
+
+/* ---------- trust + why us ---------- */
+body.pdp .trust-item, body.pdp .why-us-item { background: #fff !important; border: 1px solid var(--line) !important; border-radius: 20px !important; box-shadow: 0 6px 16px rgba(60,40,10,.05); color: var(--ink) !important; }
+body.pdp .trust-item svg { color: var(--red) !important; }
+body.pdp .trust-item h4, body.pdp .why-us-item h4 { color: var(--ink) !important; font-weight: 800; }
+body.pdp .trust-item p, body.pdp .why-us-item p { color: var(--muted) !important; }
+body.pdp .trust-dot { background: var(--red) !important; }
+body.pdp .why-us-heading { color: var(--ink) !important; font-family: inherit !important; font-weight: 800 !important; }
+body.pdp .why-us-icon { background: #FFF1EC !important; border: 0 !important; color: var(--red) !important; }
+body.pdp .why-us-icon svg { color: var(--red) !important; stroke: var(--red) !important; }
+
+/* ---------- video block ---------- */
+body.pdp .pv-eyebrow { color: var(--red) !important; font-weight: 800; }
+body.pdp .pv-title { color: var(--ink) !important; font-family: inherit !important; font-weight: 800 !important; }
+body.pdp .pv-frame, body.pdp .pv-section.pv-m-custom .pv-frame { border: 0 !important; border-radius: 22px !important; box-shadow: 0 14px 30px rgba(60,40,10,.14); }
+body.pdp .pv-mute:hover { background: var(--red) !important; color: #fff !important; }
+body.pdp .pv-bar span { background: var(--red) !important; }
+
+/* ---------- related products ---------- */
+body.pdp .related-products { background: var(--cream) !important; }
+body.pdp .related-heading { color: var(--ink) !important; font-family: inherit !important; font-weight: 800 !important; }
+body.pdp .related-heading span { color: var(--red) !important; }
+body.pdp .related-card-img { border: 1.5px solid var(--line) !important; background: #fff !important; border-radius: 16px !important; }
+body.pdp .related-card.rc-active .related-card-img { border-color: var(--red) !important; box-shadow: 0 0 0 3px rgba(200,35,44,.18) !important; }
+body.pdp .related-card-name { color: var(--ink) !important; font-weight: 600; }
+body.pdp .back-btn-full { background: var(--red) !important; border-radius: 999px !important; }
