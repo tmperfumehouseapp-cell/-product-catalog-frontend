@@ -230,8 +230,11 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
     .admin-page, .admin-layout { padding-top: 0; }
 }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="hero-banner.css?v=20261116-adm1">
+<link rel="stylesheet" href="admin-theme.css?v=20261116-adm2">
 </head>
-<body class="admin-page">
+<body class="admin-page adm">
 
 <!-- Mobile-only header + drawer, matches the storefront's top-header/drawer.
      Hidden on desktop (≥769px) via CSS — desktop keeps the dark sidebar. -->
@@ -1058,6 +1061,12 @@ form button[type="submit"], .modal-save-btn, #shwSaveBtn, #videoUploadBtn, #vide
                 <div id="shwSelected" style="margin-top:6px;"><p style="font-size:12px;color:#999;">Loading...</p></div>
                 <button type="button" id="shwSaveBtn" style="margin-top:14px; width:auto; padding:12px 24px;">Save Showcase</button>
                 <div id="shwMsg"></div>
+            </div>
+
+            <p class="section-label">Live preview (what your home banner will look like)</p>
+            <div class="hero-preview" id="heroPreviewWrap">
+                <div class="hb" id="heroPreview"></div>
+                <p class="hero-preview-note">This updates as you type. Colours change automatically from the words you use (perfume, watch, shades) or from the slide order. Button 2 only shows when it has a link. Slides marked Active show on your home page in the order you set.</p>
             </div>
 
             <p class="section-label" id="heroFormLabel">Add a hero slide</p>
@@ -5911,5 +5920,42 @@ function openImageLightbox(url) {
 })();
 </script>
 <script src="bill-addon.js"></script>
+
+<script>
+/* Live preview of the hero slide: same look as the home page banner. Read-only: it never saves anything. */
+(function () {
+    var box = document.getElementById('heroPreview');
+    if (!box) return;
+    var $ = function (id) { return document.getElementById(id); };
+    function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+    var RULES = [[/perfume|fragrance|attar|scent/i, 't-perfume'], [/watch/i, 't-watch'], [/shade|sun|glass/i, 't-shades']];
+    var ORDER = ['t-perfume', 't-watch', 't-shades', 't-light'];
+    var last = '';
+    function render() {
+        var v = {
+            kicker: $('heroKicker').value.trim(), head: $('heroHeadline').value.trim(), acc: $('heroHeadlineAccent').value.trim(),
+            desc: $('heroDescription').value.trim(), b1: $('heroBtn1Text').value.trim(), b2: $('heroBtn2Text').value.trim(),
+            b2l: $('heroBtn2Link').value.trim(), size: parseInt($('heroImageSize').value, 10) || 400,
+            order: parseInt($('heroSortOrder').value, 10) || 0
+        };
+        var im = $('heroImagePreview') && $('heroImagePreview').querySelector('img');
+        v.img = im ? im.getAttribute('src') : '';
+        var sig = JSON.stringify(v);
+        if (sig === last) return;
+        last = sig;
+        var text = [v.kicker, v.head, v.acc].join(' '), cls = ORDER[v.order % ORDER.length];
+        RULES.forEach(function (r) { if (r[0].test(text)) cls = r[1]; });
+        box.innerHTML = '<article class="hb-slide on ' + cls + '"><div class="hb-copy">' +
+            (v.kicker ? '<span class="hb-eyebrow">' + esc(v.kicker) + '</span>' : '<span class="hb-eyebrow">Small label</span>') +
+            '<h2>' + (esc(v.head) || 'Your headline here') + (v.acc ? ' <em>' + esc(v.acc) + '</em>' : '') + '</h2>' +
+            '<p>' + (esc(v.desc) || 'One or two lines about this slide.') + '</p>' +
+            '<div class="hb-actions"><span class="hb-cta">' + (esc(v.b1) || 'Explore more') + ' \u2192</span>' +
+            (v.b2l ? '<span class="hb-cta ghost">' + (esc(v.b2) || 'Inquiry') + '</span>' : '') + '</div></div>' +
+            '<div class="hb-art"><div class="hb-adm" style="--img-h:' + v.size + 'px">' + (v.img ? '<img src="' + esc(v.img) + '" alt="">' : '') + '</div></div></article>';
+    }
+    render();
+    setInterval(render, 400); /* also catches fields filled in by "Edit" */
+})();
+</script>
 </body>
 </html>

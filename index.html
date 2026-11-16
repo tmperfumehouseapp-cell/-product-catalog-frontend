@@ -11,7 +11,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="cat-icons.js?v=1"></script>
-<link rel="stylesheet" href="theme.css?v=20261116-icons1">
+<link rel="stylesheet" href="theme.css?v=20261116-icons2">
+<link rel="stylesheet" href="hero-banner.css?v=20261116-adm1">
 <meta name="build" content="hero-slider-2026-11-16">
 </head>
 <body class="tp">
@@ -192,9 +193,33 @@ function slideHtml(c, items, i, total) {
     <div class="hb-art">${img(main, 'hb-main')}${img(m1, 'hb-mini a')}${img(m2, 'hb-mini b')}</div>
   </article>`;
 }
+/* Slides written in the admin: Admin > Hero Slider. Colours rotate automatically (or follow the words: perfume, watch, shades). */
+const THEMES = ['t-perfume', 't-watch', 't-shades', 't-light'];
+function adminSlideHtml(s, i, total) {
+  const text = [s.kicker, s.headline, s.headline_accent].join(' ');
+  const m = COPY.find(c => c.re.test(text));
+  const cls = m ? m.cls : THEMES[i % THEMES.length];
+  const size = parseInt(s.image_size, 10) || 400;
+  const b1 = s.button1_link || s.button1_text ? `<a class="hb-cta" href="${esc(s.button1_link || 'products.html')}">${esc(s.button1_text || 'Explore more')} ${ARROW}</a>` : '';
+  const b2 = s.button2_link ? `<a class="hb-cta ghost" href="${esc(s.button2_link)}" target="_blank" rel="noopener">${esc(s.button2_text || 'Inquiry')}</a>` : '';
+  return `<article class="hb-slide ${cls}${i === 0 ? ' on' : ''}" aria-label="${i + 1} of ${total}">
+    <div class="hb-copy">
+      ${s.kicker ? `<span class="hb-eyebrow">${esc(s.kicker)}</span>` : ''}
+      <h2>${esc(s.headline || '')}${s.headline_accent ? ` <em>${esc(s.headline_accent)}</em>` : ''}</h2>
+      ${s.description ? `<p>${esc(s.description)}</p>` : ''}
+      <div class="hb-actions">${b1}${b2}</div>
+    </div>
+    <div class="hb-art"><div class="hb-adm" style="--img-h:${size}px">${s.image ? `<img src="${esc(s.image)}" alt="${esc(s.headline || '')}" ${i === 0 ? '' : 'loading="lazy"'} onerror="this.style.opacity=0">` : ''}</div></div>
+  </article>`;
+}
 const rank = (n) => { const i = COPY.findIndex(c => c.re.test(n)); return i < 0 ? 99 : i; };
 async function buildHero(cats, fallback) {
-  try {
+  try { // 1) slides you made in Admin > Hero Slider
+    const d = await getJSON('get_hero_slides.php');
+    const mine = (d.success && Array.isArray(d.slides) ? d.slides : []).filter(s => s && s.headline);
+    if (mine.length) { hbTrack.innerHTML = mine.map((s, i) => adminSlideHtml(s, i, mine.length)).join(''); hbStart(mine.length); return; }
+  } catch (e) {}
+  try { // 2) no slides yet: build one per collection
     const picks = (cats || []).slice().sort((a, b) => rank(a.category) - rank(b.category)).slice(0, 4);
     const got = await Promise.all(picks.map(async (c) => {
       try { const d = await getJSON('get_products.php?category=' + encodeURIComponent(c.category) + '&page=1'); return { c, items: (d.success ? d.products || [] : []).filter(p => p.image).slice(0, 3) }; }
