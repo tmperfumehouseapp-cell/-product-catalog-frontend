@@ -556,8 +556,8 @@ async function loadCategories() {
 
         const drawerLinks = data.categories.map(c => `
             <a class="drawer-link" data-category="${escapeHtml(c.category)}">
-                <span class="drawer-icon">${c.thumb ? `<img src="${escapeHtml(c.thumb)}" alt="${escapeHtml(c.category)}">` : ''}</span>
-                ${escapeHtml(c.category)}
+                <span class="drawer-icon">${typeof catIcon === 'function' ? catIcon(c.category) : ''}</span>
+                <span class="drawer-text">${escapeHtml(c.category)}</span>
             </a>
         `).join('');
 

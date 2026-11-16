@@ -661,7 +661,8 @@ body { background: #0d0b08 !important; color: #e9e2d4; }
 .wa-aurora-text { font-size: 11px; letter-spacing: 2px; color: #f2ecdf; }
 .wa-aurora-text b { color: #25D366; font-weight: 700; }
 </style>
-<link rel="stylesheet" href="shop-theme.css?v=20261116-shop1">
+<script src="cat-icons.js?v=1"></script>
+<link rel="stylesheet" href="shop-theme.css?v=20261116-shop3">
 <link rel="stylesheet" href="product-theme.css?v=20261116-pdp1">
 </head>
 <body class="shop pdp">
@@ -1115,8 +1116,8 @@ async function loadDrawerCategories() {
 
         const categoryLinks = data.categories.map(c => `
             <a class="drawer-link${activeCategory === c.category ? ' active' : ''}" href="products.html?category=${encodeURIComponent(c.category)}">
-                <span class="drawer-icon">${c.thumb ? `<img src="${escapeHtml(c.thumb)}" alt="${escapeHtml(c.category)}">` : ''}</span>
-                ${escapeHtml(c.category)}
+                <span class="drawer-icon">${typeof catIcon === 'function' ? catIcon(c.category) : ''}</span>
+                <span class="drawer-text">${escapeHtml(c.category)}</span>
             </a>
         `).join('');
 

@@ -119,7 +119,7 @@ body.tp {
 .tp-drawer nav a:hover { background: #fff; }
 .tp-drawer nav a i { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--red); display: grid; place-items: center; overflow: hidden; background: #fff; flex: none; }
 .tp-drawer nav a i img { width: 70%; height: 70%; object-fit: contain; }
-.tp-drawer .wa { margin: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; background: var(--red); color: #fff; text-decoration: none; font-weight: 800; padding: 15px; border-radius: 16px; }
+.tp-drawer .wa { margin: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; background: #25D366; color: #fff; text-decoration: none; font-weight: 800; padding: 15px; border-radius: 16px; }
 
 @media (max-width: 380px) { .tp-cta { padding: 14px 20px; font-size: 15px; } .tp-hero-foot strong { font-size: 18px; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
@@ -189,3 +189,12 @@ body.tp {
   .hb-word { top: 22%; }
 }
 @media (prefers-reduced-motion: reduce) { .hb-main, .hb-mini, .hb-slide.on .hb-copy > * { animation: none !important; } .hb-slide { transition: none; } }
+
+/* ---------- category icons: red line icons in white rings ---------- */
+.tp-cat-c { color: var(--red); }
+.tp-cat-c .cat-ic { width: 44%; height: 44%; }
+.tp-cat:hover .tp-cat-c, .tp-cat:focus-visible .tp-cat-c { background: var(--red); color: #fff; }
+.tp-cat-c { transition: background .15s, color .15s; }
+.tp-drawer nav a i { width: 44px; height: 44px; color: var(--red); }
+.tp-drawer nav a i .cat-ic { width: 24px; height: 24px; }
+.tp-drawer nav a:hover i { background: var(--red); color: #fff; }

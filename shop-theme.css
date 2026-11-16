@@ -83,3 +83,19 @@ body.shop .footer-brand-banner { background: #1C1C1C !important; border-top: 0 !
 /* closed side menu must not cast a shadow onto the page edge */
 body.shop .drawer:not(.open) { box-shadow: none !important; }
 body.shop .filter-drawer:not(.open):not(.is-desktop) { box-shadow: none; }
+
+
+/* ---------- side menu: red category icons, no numbers ---------- */
+body.shop .drawer-nav { counter-reset: none !important; padding: 8px 10px !important; }
+body.shop .drawer-nav .drawer-link { display: flex !important; align-items: center !important; gap: 14px !important; padding: 10px 12px !important; margin: 2px 0; border: 0 !important; border-radius: 16px !important; font-family: inherit !important; font-size: 17px !important; font-weight: 700 !important; color: var(--ink) !important; opacity: 1; transform: none; }
+body.shop .drawer-link::before { content: none !important; display: none !important; }
+body.shop .drawer-link::after { content: '\2192'; color: var(--red) !important; opacity: .7; }
+body.shop .drawer-nav .drawer-link .drawer-icon { display: grid !important; place-items: center; flex: none; width: 46px !important; height: 46px !important; border-radius: 50% !important; border: 2px solid var(--red) !important; background: #fff !important; color: var(--red) !important; overflow: hidden; }
+body.shop .drawer-link .drawer-icon .cat-ic { width: 26px; height: 26px; }
+body.shop .drawer-link .drawer-icon img { display: none !important; }
+body.shop .drawer-link .drawer-text { min-width: 0; }
+body.shop .drawer-nav .drawer-link:hover, body.shop .drawer-nav .drawer-link.active { background: #fff !important; color: var(--red) !important; }
+body.shop .drawer-nav .drawer-link:hover .drawer-icon, body.shop .drawer-nav .drawer-link.active .drawer-icon { background: var(--red) !important; color: #fff !important; }
+
+/* WhatsApp button in the menu: show the full 'CHAT ON WHATSAPP' text */
+body.shop .wa-aurora-text, body.shop .wa-aurora-text b { color: #fff !important; }
