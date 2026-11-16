@@ -492,8 +492,8 @@ body { padding-top: 60px; }
 .card-img-wrap { position: relative; background: #f0ede6; overflow: hidden; }
 .card img {
     width: 100%;
-    aspect-ratio: 8 / 10;
-    object-fit: cover;
+    aspect-ratio: 10 / 18; /* tall portrait frame */
+    object-fit: contain;   /* whole product visible, never cropped */
     background: #f0ede6;
     box-sizing: border-box;
 }
@@ -550,7 +550,7 @@ body { padding-top: 60px; }
 @media (min-width: 640px) { .tag { padding: 2px 9px; } }
 
 .skeleton-card { background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #eee; }
-.skeleton-img { aspect-ratio: 8 / 10; background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+.skeleton-img { aspect-ratio: 10 / 18; background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 .skeleton-line { height: 8px; background: #eee; border-radius: 4px; margin: 8px 7px; }
 .skeleton-line.short { width: 60%; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -663,9 +663,9 @@ body { padding-top: 60px; }
 @media (min-width: 640px) { .detail-card { grid-template-columns: 1fr 1fr; } }
 .gallery-main {
     width: 100%;
-    aspect-ratio: 8 / 10;
+    aspect-ratio: 10 / 18;
     height: auto;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center;
     background: #eee;
     display: block;
@@ -1147,7 +1147,7 @@ body { padding-top: 60px; }
     background: #f0ede6;
     border: 1.5px solid #ddd;
     border-radius: 8px;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 10 / 18;
     overflow: hidden;
     margin-bottom: 8px;
     transition: border-color 0.25s ease, box-shadow 0.25s ease, border-width 0.25s ease;
@@ -1942,25 +1942,25 @@ body.admin-page { padding-top: 0; }
 .gallery-main {
     width: 100% !important;
     height: auto !important;
-    aspect-ratio: 8 / 10 !important;
-    object-fit: cover !important;
+    aspect-ratio: 10 / 18 !important;
+    object-fit: contain !important;
     object-position: center !important;
     display: block !important;
 }
 .gallery-thumbs img {
     width: 56px !important;
-    height: 70px !important;
-    object-fit: cover !important;
+    height: 100px !important;
+    object-fit: contain !important;
 }
 .card img {
     width: 100% !important;
     height: auto !important;
-    aspect-ratio: 8 / 10 !important;
-    object-fit: cover !important;
+    aspect-ratio: 10 / 18 !important;
+    object-fit: contain !important;
 }
 .grid.list-view .card img {
-    width: 120px !important;
-    height: 150px !important;
+    width: 100px !important;
+    height: 180px !important;
     aspect-ratio: unset !important;
 }
 
@@ -1974,3 +1974,7 @@ body.admin-page { padding-top: 0; }
 .search-suggest-item:hover .search-suggest-name,
 .search-suggest-item:focus-visible .search-suggest-name { color: #d4af6a !important; }
 .search-suggest-viewall:hover { background: rgba(212,175,106,0.12) !important; color: #f0d9a8 !important; }
+/* =========================================================
+   TALL 10:18 PRODUCT IMAGES (portrait) — related cards show the full product too
+   ========================================================= */
+.related-card-img img { width: 100%; height: 100%; object-fit: contain; }

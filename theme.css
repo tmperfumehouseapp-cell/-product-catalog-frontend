@@ -83,7 +83,7 @@ body.tp {
 .tp-card { position: relative; background: var(--card); border-radius: var(--radius); padding: 14px 14px 16px; text-decoration: none; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(60,40,10,.05), 0 8px 22px rgba(60,40,10,.05); transition: transform .15s; }
 .tp-card:hover { transform: translateY(-2px); }
 .tp-badge { position: absolute; left: 14px; top: 14px; z-index: 1; background: var(--red); color: #fff; font-weight: 800; font-size: 13px; padding: 6px 11px; border-radius: 10px; }
-.tp-card-img { height: 150px; display: grid; place-items: center; margin: 6px 0 12px; }
+.tp-card-img { aspect-ratio: 10 / 18; display: grid; place-items: center; margin: 6px 0 12px; }
 .tp-card-img { overflow: hidden; }
 .tp-card-img img { width: 100%; height: 100%; object-fit: contain; }
 .tp-card-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: auto; }
