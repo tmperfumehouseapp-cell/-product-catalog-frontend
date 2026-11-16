@@ -1,0 +1,85 @@
+/* =========================================================
+   3RD PARTY · shop / category page theme (red · cream · white cards)
+   Loaded LAST on products.html. Only colours, shapes and type: no layout logic.
+   ========================================================= */
+body.shop {
+  --red: #C8232C; --red-deep: #A81B23; --cream: #FFFCF3; --ink: #1B1B1B; --muted: #6B6B6B; --line: #EFE9DA; --wa: #25D366;
+  background: var(--cream) !important; color: var(--ink) !important;
+  font-family: 'Manrope', 'Segoe UI', system-ui, Arial, sans-serif !important;
+}
+body.shop h1, body.shop h2, body.shop h3, body.shop button, body.shop input, body.shop select { font-family: inherit; }
+
+/* ---------- header: red bar ---------- */
+body.shop .top-header { background: var(--red) !important; border-bottom: 0 !important; box-shadow: 0 6px 18px rgba(120,15,20,.28) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+body.shop .hamburger-btn, body.shop .search-icon-btn { background: rgba(255,255,255,.16) !important; border: 0 !important; color: #fff !important; }
+body.shop .hamburger-btn:hover, body.shop .search-icon-btn:hover { background: rgba(255,255,255,.28) !important; }
+body.shop .search-input-hidden { background: #fff !important; border: 0 !important; color: var(--ink) !important; border-radius: 999px !important; }
+body.shop .site-logo { filter: none !important; }
+
+/* ---------- side menu ---------- */
+body.shop .drawer { background: var(--cream) !important; }
+body.shop .drawer-head { background: var(--red) !important; border-bottom: 0 !important; border-radius: 0 0 26px 0 !important; }
+body.shop .drawer-logo, body.shop .drawer-logo b, body.shop .drawer-close-btn { color: #fff !important; }
+body.shop .drawer-close-btn { border: 1px solid rgba(255,255,255,.55) !important; background: rgba(255,255,255,.14) !important; }
+body.shop .drawer-link { color: var(--ink) !important; font-weight: 700 !important; border-bottom-color: var(--line) !important; }
+body.shop .drawer-link:hover, body.shop .drawer-link.active { background: #fff !important; color: var(--red) !important; }
+body.shop .drawer-link::before { color: var(--red) !important; opacity: .55; font-family: inherit !important; font-weight: 800; }
+body.shop .drawer-link::after { color: var(--red) !important; }
+
+/* ---------- brand circles (stories) ---------- */
+body.shop .category-stories, body.shop .toolbar-row { background: var(--cream) !important; border-bottom: 0 !important; }
+body.shop .story-circle { border-color: var(--red) !important; background: #1B1B1B; box-shadow: none; }
+body.shop .story-circle.active { border-color: var(--red) !important; box-shadow: 0 0 0 3px rgba(200,35,44,.22) !important; }
+body.shop .story-circle.all-circle, body.shop .story-c-alltxt { background: var(--red) !important; color: #fff !important; }
+body.shop .story-c-ring::before { background: conic-gradient(#C8232C, #F7A93B, #C8232C) !important; }
+body.shop .story-c-inner { background: #1B1B1B !important; }
+body.shop .story-c-label { color: var(--ink) !important; font-weight: 600; }
+body.shop .brand-letter { color: #fff !important; font-family: inherit !important; font-weight: 800; }
+
+/* ---------- category / control box ---------- */
+body.shop .control-box { background: #fff !important; border: 1px solid var(--line) !important; border-radius: 24px !important; box-shadow: 0 8px 22px rgba(60,40,10,.06) !important; }
+body.shop .control-box-divider { background: var(--line) !important; height: 1px !important; }
+body.shop .seg-bar { background: #F6F1E4 !important; border: 0 !important; }
+body.shop .seg-slider { background: var(--red) !important; box-shadow: 0 6px 14px rgba(200,35,44,.35) !important; }
+body.shop .seg-btn { color: var(--ink) !important; font-weight: 700 !important; }
+body.shop .seg-btn.active { color: #fff !important; }
+body.shop .shop-banner { border: 0 !important; border-radius: 26px !important; box-shadow: 0 14px 30px rgba(60,20,10,.18) !important; }
+
+/* ---------- toolbar ---------- */
+body.shop .results-count { color: var(--muted) !important; font-weight: 600; }
+body.shop .filter-toggle-btn { background: #fff !important; border: 1.5px solid var(--red) !important; color: var(--red) !important; font-weight: 800 !important; border-radius: 999px !important; }
+body.shop .filter-toggle-btn:hover { background: var(--red) !important; color: #fff !important; }
+body.shop .filter-ic-disc { background: var(--red) !important; }
+body.shop .filter-ic-disc svg { stroke: #fff !important; }
+body.shop .wa-aurora-inner { background: var(--wa) !important; box-shadow: 0 8px 20px rgba(37,211,102,.38); }
+
+/* ---------- filter panel ---------- */
+body.shop .filter-drawer, body.shop .filter-drawer-head, body.shop .filter-drawer-body, body.shop .filter-drawer-footer { background: #fff !important; color: var(--ink) !important; }
+body.shop .filter-drawer { border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 8px 22px rgba(60,40,10,.06); }
+body.shop .filter-drawer-head, body.shop .filter-drawer-footer { border-color: var(--line) !important; }
+body.shop .filter-drawer-head span, body.shop .filter-drawer-close { color: var(--ink) !important; font-weight: 800; }
+body.shop .fd-section { border-bottom-color: var(--line) !important; }
+body.shop .fd-section-head { color: var(--ink) !important; font-weight: 800; }
+body.shop .fd-option { color: var(--ink) !important; }
+body.shop .fd-option input[type="checkbox"] { accent-color: var(--red) !important; }
+body.shop .fd-show-more { color: var(--red) !important; }
+body.shop .fd-clear-btn { color: var(--red) !important; border-color: var(--red) !important; background: #fff !important; font-weight: 800; border-radius: 999px !important; }
+
+/* ---------- product cards ---------- */
+body.shop .card { background: #fff !important; border: 0 !important; border-radius: 22px !important; box-shadow: 0 1px 2px rgba(60,40,10,.05), 0 10px 24px rgba(60,40,10,.07) !important; overflow: hidden; }
+body.shop .card:hover { border: 0 !important; box-shadow: 0 2px 4px rgba(60,40,10,.06), 0 16px 30px rgba(60,40,10,.12) !important; }
+body.shop .card-img-wrap { background: #F3EEE1 !important; }
+body.shop .card-body { background: #fff !important; }
+body.shop .card-body h3 { color: var(--ink) !important; font-family: inherit !important; font-weight: 700 !important; }
+body.shop .brand-label { color: var(--red) !important; font-weight: 800; letter-spacing: .08em; }
+body.shop .badge-pill, body.shop .card .tag, body.shop .card-body .tag, body.shop .meta .tag { background: #FFF1EC !important; color: var(--red) !important; border: 0 !important; font-weight: 700; }
+body.shop .card-wishlist-btn { background: rgba(255,255,255,.9) !important; color: var(--red) !important; }
+body.shop .load-more-btn { background: #fff !important; border: 2px solid var(--red) !important; color: var(--red) !important; font-weight: 800 !important; border-radius: 999px !important; }
+body.shop .load-more-btn:hover { background: var(--red) !important; color: #fff !important; }
+
+/* ---------- footer: dark like the home page ---------- */
+body.shop .footer-brand-banner { background: #1C1C1C !important; border-top: 0 !important; }
+
+/* closed side menu must not cast a shadow onto the page edge */
+body.shop .drawer:not(.open) { box-shadow: none !important; }
+body.shop .filter-drawer:not(.open):not(.is-desktop) { box-shadow: none; }
