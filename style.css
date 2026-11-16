@@ -1974,3 +1974,13 @@ body.admin-page { padding-top: 0; }
 .search-suggest-item:hover .search-suggest-name,
 .search-suggest-item:focus-visible .search-suggest-name { color: #d4af6a !important; }
 .search-suggest-viewall:hover { background: rgba(212,175,106,0.12) !important; color: #f0d9a8 !important; }
+/* =========================================================
+   ASK US ON WHATSAPP — green button replaces the price on product cards
+   ========================================================= */
+.card .card-wa { display: flex; align-items: center; justify-content: center; gap: 6px; background: #25D366; color: #fff !important; font-weight: 800; font-size: 12.5px; line-height: 1.15; padding: 9px 12px; border-radius: 999px; cursor: pointer; text-align: center; box-shadow: 0 4px 12px rgba(37,211,102,.35); animation: cardWaPop 2.8s ease-in-out infinite; }
+.card .card-wa svg { width: 16px; height: 16px; flex: none; }
+.card .card-wa:hover { background: #1EBE5A; }
+.card .price-row { flex-direction: column; align-items: stretch; gap: 8px; }
+.search-suggest-price { display: none !important; }
+@keyframes cardWaPop { 0%, 82%, 100% { transform: scale(1); } 90% { transform: scale(1.04); } }
+@media (prefers-reduced-motion: reduce) { .card .card-wa { animation: none; } }

@@ -772,7 +772,7 @@ function renderProducts(products) {
                 <span class="brand-label">${escapeHtml(p.brand)}</span>
                 <h3>${escapeHtml(p.name)}</h3>
                 <div class="price-row">
-                    <div class="price">${formatPrice(p.price)}</div>
+                    <span class="card-wa" role="link" tabindex="0" data-wa="${encodeURIComponent('Hi, I want more details about ' + p.name + ' ' + location.origin + '/product.html?id=' + p.id)}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.6.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.800 11.900 11.900 0 0 0 4.600 4.100c1.700.7 2.400.8 3.300.7a2.800 2.800 0 0 0 1.800-1.300 2.200 2.200 0 0 0 .2-1.300c-.1-.1-.2-.2-.5-.3z"/></svg><span>Ask us on WhatsApp</span></span>
                     <div class="meta"><span class="tag">${escapeHtml(p.gender)}</span></div>
                 </div>
             </div>
@@ -1734,4 +1734,22 @@ init();
     };
 
     refreshFilterDrawerForCategory = refreshForCategory;
+})();
+
+/* Green "Ask us on WhatsApp" button on each product card (opens WhatsApp, not the product page) */
+(function () {
+    function openWa(el, e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open('https://wa.me/919574442073?text=' + el.getAttribute('data-wa'), '_blank', 'noopener');
+    }
+    document.addEventListener('click', function (e) {
+        const el = e.target.closest('.card-wa');
+        if (el) openWa(el, e);
+    }, true);
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const el = e.target.closest && e.target.closest('.card-wa');
+        if (el) openWa(el, e);
+    }, true);
 })();

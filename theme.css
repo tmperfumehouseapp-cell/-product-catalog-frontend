@@ -80,16 +80,14 @@ body.tp {
 .tp-sec-head a { color: var(--red); font-weight: 700; font-size: 16px; }
 .tp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 @media (min-width: 760px) { .tp-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; } .tp-hero { padding-top: 36px; } }
-.tp-card { position: relative; background: var(--card); border-radius: var(--radius); padding: 14px 14px 16px; text-decoration: none; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(60,40,10,.05), 0 8px 22px rgba(60,40,10,.05); transition: transform .15s; }
+/* card: a link (image + name) and a separate WhatsApp button */
+.tp-card { position: relative; background: var(--card); border-radius: var(--radius); padding: 12px 12px 14px; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(60,40,10,.05), 0 8px 22px rgba(60,40,10,.05); transition: transform .15s; }
 .tp-card:hover { transform: translateY(-2px); }
-.tp-badge { position: absolute; left: 14px; top: 14px; z-index: 1; background: var(--red); color: #fff; font-weight: 800; font-size: 13px; padding: 6px 11px; border-radius: 10px; }
-.tp-card-img { height: 150px; display: grid; place-items: center; margin: 6px 0 12px; }
+.tp-card-img { aspect-ratio: 4 / 5; display: block; margin: 0 0 12px; border-radius: 16px; background: #f0ede6; }
 .tp-card-img { overflow: hidden; }
-.tp-card-img img { width: 100%; height: 100%; object-fit: contain; }
-.tp-card-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: auto; }
+.tp-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tp-card-link { text-decoration: none; display: block; }
 .tp-card-name { font-weight: 600; font-size: 17px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.tp-card-price { color: var(--red); font-weight: 800; font-size: 17px; margin-top: 4px; }
-.tp-plus { flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--red); color: #fff; display: grid; place-items: center; font-size: 26px; line-height: 1; font-weight: 500; }
 .tp-skel { height: 232px; border-radius: var(--radius); background: linear-gradient(100deg, #f3eddd 30%, #fbf7ea 50%, #f3eddd 70%); background-size: 200% 100%; animation: tpsk 1.3s infinite; }
 @keyframes tpsk { to { background-position: -200% 0; } }
 .tp-empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 30px 10px; }
@@ -125,3 +123,10 @@ body.tp {
 
 @media (max-width: 380px) { .tp-cta { padding: 14px 20px; font-size: 15px; } .tp-hero-foot strong { font-size: 18px; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* ---------- green WhatsApp button (replaces the price) ---------- */
+.tp-wa { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; background: #25D366; color: #fff; text-decoration: none; font: 800 14px var(--font); padding: 12px 10px; border-radius: 999px; box-shadow: 0 6px 16px rgba(37,211,102,.38); text-align: center; line-height: 1.15; animation: tpwapop 2.8s ease-in-out infinite; }
+.tp-wa svg { flex: none; width: 18px; height: 18px; }
+.tp-wa:hover { background: #1EBE5A; }
+.tp-wa:focus-visible { outline: 3px solid #0B6B3A; outline-offset: 2px; }
+@keyframes tpwapop { 0%, 82%, 100% { transform: scale(1); } 90% { transform: scale(1.045); } }

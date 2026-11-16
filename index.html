@@ -60,7 +60,7 @@
   </div>
 </section>
 
-<a class="tp-help" id="helpBox" href="https://wa.me/91919574442073?text=Hi%2C%20I%20am%20looking%20for%20a%20product.%20Can%20you%20help%3F" target="_blank" rel="noopener">
+<a class="tp-help" id="helpBox" href="https://wa.me/919574442073?text=Hi%2C%20I%20am%20looking%20for%20a%20product.%20Can%20you%20help%3F" target="_blank" rel="noopener">
   <span class="tp-help-ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z"/></svg></span>
   <span><strong>Can't find it? Ask us.</strong><span>Send a photo on WhatsApp, we'll find the match.</span></span>
 </a>
@@ -70,8 +70,8 @@
     <img src="assets/logo-white.png" alt="3rd Party · Masters of 9A">
     <div class="tp-foot-links">
       <a href="products.html">Shop</a>
-      <a href="https://wa.me/91919574442073?text=Hi%2C%20I%20want%20to%20track%20my%20order" target="_blank" rel="noopener">Track order</a>
-      <a href="https://wa.me/91919574442073" target="_blank" rel="noopener">Contact</a>
+      <a href="https://wa.me/919574442073?text=Hi%2C%20I%20want%20to%20track%20my%20order" target="_blank" rel="noopener">Track order</a>
+      <a href="https://wa.me/919574442073" target="_blank" rel="noopener">Contact</a>
     </div>
     <p>Authentic perfumes, watches, and shoes, all in one place. 3rd Party brings you genuine accessories from the brands you trust, at prices that actually make sense.</p>
     <p>&copy; 2026, 3rd Party</p>
@@ -85,7 +85,7 @@
     <button class="tp-icon" id="menuClose" aria-label="Close menu"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <nav id="drawerNav"><a href="products.html">Shop all</a></nav>
-  <a class="wa" href="https://wa.me/91919574442073?text=Hi%2C%20I%20have%20a%20question%20about%20a%20product" target="_blank" rel="noopener">Chat on WhatsApp</a>
+  <a class="wa" href="https://wa.me/919574442073?text=Hi%2C%20I%20have%20a%20question%20about%20a%20product" target="_blank" rel="noopener">Chat on WhatsApp</a>
 </aside>
 
 <script>
@@ -93,6 +93,8 @@ const API = 'https://fourpirates.tmfragrance.com/visitor/product-api';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; };
 const inr = (n) => '₹' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+const WA_NUM = '919574442073';
+const waLink = (p) => 'https://wa.me/' + WA_NUM + '?text=' + encodeURIComponent('Hi, I want more details about ' + p.name + ' ' + location.origin + '/product.html?id=' + p.id);
 const getJSON = async (path) => { const r = await fetch(API + '/' + path); return r.json(); };
 
 /* ---------- menu drawer ---------- */
@@ -126,7 +128,7 @@ input.addEventListener('input', () => {
       if (input.value.trim() !== q) return;
       const items = d.success ? (d.products || []).slice(0, 6) : [];
       box.innerHTML = items.length
-        ? items.map(p => `<a href="product.html?id=${encodeURIComponent(p.id)}"><img src="${esc(p.image)}" alt="" onerror="this.style.opacity=0"><span>${esc(p.name)}</span><span>${inr(p.price)}</span></a>`).join('')
+        ? items.map(p => `<a href="product.html?id=${encodeURIComponent(p.id)}"><img src="${esc(p.image)}" alt="" onerror="this.style.opacity=0"><span>${esc(p.name)}</span></a>`).join('')
           + `<a class="all" href="products.html?search=${encodeURIComponent(q)}">See all results</a>`
         : `<div class="none">No matches for "${esc(q)}"</div>`;
       box.classList.add('open');
@@ -177,7 +179,7 @@ async function loadHero(fallbackProduct) {
     slidesEl.innerHTML = `<div class="tp-slide on">
       <div class="tp-eyebrow">Just landed</div><h1>New drop is live.</h1>
       <div class="tp-stage"><img src="${esc(p.image)}" alt="${esc(p.name)}" onerror="this.style.opacity=0"></div>
-      <div class="tp-hero-foot"><div><strong>${esc(p.name)}</strong><small>from ${inr(p.price)}</small></div>
+      <div class="tp-hero-foot"><div><strong>${esc(p.name)}</strong><small>Ask us on WhatsApp for details</small></div>
       <a class="tp-cta" href="product.html?id=${encodeURIComponent(p.id)}">Shop the drop</a></div></div>`;
   }
 }
@@ -203,14 +205,13 @@ async function loadProducts() {
     const items = d.success ? (d.products || []) : [];
     if (!items.length) { grid.innerHTML = '<div class="tp-empty">Products will appear here soon.</div>'; return null; }
     grid.innerHTML = items.slice(0, 8).map(p => `
-      <a class="tp-card" href="product.html?id=${encodeURIComponent(p.id)}">
-        <span class="tp-badge">9A</span>
-        <div class="tp-card-img"><img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.opacity=0"></div>
-        <div class="tp-card-foot">
-          <div><div class="tp-card-name">${esc(p.name)}</div><div class="tp-card-price">${inr(p.price)}</div></div>
-          <span class="tp-plus" aria-hidden="true">+</span>
-        </div>
-      </a>`).join('');
+      <div class="tp-card">
+        <a class="tp-card-link" href="product.html?id=${encodeURIComponent(p.id)}">
+          <div class="tp-card-img"><img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.opacity=0"></div>
+          <div class="tp-card-name">${esc(p.name)}</div>
+        </a>
+        <a class="tp-wa" href="${waLink(p)}" target="_blank" rel="noopener" aria-label="Ask us on WhatsApp about ${esc(p.name)}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.6.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.5l-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.800 11.900 11.900 0 0 0 4.600 4.100c1.700.7 2.400.8 3.300.7a2.800 2.800 0 0 0 1.800-1.300 2.200 2.200 0 0 0 .2-1.300c-.1-.1-.2-.2-.5-.3z"/></svg><span>Ask us on WhatsApp</span></a>
+      </div>`).join('');
     return items[0];
   } catch (e) {
     grid.innerHTML = '<div class="tp-empty">Could not load products. Please refresh.</div>';
